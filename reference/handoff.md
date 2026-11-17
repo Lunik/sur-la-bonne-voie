@@ -19,9 +19,9 @@ Ce projet est **indépendant** des dépôts ÉtymoLogique visibles dans la sessi
 | Quoi | Où |
 |---|---|
 | Artifact publié (privé, version 4) | https://claude.ai/artifact/3vhQYZr5vypciuf3N1zJow |
-| Source unique du jeu (HTML + CSS + JS, un seul fichier) | `index.html` (dépôt `sur-la-bonne-voie`, restauré depuis l’artifact) |
+| Source unique du jeu (HTML + CSS + JS, un seul fichier) | `reference/artifact.html` (dépôt `sur-la-bonne-voie`, restauré depuis l’artifact) |
 | Test de bout en bout (Playwright, résout les 21 stations) | **perdu** : resté dans la session cloud (`/home/user/gare-de-triage/test-solutions.js`), à réécrire |
-| Ce handoff | `handoff.md` |
+| Ce handoff | `reference/handoff.md` |
 
 L’artifact est **privé** : seules les personnes à qui le propriétaire donne accès (menu Partager) peuvent l’ouvrir.
 
