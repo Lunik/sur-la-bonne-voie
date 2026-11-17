@@ -42,8 +42,9 @@ const carsOn = (s: RepoState, ref: string): Commit[] => {
 /** Every car is on `ref`, possibly recreated (`C′`) or squashed (`CDE`). Merges and reverts do not count. */
 export const contains = (ref: string, ...cars: string[]): Check => (s) =>
   cars.every((car) => carsOn(s, ref).some((c) => c.kind === 'normal' && [...stripPrimes(c.label)].includes(car)));
-export const noCargo = (ref: string, cargo: string): Check => (s) => !carsOn(s, ref).some((c) => c.cargo === cargo);
-export const noMerge = (ref: string): Check => (s) => !carsOn(s, ref).some((c) => c.kind === 'merge');
+/** Negative rules fail on an unknown ref, so a typo cannot pass silently. */
+export const noCargo = (ref: string, cargo: string): Check => (s) => !!tipOf(s, ref) && !carsOn(s, ref).some((c) => c.cargo === cargo);
+export const noMerge = (ref: string): Check => (s) => !!tipOf(s, ref) && !carsOn(s, ref).some((c) => c.kind === 'merge');
 export const reverted = (ref: string, car: string): Check => (s) =>
   carsOn(s, ref).some((c) => c.kind === 'revert' && stripPrimes(c.label) === `↩${car}`);
 /** `branch` and `origin/branch` point to the same car. */

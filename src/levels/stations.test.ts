@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { contains, isWon, lines, play, startBoard, validate, type PlayedStation } from './index.ts';
+import { contains, isWon, noMerge, lines, play, startBoard, validate, type PlayedStation } from './index.ts';
 import { stations } from './stations.ts';
 
 test('21 stations over 5 lines', () => {
@@ -21,7 +21,9 @@ test('validate catches a broken station', () => {
     { ...base, line: 9 },
     { ...base, id: 'x', solution: ['merge main'] },
     { ...base, id: 'y', tool: 'push' },
+    { ...played('grue-en-panne'), rules: [{ text: 'typo', check: noMerge('mian') }] },
   ]);
+  assert.ok(errors.some((e) => e === 'grue-en-panne : la solution ne gagne pas'));
   assert.ok(errors.some((e) => e.includes('budget 1 < par 2')));
   assert.ok(errors.some((e) => e.includes('identifiant en double')));
   assert.ok(errors.some((e) => e.includes('ligne 9 inconnue')));
