@@ -3,8 +3,8 @@
 import { build, type RepoState } from '../engine/index.ts';
 import { isWon, predictBoards, runStep, startBoard, type Station, type Step } from '../levels/index.ts';
 
-export { build, firstParentChain, orphans, stripPrimes, type Commit, type RepoState } from '../engine/index.ts';
-export { allowedTools, lines, type Line, type Station, type Tool } from '../levels/index.ts';
+export { ancestors, build, firstParentChain, orphans, stripPrimes, type Commit, type RepoState } from '../engine/index.ts';
+export { allowedTools, lines, type Line, type Station, type Step, type Tool } from '../levels/index.ts';
 export { stations } from '../levels/stations.ts';
 export * from './gestures.ts';
 

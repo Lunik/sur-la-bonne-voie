@@ -1,34 +1,120 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "ignorePatterns": ["dist/**", "reference/**"],
+  "plugins": [
+    "react",
+    "typescript",
+    "oxc"
+  ],
+  "ignorePatterns": [
+    "dist/**",
+    "reference/**"
+  ],
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true
+      }
+    ]
   },
   "overrides": [
     {
-      "files": ["src/engine/**", "src/levels/**", "src/game/**"],
+      "files": [
+        "src/engine/**",
+        "src/levels/**",
+        "src/game/**"
+      ],
       "rules": {
-        "no-restricted-imports": ["error", { "patterns": [
-          { "group": ["react", "react-dom", "react-dom/*", "**/ui/**", "**/theme/**"], "message": "engine, levels and game stay pure: no React, no UI." }
-        ] }]
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "react",
+                  "react-dom",
+                  "react-dom/*",
+                  "**/ui/**",
+                  "**/theme/**"
+                ],
+                "message": "engine, levels and game stay pure: no React, no UI."
+              }
+            ]
+          }
+        ]
       }
     },
     {
-      "files": ["src/engine/**"],
+      "files": [
+        "src/engine/**"
+      ],
       "rules": {
-        "no-restricted-imports": ["error", { "patterns": [
-          { "group": ["react", "react-dom", "react-dom/*", "**/ui/**", "**/theme/**", "**/levels/**", "**/game/**"], "message": "engine depends on nothing." }
-        ] }]
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "react",
+                  "react-dom",
+                  "react-dom/*",
+                  "**/ui/**",
+                  "**/theme/**",
+                  "**/levels/**",
+                  "**/game/**"
+                ],
+                "message": "engine depends on nothing."
+              }
+            ]
+          }
+        ]
       }
     },
     {
-      "files": ["src/levels/**"],
+      "files": [
+        "src/levels/**"
+      ],
       "rules": {
-        "no-restricted-imports": ["error", { "patterns": [
-          { "group": ["react", "react-dom", "react-dom/*", "**/ui/**", "**/theme/**", "**/game/**"], "message": "levels depends only on engine." }
-        ] }]
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "react",
+                  "react-dom",
+                  "react-dom/*",
+                  "**/ui/**",
+                  "**/theme/**",
+                  "**/game/**"
+                ],
+                "message": "levels depends only on engine."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/ui/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "**/engine/**",
+                  "**/levels/**"
+                ],
+                "message": "ui reaches engine and levels through game only."
+              }
+            ]
+          }
+        ]
       }
     }
   ]

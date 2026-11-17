@@ -101,6 +101,19 @@ Critère de sortie : 21 stations portées, test de contenu vert ; ajouter une st
 
 But : reconstruire l’interface du prototype en composants React qui lisent l’état de la session. Livrable : une station jouable de bout en bout, puis toutes.
 
+Statut au 17/11/2026 : **fait, en attente de relecture** (branche `jalon-3`, partie de `jalon-2`). `src/game/` (session, gestes), `src/ui/` (composants, `layout.ts`, `typography.ts`, `progress.ts`, `strings.ts`, `app.css`), `src/theme/theme.css` (tous les jetons du prototype).
+
+Vérifications : tests `node:test` (chaque station gagnée en `par` au clavier par le réducteur, 15 stations gagnées par leurs gestes, échec de budget, chrono, pronostic, atomicité d’un geste) ; dans Chrome, une station de chaque type jouée (glisser, toucher puis toucher, clavier seul, pronostic, chrono, budget épuisé, voie de garage), clair et sombre, pas de défilement horizontal à 390 et 400 px, console sans erreur.
+
+Écarts avec la liste ci-dessous :
+
+- Rendu HTML + SVG comme le prototype, pas SVG pur : CSS porté tel quel pour la fidélité. `layout(state)` reste pur et testé (`src/ui/layout.test.ts`).
+- Les gestes sont traduits par `game/gestures.ts` (pur, testé) ; un geste refusé à mi-chemin est annulé en entier (`levels.runStep`, partagé avec le test de contenu).
+- Pas de contexte React : l’état descend par props depuis `App.tsx`.
+- Fenêtres en `<dialog>` natif ; Échap ignoré pour ne pas laisser le joueur sans issue.
+- Progression sous `gare3.progress`, étoiles par `id` de station ; « Tout débloquer » gardé pour la parité (retrait au jalon 4).
+- Le « doigt » n’a été vérifié qu’en simulation (événements pointeur) ; essai sur appareil réel au jalon 5. Les voitures ne sont toujours pas focalisables : au clavier, on joue par le terminal (dette connue, jalon 5).
+
 1. **Thème** : reprendre tels quels les jetons `:root` du prototype (couleurs, livrées, mode sombre), les trois polices et la gouttière mobile.
 2. **Plateau** (`<Yard>`) : calcul de disposition pur (`layout(state)` → positions), rendu SVG des voies, aiguillages, butoirs ; voitures et motrice en composants. Le même composant sert au plateau, à l’objectif miniature, aux pronostics et à l’illustration d’en-tête.
 3. **Textes des stations** : espaces insécables français avant « : ? ! » appliquées au rendu.

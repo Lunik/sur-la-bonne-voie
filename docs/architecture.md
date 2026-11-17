@@ -9,19 +9,22 @@ Statut : **proposé au jalon 0, en attente de validation par le propriétaire.**
 | `src/engine/` | Moteur Git pur : état, commandes, signatures, voie de garage | rien |
 | `src/levels/` | Stations (données), lignes, outils autorisés, règles de victoire | `engine` |
 | `src/game/` | Session de jeu : coups, étoiles, budget, chrono, annulation | `engine`, `levels` |
-| `src/ui/` | Composants React : plateau, terminal, plan du réseau, fenêtres | `game`, `engine` (types), `levels` (types), `theme` |
+| `src/ui/` | Composants React : plateau, terminal, plan du réseau, fenêtres | `game` uniquement (qui ré-exporte ce dont l’interface a besoin du moteur et des stations), `theme` |
 | `src/theme/` | Jetons CSS, typographie, mode sombre | rien |
 
 `src/main.tsx` monte `ui/App.tsx` et charge `theme/theme.css`.
 
-Les dépendances interdites sont vérifiées par `oxlint` (`no-restricted-imports` dans `.oxlintrc.json`) : `engine`, `levels` et `game` n’importent ni React ni `ui/` ni `theme/` ; `engine` n’importe rien d’autre ; `levels` n’importe que `engine`.
+Les dépendances interdites sont vérifiées par `oxlint` (`no-restricted-imports` dans `.oxlintrc.json`) : `engine`, `levels` et `game` n’importent ni React ni `ui/` ni `theme/` ; `engine` n’importe rien d’autre ; `levels` n’importe que `engine` ; `ui` n’importe ni `engine` ni `levels` directement.
 
 ## Modèle d’état
 
 - **Moteur** : `exec(state, line)` renvoie `{ ok: true, state, output, move }` ou `{ ok: false, error }`. Il travaille sur un clone (`structuredClone`) et ne modifie jamais `state` : une commande ratée laisse l’état intact, sans restauration. `move` vaut `null` pour une commande sans effet (`switch`, `log`, push à jour…), qui ne compte pas comme manœuvre. Seules les `EngineError` deviennent `{ ok: false }` ; toute autre exception est un bogue et remonte.
-- **Session** : `game/` expose un réducteur pur `reduce(session, action)`. Les gestes et le terminal produisent tous deux des commandes Git, jamais des mutations directes.
-- **React** : `useReducer(reduce, …)` dans l’interface. Un contexte sera ajouté quand plusieurs composants éloignés liront la session (jalon 3), pas avant.
-- **Persistance** : `localStorage` en try/catch, clés versionnées (jalon 3).
+- **Étape** : `levels.runStep(state, step)` exécute une commande ou un geste (liste de commandes) de façon atomique ; un geste compte pour une manœuvre au plus. Le test de contenu (`play`) et la session l’utilisent tous deux : par et budget comptent pareil partout.
+- **Session** : `game/` expose un réducteur pur `reduce(session, action)` (étape, annuler, chrono, pronostic). Les gestes (`game/gestures.ts`) et le terminal produisent tous deux des commandes Git, jamais des mutations directes. Le hasard (ordre des pronostics) est tiré par l’appelant, pas par le réducteur.
+- **React** : `useReducer` dans `ui/App.tsx`, état passé par props. Pas de contexte : l’arbre est peu profond.
+- **Persistance** : `localStorage` en try/catch, clé versionnée `gare3.progress`, étoiles indexées par `id` de station.
+- **Rendu du plateau** : HTML + SVG comme le prototype (voitures en CSS, motrice et aiguillages en SVG), CSS du prototype porté tel quel dans `ui/app.css`. Retenu par défaut au jalon 3 pour la fidélité visuelle ; réversible, `ui/layout.ts` (pur, testé) ne dépend pas du rendu.
+- **Fenêtres** : `<dialog>` natif ; Échap est ignoré, chaque fenêtre a sa propre sortie.
 
 ## Langage et outillage
 
@@ -45,6 +48,6 @@ Les dépendances interdites sont vérifiées par `oxlint` (`no-restricted-import
 
 - **TypeScript** : retenu ici sur recommandation de la roadmap. Revenir à JavaScript + JSDoc coûte peu tant que le moteur n’est pas écrit.
 - **Lint** : la roadmap prévoyait ESLint ; le modèle Vite par défaut utilise désormais `oxlint`, retenu pour rester sur le défaut. ESLint reste possible si une règle manque.
-- **Rendu du plateau** : SVG pur (recommandé) ou HTML + SVG comme le prototype. À trancher avant le jalon 3.
+- **Rendu du plateau** : HTML + SVG retenu par défaut (voir Modèle d’état) ; SVG pur reste possible.
 - **Langue de l’interface** : français seul pour la 1.0 ; `strings.ts` prépare une traduction.
 - **Nom du jeu** : non tranché.
