@@ -61,7 +61,7 @@ export function CarBody({ repo, commit: c, coupled, gone, flags = [], selected }
       <rect className="frame" x={7} y={CAR_H} width={18} height={2} rx={1} />
       <rect className="frame" x={CAR_W - 25} y={CAR_H} width={18} height={2} rx={1} />
       {[11, 21, CAR_W - 21, CAR_W - 11].map((cx) => <circle key={cx} className="wheel" cx={cx} cy={CAR_H + 4.5} r={3.6} />)}
-      {c.cargo && <rect className="cargo" x={13} y={-10} width={8} height={8} rx={1} transform="rotate(45 17 -6)" />}
+      {c.cargo && <rect className="cargo" x={7} y={8.5} width={7} height={7} rx={1} transform="rotate(45 10.5 12)" />}
       {gone && (
         <g className="gone" transform={`translate(${CAR_W - 3} -2)`}>
           <circle r={7} />

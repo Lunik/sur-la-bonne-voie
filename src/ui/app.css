@@ -136,7 +136,7 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .car-body .stripe { fill: var(--liv); }
 .car-body .label { font: 600 16px var(--f-display); fill: var(--car-ink); text-anchor: middle; dominant-baseline: central; }
 .car-body .label.long { font-size: 12.5px; }
-.car-body .sub { font-size: 10px; fill: var(--muted); }
+.car-body .sub { font-size: 10px; fill: var(--car-ink); opacity: .65; }
 .car-body.revert .body { fill: var(--rev-car); stroke: var(--rev-car); }
 .car-body.revert .label { fill: var(--rev-label); }
 .car-body.revert .pane { fill: color-mix(in srgb, var(--rev-label) 22%, var(--rev-car)); }
@@ -158,12 +158,14 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 /* Motion: a car that changes place glides; the train leaves with an accelerating pull. */
 .yard-live .car, .yard-live .loco { transition: transform var(--move) var(--ease-move); }
 .yard-live.grab .car { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
-.yard-live .depart { translate: 1800px 0; transition: transform var(--move) var(--ease-move), translate 1.6s cubic-bezier(.55, 0, .9, .35); }
+/* The pull waits for the last car to couple. A keyframe, not a transition, so a car that
+   joined the train in the winning move leaves with it instead of jumping off screen. */
+.yard-live .depart { animation: depart 1.6s cubic-bezier(.55, 0, .9, .35) var(--move) both; }
+@keyframes depart { to { translate: 1800px 0; } }
 .roll-in { animation: roll-in 1.7s cubic-bezier(.2, .75, .25, 1) .2s both; }
 @keyframes roll-in { from { translate: -620px 0; } to { translate: 0 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .yard-live .depart { transition: none; }
-  .roll-in { animation: none; }
+  .yard-live .depart, .roll-in { animation: none; }
 }
 
 .ghost { position: fixed; z-index: 50; pointer-events: none; transform: translate(-50%, -60%) rotate(-2deg); }

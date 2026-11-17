@@ -67,7 +67,7 @@ export function App() {
   useEffect(() => {
     if (status !== 'won') return;
     const fast = station.type === 'predict' || matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const t = setTimeout(() => setVictoryShown(true), fast ? 1100 : 1500);
+    const t = setTimeout(() => setVictoryShown(true), fast ? 1100 : 1900);
     return () => clearTimeout(t);
   }, [status, station]);
 

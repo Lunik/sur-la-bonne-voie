@@ -48,20 +48,11 @@
   --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   --move: .55s;
+  color-scheme: light;
   --ease-move: cubic-bezier(.25, .8, .25, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #12181e; --surface: #1a222a; --sunk: #151c23; --ink: #e6ebef; --ink-2: #c3ccd3; --muted: #93a0ab;
-    --line: #2a343e; --line-2: #3a4652; --on-ink: #12181e; --focus: #f2b705;
-    --rail: #7d8891; --sleeper: #34404b; --lane-drop: rgba(242, 183, 5, .14);
-    --car: #e9edf0; --car-edge: #9aa5ae; --roof: #b9c2c9; --glass: #24313d; --bogie: #57636e; --rev-car: #3b4957;
-    --n1: #6a8ff0; --n2: #f08a3c; --n3: #3cc29e; --n4: #9d84f2; --n5: #ef6a5f; --on-line: #12181e;
-    --good: #4fc982; --danger: #f06a5e;
-    color-scheme: dark;
-  }
-}
+/* Light is the default; dark is opt-in through data-theme="dark". */
 :root[data-theme="dark"] {
   --bg: #12181e; --surface: #1a222a; --sunk: #151c23; --ink: #e6ebef; --ink-2: #c3ccd3; --muted: #93a0ab;
   --line: #2a343e; --line-2: #3a4652; --on-ink: #12181e; --focus: #f2b705;
