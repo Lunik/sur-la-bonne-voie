@@ -12,7 +12,8 @@ const BODY_Y = 22; // car body top within a row, leaves room for the flags
 const RAIL_Y = BODY_Y + CAR_H + 9; // rail line within a row
 const PAD = 14;
 const LOCO_W = 100;
-const ENTER_MS = 600;
+const MOVE_MS = 550;
+const EASE = 'cubic-bezier(.25,.8,.25,1)';
 
 const carX = (col: number) => PAD + col * SLOT;
 const translate = (x: number, y: number) => `translate(${x}px, ${y}px)`;
@@ -161,37 +162,46 @@ export function Yard({ repo: s, variant, selected, grab, dropRow, leaving, class
   const headRow = rows[headIndex];
   const loco = withLoco && headRow ? { x: carX((headRow.cells.at(-1)?.col ?? headRow.fork) + 1), y: headIndex * ROW + BODY_Y } : null;
 
-  // ---- Motion (live board only). Moved cars glide by CSS transition; new cars enter from where they come from. ----
+  // ---- Motion (live board only). Nothing leaves the rails: rolling stock only rolls along its own track.
+  // A new car, or a car that now belongs to another track, is coupled in place; the locomotive changes
+  // track by pulling away and reappearing on the new one. ----
   const els = useRef(new Map<string, SVGGElement>());
-  const prev = useRef<{ cars: Map<string, { x: number; y: number; label: string }>; loco: typeof loco } | null>(null);
+  const locoEl = useRef<SVGGElement>(null);
+  const prev = useRef<{ cars: Map<string, { x: number; y: number; row: string }>; loco: typeof loco } | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (!live) return;
     const before = prev.current;
-    const now = new Map(placed.map((p) => [p.id, { x: p.x, y: p.y, label: s.commits[p.id].label }]));
-    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (before && !still) {
+    if (before && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const roll = (el: SVGGElement, x0: number, x1: number, y: number) =>
+        el.animate([{ transform: translate(x0, y) }, { transform: translate(x1, y) }], { duration: MOVE_MS, easing: EASE });
       for (const p of placed) {
-        if (before.cars.has(p.id)) continue;
         const el = els.current.get(p.id);
-        const c = s.commits[p.id];
         if (!el) continue;
-        const key = stripPrimes(c.label);
-        // A recreated car (rebase, cherry-pick, squash) leaves from its original.
-        const source = c.kind !== 'merge'
-          ? [...before.cars.values()].find((b) => stripPrimes(b.label) === key || (key.length > 1 && stripPrimes(b.label) === key[0]))
-          : undefined;
-        // A new car at the HEAD tip is coupled where the locomotive stood; anything else fades in from the left.
-        const fromLoco = p.tip && p.row.name === s.head ? before.loco : null;
-        const from = source ?? fromLoco ?? { x: p.x - SLOT / 2, y: p.y };
-        const opacity = source || fromLoco ? 1 : 0;
-        el.animate(
-          [{ transform: translate(from.x, from.y), opacity }, { transform: translate(p.x, p.y), opacity: 1 }],
-          { duration: ENTER_MS, easing: 'cubic-bezier(.25,.8,.25,1)' },
-        );
+        const b = before.cars.get(p.id);
+        if (b && b.row === p.row.name) {
+          // Same track: roll. A whole track that changed height snaps with its rails.
+          if (b.y === p.y && b.x !== p.x) roll(el, b.x, p.x, p.y);
+          continue;
+        }
+        el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 200, easing: 'ease-out', fill: 'backwards' });
+      }
+      const lo = locoEl.current;
+      const bl = before.loco;
+      if (lo && bl && loco) {
+        if (bl.y === loco.y) {
+          if (bl.x !== loco.x) roll(lo, bl.x, loco.x, loco.y);
+        } else {
+          lo.animate([
+            { transform: translate(bl.x, bl.y), opacity: 1 },
+            { transform: translate(bl.x + 28, bl.y), opacity: 0, offset: 0.45 },
+            { transform: translate(loco.x, loco.y), opacity: 0, offset: 0.55 },
+            { transform: translate(loco.x, loco.y), opacity: 1 },
+          ], { duration: MOVE_MS * 1.4, easing: 'ease-in-out' });
+        }
       }
     }
-    prev.current = { cars: now, loco };
+    prev.current = { cars: new Map(placed.map((p) => [p.id, { x: p.x, y: p.y, row: p.row.name }])), loco };
   });
 
   // Keep the locomotive in view on a long train (narrow screens).
@@ -261,15 +271,16 @@ export function Yard({ repo: s, variant, selected, grab, dropRow, leaving, class
                   return `M${x0} ${y0} C${x0 + w * 0.55} ${y0} ${x1 - w * 0.45} ${y} ${x1} ${y}`;
                 })()
               : null;
-            const track = `M${start} ${y} H${trackEnd}`;
+            // Open line on the right, toward origin, so a departing train never crosses a buffer.
+            const track = `M${start} ${y} H${live || deco ? trackEnd + 2000 : trackEnd}`;
             return (
               <g key={`track-${r.name}`} className={`track${r.kind === 'remote' ? ' remote' : ''}`}>
                 {curve && <path className="sleepers" d={curve} />}
                 <path className="sleepers" d={track} transform="translate(0 3)" />
                 {curve && <path className="rail" d={curve} />}
                 <path className="rail" d={track} />
-                {!deco && (
-                  <g className="buffer" transform={`translate(${trackEnd} ${y})`}>
+                {!deco && r.fork < 0 && (
+                  <g className="buffer" transform={`translate(${start - 5} ${y})`}>
                     <rect x={0} y={-15} width={5} height={15} rx={1} />
                     <circle cx={2.5} cy={-11} r={1.8} />
                   </g>
@@ -300,7 +311,7 @@ export function Yard({ repo: s, variant, selected, grab, dropRow, leaving, class
             );
           })}
           {loco && (
-            <g className={['loco', leaving && 'depart', deco && 'roll-in'].filter(Boolean).join(' ')} style={{ transform: translate(loco.x, loco.y) }}>
+            <g ref={locoEl} className={['loco', leaving && 'depart', deco && 'roll-in'].filter(Boolean).join(' ')} style={{ transform: translate(loco.x, loco.y) }}>
               <LocoBody />
             </g>
           )}

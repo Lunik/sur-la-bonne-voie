@@ -155,15 +155,15 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .loco-body .head { font: 600 9px var(--f-display); letter-spacing: .1em; fill: var(--car-ink); text-anchor: middle; }
 .loco-body .lamp { fill: var(--lamp); }
 
-/* Motion: a car that changes place glides; the train leaves with an accelerating pull. */
-.yard-live .car, .yard-live .loco { transition: transform var(--move) var(--ease-move); }
+/* Motion: rolling and coupling run in Yard.tsx (Web Animations); the train leaves with an accelerating pull. */
 .yard-live.grab .car { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 /* The pull waits for the last car to couple. A keyframe, not a transition, so a car that
    joined the train in the winning move leaves with it instead of jumping off screen. */
 .yard-live .depart { animation: depart 1.6s cubic-bezier(.55, 0, .9, .35) var(--move) both; }
 @keyframes depart { to { translate: 1800px 0; } }
 .roll-in { animation: roll-in 1.7s cubic-bezier(.2, .75, .25, 1) .2s both; }
-@keyframes roll-in { from { translate: -620px 0; } to { translate: 0 0; } }
+/* The header train backs in from the open end of its own track. */
+@keyframes roll-in { from { translate: 640px 0; } to { translate: 0 0; } }
 @media (prefers-reduced-motion: reduce) {
   .yard-live .depart, .roll-in { animation: none; }
 }

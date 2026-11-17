@@ -23,7 +23,7 @@ Les dépendances interdites sont vérifiées par `oxlint` (`no-restricted-import
 - **Session** : `game/` expose un réducteur pur `reduce(session, action)` (étape, annuler, chrono, pronostic). Les gestes (`game/gestures.ts`) et le terminal produisent tous deux des commandes Git, jamais des mutations directes. Le hasard (ordre des pronostics) est tiré par l’appelant, pas par le réducteur.
 - **React** : `useReducer` dans `ui/App.tsx`, état passé par props. Pas de contexte : l’arbre est peu profond.
 - **Persistance** : `localStorage` en try/catch, clé versionnée `gare3.progress`, étoiles indexées par `id` de station.
-- **Rendu du plateau** : SVG pur (`ui/Yard.tsx`), pancartes en HTML dans une colonne fixe pour qu’elles restent visibles quand les voies défilent. Les voitures forment une liste plate indexée par commit : une voiture qui change de voie garde son nœud et glisse (transition CSS), une voiture nouvelle entre depuis son origine (Web Animations). `ui/layout.ts` (pur, testé) place les voitures ; l’échelle vient de la variable CSS `--k`.
+- **Rendu du plateau** : SVG pur (`ui/Yard.tsx`), pancartes en HTML dans une colonne fixe pour qu’elles restent visibles quand les voies défilent. Les voitures forment une liste plate indexée par commit, animée en Web Animations sans jamais quitter les rails : une voiture qui reste sur sa voie roule, une voiture nouvelle ou passée sur une autre voie est attelée sur place. `ui/layout.ts` (pur, testé) place les voitures ; l’échelle vient de la variable CSS `--k`.
 - **Fenêtres** : `<dialog>` natif ; Échap est ignoré, chaque fenêtre a sa propre sortie.
 
 ## Langage et outillage

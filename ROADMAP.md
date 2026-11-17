@@ -109,7 +109,7 @@ Vérifications : tests `node:test` (chaque station gagnée en `par` au clavier p
 
 - Identité visuelle refaite après le portage (demande du propriétaire, interface jugée trop « générée ») : thème clair épuré, Barlow (signalétique ferroviaire) et IBM Plex Mono pour le terminal, pancartes en plaques émaillées, jaune signal réservé à HEAD (nez de la motrice). Le critère « fidèle au prototype » ne vaut donc plus pour le visuel, seulement pour le comportement.
 - Plateau en SVG pur (voies avec traverses, aiguillages, voitures, motrice redessinées) ; `layout(state)` reste pur et testé (`src/ui/layout.test.ts`).
-- Déplacements animés : une voiture qui change de voie glisse, une voiture recréée (rebase, cherry-pick, soudure) part de l’original, une nouvelle voiture sort de la place de la motrice, le train part en accélérant, le plateau suit la motrice sur un écran étroit. Tout est coupé avec `prefers-reduced-motion`.
+- Déplacements animés, sans jamais quitter les rails : une voiture ou la motrice ne roule que le long de sa voie ; une voiture nouvelle ou recréée (rebase, cherry-pick, soudure) est attelée sur place ; la motrice qui change de voie avance, s’efface et réapparaît sur la nouvelle voie. Butoir à gauche, voie ouverte à droite : le train part vers origin en accélérant. Dans l’en-tête, le train recule sur sa voie depuis la sortie. Le plateau suit la motrice sur un écran étroit. Tout est coupé avec `prefers-reduced-motion`.
 - Les gestes sont traduits par `game/gestures.ts` (pur, testé) ; un geste refusé à mi-chemin est annulé en entier (`levels.runStep`, partagé avec le test de contenu).
 - Pas de contexte React : l’état descend par props depuis `App.tsx`.
 - Fenêtres en `<dialog>` natif ; Échap ignoré pour ne pas laisser le joueur sans issue.
