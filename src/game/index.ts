@@ -18,5 +18,10 @@ export function newSession(station: Station | undefined = stations[0]): Session 
 export function reduce(session: Session, action: Action): Session {
   const result = exec(session.repo, action.line);
   if (!result.ok) return { ...session, log: [...session.log, result.error] };
-  return { ...session, repo: result.state, moves: session.moves + 1, log: [...session.log, result.output] };
+  return {
+    ...session,
+    repo: result.state,
+    moves: session.moves + (result.move ? 1 : 0),
+    log: [...session.log, ...result.output],
+  };
 }

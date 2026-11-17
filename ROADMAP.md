@@ -59,6 +59,8 @@ Critère de sortie : `npm test`, `npm run lint` et `npm run build` passent en CI
 
 But : réécrire le moteur du prototype (§ 4.1 du handoff) en module autonome, couvert par des tests unitaires. Livrable : `src/engine/` + ses tests, aucune interface.
 
+Statut au 17/11/2026 : **fait, en attente de relecture.** `src/engine/` (moteur + `messages.ts`) et tests par famille de commandes ; `prototype-stations.test.ts` rejoue les 21 stations (cibles, solutions = `par`, pronostics distincts).
+
 1. Modèle d’état : commits `{id, parents, label, origin, kind, cargo}`, voies, HEAD, `origin`, reflog, quai (`pending`), drapeaux `allow` / `noM` / `noForce`. Limites du prototype (3 voies, 8 positions de reflog) rendues configurables.
 2. Analyse de commande : `exec(state, ligne)` renvoie `{state, output}` ou une erreur, sans mutation (atomicité par construction, plus besoin de clone + restauration).
 3. Commandes, par ordre d’apparition dans le jeu :

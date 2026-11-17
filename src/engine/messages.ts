@@ -1,0 +1,67 @@
+// Terminal output of the engine, in French, grouped here so a translation touches one file.
+// Taken from the prototype (reference/artifact.html), except `tooManyBranches` (limit now
+// configurable) and the new `emptyBranch`, `outOfLetters` refusals.
+
+export const messages = {
+  // Errors
+  notYetTaught: (cmd: string) => `git ${cmd} n’est pas encore au programme : il s’apprend plus loin sur le réseau.`,
+  unknownCommand: (cmd: string) => `git: « ${cmd} » n’est pas une commande de ce poste. Tapez help.`,
+  emptyBranch: (branch: string) => `La voie ${branch} n’a encore aucune voiture.`,
+  missingBranch: 'fatal: précisez une voie.',
+  unknownBranch: (name: string) => `fatal: voie inconnue « ${name} ».`,
+  unknownBranchSwitch: (name: string) => `fatal: voie inconnue « ${name} ». Pour en créer une : switch -c nom.`,
+  branchNameMissing: 'fatal: donnez un nom à la nouvelle voie.',
+  branchExists: (name: string) => `fatal: la voie « ${name} » existe déjà.`,
+  branchNameInvalid: 'fatal: nom de voie invalide (lettres, chiffres, tirets).',
+  tooManyBranches: (max: number) => `Le plateau n’a que ${max} voies.`,
+  remoteNotDrivable: 'Le quai distant se consulte, il ne se conduit pas.',
+  mergeSelf: 'fatal: impossible de fusionner une voie avec elle-même.',
+  rebaseSelf: 'fatal: impossible de rebaser une voie sur elle-même.',
+  fastForwardOnly: 'Panne de la grue de jonction : seuls les fast-forward passent. Raccrochez d’abord la voie (rebase).',
+  cherryPickMissing: 'fatal: précisez la voiture à copier (ex. D).',
+  revertMissing: 'fatal: précisez la voiture à inverser (ex. C).',
+  carNotFound: (label: string) => `fatal: voiture « ${label} » introuvable.`,
+  carAlreadyOnBranch: (label: string, branch: string) => `La voiture ${label} est déjà sur la voie ${branch}.`,
+  carNotOnBranch: (label: string, branch: string) => `La voiture ${label} n’est pas sur la voie ${branch}.`,
+  cannotCopyMerge: 'Copier une voiture de jonction : pas sur ce réseau.',
+  cannotRevert: 'Cette voiture ne s’inverse pas sur ce réseau.',
+  refNotFound: (ref: string) => `fatal: référence « ${ref} » introuvable.`,
+  pushRejected: (branch: string) =>
+    `! [rejected] ${branch} -> ${branch} (fetch first) · origin/${branch} a des voitures que vous n’avez pas. Intégrez-les (pull) avant de pousser.`,
+  forceForbidden: 'Refusé : des voyageurs sont à bord de ce train. Le push forcé est interdit sur ce réseau.',
+  noRemote: (branch: string) => `Aucun quai distant pour la voie ${branch}.`,
+  outOfLetters: 'Le dépôt est plein : plus de lettre disponible pour une nouvelle voiture.',
+
+  // Output
+  commitNew: (branch: string, label: string) => `[${branch} ${label}] nouvelle voiture accrochée`,
+  commitSquash: (branch: string, label: string, count: number) => `[${branch} ${label}] ${count} voitures soudées en une seule`,
+  branchCreated: (name: string, label: string) => `Voie « ${name} » posée au niveau de la voiture ${label}.`,
+  switchedNew: (name: string) => `Switched to a new branch '${name}'`,
+  switched: (name: string) => `Switched to branch '${name}' · la motrice change de voie`,
+  alreadyOn: (name: string) => `Already on '${name}'`,
+  upToDate: 'Already up to date.',
+  mergeFastForward: (branch: string, label: string) => `Fast-forward · ${branch} avance jusqu’à ${label}, sans voiture de jonction`,
+  mergeCommit: (label: string) => `Merge made by the 'ort' strategy · voiture de jonction M (relie ${label})`,
+  rebaseUpToDate: (branch: string) => `Current branch ${branch} is up to date.`,
+  rebaseFastForward: (branch: string, onto: string) => `Fast-forward · ${branch} rejoint ${onto}`,
+  rebased: (branch: string, labels: string[]) => `Successfully rebased refs/heads/${branch} · voitures recréées : ${labels.join(', ')}`,
+  rebasedLeftBehind: (labels: string[]) => `  (les anciennes ${labels.join(', ')} partent sur la voie de garage)`,
+  cherryPicked: (branch: string, label: string, original: string) => `[${branch} ${label}] copie de la voiture ${original}`,
+  headAt: (label: string) => `HEAD is now at ${label}`,
+  resetPending: (labels: string[]) => `  ${labels.join(', ')} dételées, en attente sur le quai (commit pour les souder)`,
+  resetLost: (labels: string[]) => `  ${labels.join(', ')} partent sur la voie de garage`,
+  reverted: (branch: string, label: string, original: string) => `[${branch} ${label}] voiture inverse : annule l’effet de ${original}`,
+  pushUpToDate: 'Everything up-to-date',
+  pushForced: '+ forced update · des voyageurs ont perdu leurs voitures !',
+  pushed: (branch: string) => `To origin · ${branch} -> ${branch} · le train part !`,
+  pulled: (branch: string) => `From origin · origin/${branch} récupéré`,
+  fetch: 'Le quai distant est déjà affiché sur le plateau : rien de nouveau.',
+  reflogEntry: (branch: string, index: number, label: string) =>
+    `${branch}@{${index}}: ${label}${index === 0 ? '   (position actuelle)' : ''}`,
+  statusBranch: (branch: string) => `On branch ${branch}`,
+  statusPending: (labels: string[]) => `Voitures dételées sur le quai : ${labels.join(', ')}`,
+  statusDiverged: (ahead: number, behind: number, branch: string) =>
+    `Votre voie : ${ahead} voiture(s) d’avance, ${behind} de retard sur origin/${branch}`,
+  statusInSync: (branch: string) => `À jour avec origin/${branch}`,
+  help: (commands: string[]) => `Commandes : ${commands.join(' · ')} · switch · log · status · reflog`,
+};

@@ -18,7 +18,7 @@ Les dépendances interdites sont vérifiées par `oxlint` (`no-restricted-import
 
 ## Modèle d’état
 
-- **Moteur** : `exec(state, line)` renvoie `{ ok: true, state, output }` ou `{ ok: false, error }`. Il ne modifie jamais `state` : une commande ratée laisse l’état intact par construction, sans clone ni restauration.
+- **Moteur** : `exec(state, line)` renvoie `{ ok: true, state, output, move }` ou `{ ok: false, error }`. Il travaille sur un clone (`structuredClone`) et ne modifie jamais `state` : une commande ratée laisse l’état intact, sans restauration. `move` vaut `null` pour une commande sans effet (`switch`, `log`, push à jour…), qui ne compte pas comme manœuvre. Seules les `EngineError` deviennent `{ ok: false }` ; toute autre exception est un bogue et remonte.
 - **Session** : `game/` expose un réducteur pur `reduce(session, action)`. Les gestes et le terminal produisent tous deux des commandes Git, jamais des mutations directes.
 - **React** : `useReducer(reduce, …)` dans l’interface. Un contexte sera ajouté quand plusieurs composants éloignés liront la session (jalon 3), pas avant.
 - **Persistance** : `localStorage` en try/catch, clés versionnées (jalon 3).
@@ -37,6 +37,7 @@ Les dépendances interdites sont vérifiées par `oxlint` (`no-restricted-import
 
 - **Langue** : code, identifiants, commentaires et messages de commit en anglais ; contenu du jeu (stations, libellés) et documentation en français.
 - **Libellés** : tous les textes d’interface dans `src/ui/strings.ts`. Les textes des stations restent dans leurs données (`src/levels/`).
+  Exception : la sortie du terminal (messages du moteur) vit dans `src/engine/messages.ts`, car `engine` n’importe rien.
 - **Nommage** : `camelCase` pour les variables et fonctions, `PascalCase` pour les types et composants, fichiers de composants en `PascalCase.tsx`, autres fichiers en `kebab-case.ts`. Noms explicites : les abréviations du prototype (`ch`, `noM`, `diff`…) disparaissent.
 - **Commits** : [Conventional Commits](https://www.conventionalcommits.org/) en anglais, à l’impératif (`feat(engine): add rebase`, `chore: …`), comme le dernier commit du propriétaire. Les commits plus anciens, sans préfixe, ne sont pas réécrits.
 
