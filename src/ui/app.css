@@ -91,7 +91,7 @@
 .yard-deco { display: block; }
 .signs { width: 118px; padding-left: 14px; }
 .yard-mini .signs { width: 70px; padding-left: 0; }
-.sign-cell { height: calc(88px * var(--k)); display: flex; align-items: flex-start; padding-top: calc(18px * var(--k)); }
+.sign-cell { height: calc(88px * var(--k)); display: flex; align-items: flex-start; padding-top: calc(24px * var(--k)); }
 .sign {
   display: grid; gap: 1px; width: 100%; text-align: left; border: 0; border-radius: 4px; padding: 6px 9px;
   background: var(--ink); color: var(--on-ink);

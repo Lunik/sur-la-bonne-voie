@@ -1,10 +1,11 @@
 // Rolling stock families, one per station (see `train` in levels/stations.ts).
 // Side-on silhouettes after real French trains: nose profile, roof line, doors, window rhythm, bogies.
 // No logos, no wordmarks: colours come from theme tokens (`.t-<family>` rules in app.css).
-// Geometry contract shared with Yard.tsx: a car spans 0..70 × 0..34, a locomotive 0..100 × 0..34,
+// Geometry contract shared with Yard.tsx: a car spans x 0..70, a locomotive x 0..100; both run from
+// their roof (y -4..-7, the car matching its locomotive) down to y 34,
 // wheels sit on the rail at y = 42 (CAR_H + 8), the gap to the previous vehicle is -8..0.
 // Yard.tsx draws the livery stripe (y 24..28), the label (x 23..47, y 9..25) and the flags (above
-// y = -5) on top of the car, so details stay out of the label box and stay neutral in colour.
+// y = -11) on top of the car, so details stay out of the label box and stay neutral in colour.
 import { createContext, type ReactNode } from 'react';
 import type { Train } from '../game/index.ts';
 
@@ -90,8 +91,8 @@ const wiper = (x: number, y: number, l = 5) => <path className="wiper" d={`M${x}
 const gangway = (
   <>
     <rect className="coupler" x={-8} y={H - 12} width={8} height={3} />
-    <rect className="gangway" x={-8.5} y={5} width={9} height={22} rx={1} />
-    <path className="louvre" d="M-6 7 V25 M-4 7 V25 M-2 7 V25" />
+    <rect className="gangway" x={-8.5} y={-1} width={9} height={28} rx={1} />
+    <path className="louvre" d="M-6 1 V25 M-4 1 V25 M-2 1 V25" />
   </>
 );
 /** Screw coupling between two pairs of buffers. */
@@ -128,13 +129,13 @@ export const trains: Record<Train, Family> = {
   francilien: {
     car: (
       <>
-        <rect className="roof" x={4} y={-2.5} width={62} height={3.5} rx={1.75} />
-        <rect className="roof" x={26} y={-5} width={18} height={3} rx={1} />
-        <rect className="body" x={0.75} y={0.75} width={68.5} height={H - 1.5} rx={7} />
-        {door(3, 4, 8, 27)}
-        {door(59, 4, 8, 27)}
-        {pane(13, 5, 9, 13, 2.5)}
-        {pane(48, 5, 9, 13, 2.5)}
+        <rect className="roof" x={4} y={-7.5} width={62} height={3.5} rx={1.75} />
+        <rect className="roof" x={26} y={-10} width={18} height={3} rx={1} />
+        <rect className="body" x={0.75} y={-4.25} width={68.5} height={H + 3.5} rx={7} />
+        {door(3, -1, 8, 32)}
+        {door(59, -1, 8, 32)}
+        {pane(13, 0, 9, 16, 2.5)}
+        {pane(48, 0, 9, 16, 2.5)}
         {under(27, 43)}
         {bogie(15, 23)}
         {bogie(47, 55)}
@@ -167,13 +168,13 @@ export const trains: Record<Train, Family> = {
   regio2n: {
     car: (
       <>
-        <rect className="roof" x={2} y={-2} width={66} height={3} rx={1} />
-        <rect className="roof" x={6} y={-4.5} width={12} height={3} rx={1} />
-        <rect className="body" x={0.75} y={0.75} width={68.5} height={H - 1.5} rx={4} />
+        <rect className="roof" x={2} y={-8} width={66} height={3} rx={1} />
+        <rect className="roof" x={6} y={-10.5} width={12} height={3} rx={1} />
+        <rect className="body" x={0.75} y={-5.25} width={68.5} height={H + 4.5} rx={4} />
         <rect className="trim" x={1} y={29.5} width={68} height={3.5} />
-        {[3, 57].flatMap((x) => [pane(x, 3, 10, 7), pane(x, 13, 10, 7)])}
-        {door(15, 6, 6, 25)}
-        {door(49, 6, 6, 25)}
+        {[3, 57].flatMap((x) => [pane(x, -2, 10, 8), pane(x, 10, 10, 8)])}
+        {door(15, 3, 6, 28)}
+        {door(49, 3, 6, 28)}
         {under(26, 44, 3)}
         {bogie(8, 17)}
         {bogie(53, 62)}
@@ -209,12 +210,12 @@ export const trains: Record<Train, Family> = {
   regiolis: {
     car: (
       <>
-        <rect className="roof" x={18} y={-4} width={34} height={5} rx={2.5} />
-        <rect className="body" x={0.75} y={0.75} width={68.5} height={H - 1.5} rx={9} />
-        {door(4, 5, 7, 26)}
-        {door(59, 5, 7, 26)}
-        {pane(12.5, 6, 10, 11, 4)}
-        {pane(47.5, 6, 10, 11, 4)}
+        <rect className="roof" x={18} y={-9} width={34} height={5} rx={2.5} />
+        <rect className="body" x={0.75} y={-4.25} width={68.5} height={H + 3.5} rx={9} />
+        {door(4, 0, 7, 31)}
+        {door(59, 0, 7, 31)}
+        {pane(12.5, 1, 10, 14, 4)}
+        {pane(47.5, 1, 10, 14, 4)}
         {under(26, 44)}
         {bogie(14, 22)}
         {bogie(48, 56)}
@@ -247,12 +248,12 @@ export const trains: Record<Train, Family> = {
   agc: {
     car: (
       <>
-        <rect className="roof" x={6} y={-4} width={16} height={5} rx={1} />
-        <rect className="roof" x={48} y={-4} width={16} height={5} rx={1} />
-        <rect className="body" x={0.75} y={0.75} width={68.5} height={H - 1.5} rx={5} />
-        {door(3, 4, 7, 27)}
-        {door(60, 4, 7, 27)}
-        {[11.5, 17.5, 46.5, 52.5].map((x) => pane(x, 7, 5, 9, 1))}
+        <rect className="roof" x={6} y={-10} width={16} height={5} rx={1} />
+        <rect className="roof" x={48} y={-10} width={16} height={5} rx={1} />
+        <rect className="body" x={0.75} y={-5.25} width={68.5} height={H + 4.5} rx={5} />
+        {door(3, -1, 7, 32)}
+        {door(60, -1, 7, 32)}
+        {[11.5, 17.5, 46.5, 52.5].map((x) => pane(x, 1, 5, 12, 1))}
         {under(26, 44)}
         {bogie(13, 21)}
         {bogie(49, 57)}
@@ -289,19 +290,19 @@ export const trains: Record<Train, Family> = {
   corail: {
     car: (
       <>
-        <path className="body" d="M0.75 6 Q0.75 0.75 9 0.75 H61 Q69.25 0.75 69.25 6 V33.25 H0.75 Z" />
-        <path className="rib" d="M5 3 H65 M2 30 H68 M2 32 H68" />
-        {door(2.5, 4, 6, 27)}
-        {door(61.5, 4, 6, 27)}
-        {pane(10.5, 7, 7, 9, 1)}
-        {pane(52.5, 7, 7, 9, 1)}
+        <path className="body" d="M0.75 2 Q0.75 -3.25 9 -3.25 H61 Q69.25 -3.25 69.25 2 V33.25 H0.75 Z" />
+        <path className="rib" d="M5 -1 H65 M2 30 H68 M2 32 H68" />
+        {door(2.5, 0, 6, 31)}
+        {door(61.5, 0, 6, 31)}
+        {pane(10.5, 3, 7, 11, 1)}
+        {pane(52.5, 3, 7, 11, 1)}
         {under(22, 31, 3)}
         {under(39, 48, 3)}
         {bogie(9, 18)}
         {bogie(52, 61)}
       </>
     ),
-    link: <>{buffers}<rect className="gangway" x={-8.5} y={6} width={9} height={18} rx={1} /></>,
+    link: <>{buffers}<rect className="gangway" x={-8.5} y={2} width={9} height={22} rx={1} /></>,
     loco: {
       outline: 'M15 -4 H85 L95 10 L98 12 V34 H2 V12 L5 10 Z',
       nose: 92,
@@ -336,11 +337,11 @@ export const trains: Record<Train, Family> = {
   tgv: {
     car: (
       <>
-        <rect className="body" x={0.75} y={0.75} width={68.5} height={H - 1.5} rx={3} />
-        <rect className="trim" x={8} y={3} width={54} height={7} />
-        {[9.5, 18.5, 27.5, 36.5, 45.5, 54.5].map((x) => pane(x, 4, 6.5, 5, 1))}
-        {door(2, 4, 5, 26)}
-        {door(63, 4, 5, 26)}
+        <rect className="body" x={0.75} y={-4.25} width={68.5} height={H + 3.5} rx={3} />
+        <rect className="trim" x={8} y={-1} width={54} height={8} />
+        {[9.5, 18.5, 27.5, 36.5, 45.5, 54.5].map((x) => pane(x, 0, 6.5, 6, 1))}
+        {door(2, -1, 5, 31)}
+        {door(63, -1, 5, 31)}
         {under(24, 46, 3)}
         {bogie(9, 17)}
         {bogie(53, 61)}
@@ -376,11 +377,11 @@ export const trains: Record<Train, Family> = {
   'tgv-m': {
     car: (
       <>
-        <rect className="roof" x={3} y={-1.5} width={64} height={2.5} rx={1.25} />
-        <rect className="body" x={0.75} y={0.75} width={68.5} height={H - 1.5} rx={6} />
-        {[8.5, 48.5].flatMap((x) => [pane(x, 3.5, 13, 6, 3), pane(x, 13, 13, 6, 3)])}
-        {door(2, 10, 5, 21)}
-        {door(63, 10, 5, 21)}
+        <rect className="roof" x={3} y={-8.5} width={64} height={2.5} rx={1.25} />
+        <rect className="body" x={0.75} y={-6.25} width={68.5} height={H + 5.5} rx={6} />
+        {[8.5, 48.5].flatMap((x) => [pane(x, -3, 13, 7, 3), pane(x, 8, 13, 7, 3)])}
+        {door(2, 7, 5, 24)}
+        {door(63, 7, 5, 24)}
         {under(24, 46, 3)}
         {bogie(10, 18)}
         {bogie(52, 60)}
@@ -413,10 +414,10 @@ export const trains: Record<Train, Family> = {
     car: (
       <>
         <rect className="trim" x={0} y={29} width={70} height={4} rx={1} />
-        <rect className="body" x={2} y={0.75} width={66} height={28} rx={1} />
-        <path className="rib" d="M7 3 V21 M11 3 V21 M15 3 V21 M55 3 V21 M59 3 V21 M63 3 V21" />
-        {[2, 64].flatMap((x) => [0.75, 24.75].map((y) => <rect key={`${x},${y}`} className="trim" x={x} y={y} width={4} height={4} rx={0.5} />))}
-        <path className="rod" d="M19 4 V22 M21.5 4 V22" />
+        <rect className="body" x={2} y={-3.25} width={66} height={32} rx={1} />
+        <path className="rib" d="M7 -1 V21 M11 -1 V21 M15 -1 V21 M55 -1 V21 M59 -1 V21 M63 -1 V21" />
+        {[2, 64].flatMap((x) => [-3.25, 24.75].map((y) => <rect key={`${x},${y}`} className="trim" x={x} y={y} width={4} height={4} rx={0.5} />))}
+        <path className="rod" d="M19 0 V22 M21.5 0 V22" />
         {bogie(10, 18)}
         {bogie(52, 60)}
       </>

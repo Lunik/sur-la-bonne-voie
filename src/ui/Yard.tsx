@@ -9,7 +9,7 @@ const SLOT = 78; // car pitch
 const CAR_W = 70;
 const CAR_H = 34;
 const ROW = 88; // row pitch
-const BODY_Y = 22; // car body top within a row, leaves room for the flags
+const BODY_Y = 28; // car y = 0 within a row; bodies rise to y -7 to match their locomotive, flags sit above
 const RAIL_Y = BODY_Y + CAR_H + 9; // rail line within a row
 const PAD = 14;
 const LOCO_W = 100;
@@ -34,7 +34,7 @@ interface CarBodyProps {
   selected?: boolean;
 }
 
-/** One commit, drawn side-on in local coordinates (body from 0,0 to CAR_W,CAR_H; wheels sit on y = CAR_H + 9). */
+/** One commit, drawn side-on in local coordinates (body from x 0 to CAR_W, roof at y -4..-7 to CAR_H; wheels sit on y = CAR_H + 9). */
 export function CarBody({ repo, commit: c, coupled, gone, flags = [], selected }: CarBodyProps) {
   const raw = stripPrimes(c.label);
   const recreated = c.label.includes('′');
@@ -44,7 +44,7 @@ export function CarBody({ repo, commit: c, coupled, gone, flags = [], selected }
   const train = use(TrainContext);
   return (
     <g className={`car-body t-${train} ${kind}`}>
-      {selected && <rect className="sel" x={-5} y={-7} width={CAR_W + 10} height={CAR_H + 20} rx={8} />}
+      {selected && <rect className="sel" x={-5} y={-12} width={CAR_W + 10} height={CAR_H + 25} rx={8} />}
       {coupled && trains[train].link}
       {trains[train].car}
       {recreated ? (
@@ -60,7 +60,7 @@ export function CarBody({ repo, commit: c, coupled, gone, flags = [], selected }
       </text>
       {c.cargo && <rect className="cargo" x={7} y={8.5} width={7} height={7} rx={1} transform="rotate(45 10.5 12)" />}
       {gone && (
-        <g className="gone" transform={`translate(${CAR_W - 3} -2)`}>
+        <g className="gone" transform={`translate(${CAR_W - 3} -6)`}>
           <circle r={7} />
           <path d="M-2.6 2.6 L2.6 -2.6 M-1 -2.6 H2.6 V1" />
         </g>
@@ -107,7 +107,7 @@ export function LocoToken() {
 /** A lone car in its own small SVG: drag ghost, siding, legend. */
 export function CarToken({ repo, commit, gone, className = '' }: { repo: RepoState; commit: Commit; gone?: boolean; className?: string }) {
   return (
-    <svg className={`car-token ${className}`} viewBox={`-6 -12 ${CAR_W + 12} ${CAR_H + 24}`} aria-hidden="true">
+    <svg className={`car-token ${className}`} viewBox={`-6 -16 ${CAR_W + 12} ${CAR_H + 28}`} aria-hidden="true">
       <CarBody repo={repo} commit={commit} gone={gone} />
     </svg>
   );
