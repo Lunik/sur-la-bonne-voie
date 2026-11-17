@@ -1,9 +1,9 @@
 import { useReducer } from 'react';
-import { newSession, reduce } from '../game/index.ts';
+import { newSession, reduce, stations } from '../game/index.ts';
 import { strings } from './strings.ts';
 
 export function App() {
-  const [session, dispatch] = useReducer(reduce, undefined, () => newSession());
+  const [session, dispatch] = useReducer(reduce, undefined, () => newSession(stations[0]));
   return (
     <main>
       <h1>{strings.appTitle}</h1>
@@ -11,7 +11,7 @@ export function App() {
         onSubmit={(e) => {
           e.preventDefault();
           const input = e.currentTarget.elements.namedItem('cmd') as HTMLInputElement;
-          dispatch({ type: 'command', line: input.value });
+          dispatch({ type: 'step', step: input.value, message: '' });
           input.value = '';
         }}
       >

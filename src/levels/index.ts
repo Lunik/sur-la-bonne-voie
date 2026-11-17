@@ -146,19 +146,39 @@ export function isWon(station: PlayedStation, s: RepoState): boolean {
   return (station.rules ?? []).every((rule) => rule.check(s));
 }
 
+/** What the terminal shows for one command of a step. */
+export interface Echo {
+  command: string;
+  output: string[];
+}
+
+export type StepResult =
+  | { ok: true; state: RepoState; moves: number; transcript: Echo[] }
+  | { ok: false; command: string; error: string; transcript: Echo[] };
+
+/** Runs one step atomically: if any command is refused, the whole step is dropped. A nested step counts as one move at most. */
+export function runStep(state: RepoState, step: Step): StepResult {
+  const transcript: Echo[] = [];
+  let count = 0;
+  for (const command of Array.isArray(step) ? step : [step]) {
+    const result = exec(state, command);
+    if (!result.ok) return { ok: false, command, error: result.error, transcript };
+    transcript.push({ command, output: result.output });
+    state = result.state;
+    if (result.move) count++;
+  }
+  return { ok: true, state, moves: Array.isArray(step) ? Math.min(count, 1) : count, transcript };
+}
+
 /** Plays steps from the start board; throws on a refused command. */
 export function play(station: PlayedStation, steps: Step[]): { state: RepoState; moves: number } {
   let state = startBoard(station);
   let moves = 0;
   for (const step of steps) {
-    let count = 0;
-    for (const line of Array.isArray(step) ? step : [step]) {
-      const result = exec(state, line);
-      if (!result.ok) throw new Error(`« ${line} » refusée : ${result.error}`);
-      state = result.state;
-      if (result.move) count++;
-    }
-    moves += Array.isArray(step) ? Math.min(count, 1) : count;
+    const result = runStep(state, step);
+    if (!result.ok) throw new Error(`« ${result.command} » refusée : ${result.error}`);
+    state = result.state;
+    moves += result.moves;
   }
   return { state, moves };
 }
