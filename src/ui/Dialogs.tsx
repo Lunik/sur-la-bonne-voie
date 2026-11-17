@@ -4,17 +4,26 @@ import { strings } from './strings.ts';
 import { fr } from './typography.ts';
 import { Yard } from './Yard.tsx';
 
-/** Native modal dialog. Escape is ignored: each dialog has its own way out, and closing it bare would strand the player. */
+/** Native modal dialog. Escape is ignored: each dialog has its own way out, and closing it bare would strand the player.
+ *  Chrome may still close it on a repeated Escape, so `onClose` reopens it while it is mounted. */
 function Modal({ children, label }: { children: (titleId: string) => ReactNode; label?: string }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
     const d = ref.current;
-    if (d && !d.open) d.showModal();
+    if (d && !d.open) {
+      d.showModal();
+      d.querySelector<HTMLElement>('[data-primary]')?.focus();
+    }
     return () => d?.close();
   }, []);
   return (
-    <dialog ref={ref} className="win" aria-labelledby={label ? undefined : titleId} aria-label={label} onCancel={(e) => e.preventDefault()}>
+    <dialog ref={ref} className="win" aria-labelledby={label ? undefined : titleId} aria-label={label} onCancel={(e) => e.preventDefault()}
+      onClose={(e) => {
+        const d = e.currentTarget;
+        if (d.isConnected && !d.open) d.showModal();
+      }}
+    >
       {children(titleId)}
     </dialog>
   );
@@ -47,10 +56,10 @@ export function Victory({ session, stars, totalStars, onNext, onRetry }: Victory
           {lineDone && <p className="small">{strings.nextLine}<b>{lines[next.line - 1].title}</b>{strings.nextLineAfter}</p>}
           {last && <p className="small">{strings.networkTotal(totalStars, stations.length * 3)}</p>}
           <p className="small">{strings.learn}</p>
-          <div className="learn">{s.learn}</div>
+          <div className="learn">{fr(s.learn)}</div>
           <div className="row">
             {stars < 3 && <button className="btn quiet" type="button" onClick={onRetry}>{strings.aimThree}</button>}
-            <button className="btn" type="button" autoFocus onClick={onNext}>{last ? strings.backToStart : strings.nextStation}</button>
+            <button className="btn" type="button" data-primary onClick={onNext}>{last ? strings.backToStart : strings.nextStation}</button>
           </div>
         </>
       )}
@@ -77,7 +86,7 @@ export function Failure({ session, onUndo, onHint, onRetry }: FailureProps) {
           <div className="row">
             {canUndo && <button className="btn quiet" type="button" onClick={onUndo}>{strings.undoLast}</button>}
             <button className="btn quiet" type="button" onClick={onHint}>{strings.showHint}</button>
-            <button className="btn" type="button" autoFocus onClick={onRetry}>{strings.restart}</button>
+            <button className="btn" type="button" data-primary onClick={onRetry}>{strings.restart}</button>
           </div>
         </>
       )}
@@ -93,7 +102,7 @@ export function Ready({ seconds, brief, onGo }: { seconds: number; brief: string
           <h2 id={id}>{strings.readyTitle(seconds)}</h2>
           <p>{fr(brief)}</p>
           <p className="small">{strings.readyText}</p>
-          <div className="row"><button className="btn" type="button" autoFocus onClick={onGo}>{strings.takePost}</button></div>
+          <div className="row"><button className="btn" type="button" data-primary onClick={onGo}>{strings.takePost}</button></div>
         </>
       )}
     </Modal>

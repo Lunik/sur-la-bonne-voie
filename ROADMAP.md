@@ -103,7 +103,7 @@ But : reconstruire l’interface du prototype en composants React qui lisent l�
 
 Statut au 17/11/2026 : **fait, en attente de relecture** (branche `jalon-3`, partie de `jalon-2`). `src/game/` (session, gestes), `src/ui/` (composants, `layout.ts`, `typography.ts`, `progress.ts`, `strings.ts`, `app.css`), `src/theme/theme.css` (tous les jetons du prototype).
 
-Vérifications : tests `node:test` (chaque station gagnée en `par` au clavier par le réducteur, 15 stations gagnées par leurs gestes, échec de budget, chrono, pronostic, atomicité d’un geste) ; dans Chrome, une station de chaque type jouée (glisser, toucher puis toucher, clavier seul, pronostic, chrono, budget épuisé, voie de garage), clair et sombre, pas de défilement horizontal à 390 et 400 px, console sans erreur.
+Vérifications : tests `node:test` (chaque station gagnée en `par` au clavier par le réducteur, 15 stations gagnées par leurs gestes, échec de budget, chrono, pronostic, atomicité d’un geste) ; dans Chrome, stations gagnées pour six types sur sept (composition, règlement, pronostic, panne, clavier seul, contre la montre), le budget serré vérifié par son échec (fenêtre, annulation) ; gestes glisser, toucher puis toucher, soudure, voiture inverse, voie de garage ; Échap répété sans effet sur les fenêtres ; clair et sombre, pas de défilement horizontal à 390 et 400 px, console sans erreur.
 
 Écarts avec la liste ci-dessous :
 
