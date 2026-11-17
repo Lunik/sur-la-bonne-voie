@@ -47,17 +47,19 @@ Découpage proposé :
 Tâches :
 
 - [ ] Valider le découpage ci-dessus (ou l’ajuster) et le consigner dans `docs/architecture.md`.
-- [ ] Choisir le modèle d’état : `useReducer` + contexte React, état du moteur immuable (clone par commande).
+- [x] Choisir le modèle d’état : `useReducer` + contexte React, état du moteur immuable (clone par commande).
 - [ ] Choisir JavaScript + JSDoc ou TypeScript (voir Décisions ouvertes).
-- [ ] Fixer les conventions : langue du code (anglais) et du contenu (français), nommage, format des commits.
-- [ ] Ajouter un lint minimal (ESLint config React par défaut) dans la CI.
-- [ ] Prévoir l’internationalisation des textes : tous les libellés dans un seul module, même si seul le français existe.
+- [x] Fixer les conventions : langue du code (anglais) et du contenu (français), nommage, format des commits.
+- [x] Ajouter un lint minimal (oxlint, config React par défaut du modèle Vite) et `tsc` dans la CI.
+- [x] Prévoir l’internationalisation des textes : tous les libellés dans un seul module, même si seul le français existe.
 
 Critère de sortie : `npm test`, `npm run lint` et `npm run build` passent en CI ; le découpage est documenté et validé par le propriétaire.
 
 ## Jalon 1 — Moteur Git pur et testé
 
 But : réécrire le moteur du prototype (§ 4.1 du handoff) en module autonome, couvert par des tests unitaires. Livrable : `src/engine/` + ses tests, aucune interface.
+
+Statut au 17/11/2026 : **fait, en attente de relecture.** `src/engine/` (moteur + `messages.ts`) et tests par famille de commandes ; `prototype-stations.test.ts` rejoue les 21 stations (cibles, solutions = `par`, pronostics distincts).
 
 1. Modèle d’état : commits `{id, parents, label, origin, kind, cargo}`, voies, HEAD, `origin`, reflog, quai (`pending`), drapeaux `allow` / `noM` / `noForce`. Limites du prototype (3 voies, 8 positions de reflog) rendues configurables.
 2. Analyse de commande : `exec(state, ligne)` renvoie `{state, output}` ou une erreur, sans mutation (atomicité par construction, plus besoin de clone + restauration).

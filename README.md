@@ -5,13 +5,15 @@ Jeu pour apprendre Git en composant des trains. Réécriture en cours : voir `RO
 ```sh
 npm install
 npm run dev      # serveur de développement
+npm run lint     # oxlint + tsc (types)
 npm test         # node:test
 npm run build    # site statique dans dist/
 ```
 
-- `src/index.html` : page d’entrée (Vite `root: src`), montée par `src/main.jsx`.
+- `src/index.html` : page d’entrée (Vite `root: src`), montée par `src/main.tsx`.
+- `src/engine/`, `src/levels/`, `src/game/`, `src/ui/`, `src/theme/` : couches du jeu, voir `docs/architecture.md`.
 - `static/` : fichiers copiés tels quels dans `dist/` (images, favicon…).
 - `reference/artifact.html` : prototype initial (artifact, un seul fichier), gardé comme référence. Non construit.
 - `reference/handoff.md` : architecture, contenu et identité visuelle du prototype.
 
-Chaque push sur `main` lance tests + build, puis publie `dist/` sur GitHub Pages (`.github/workflows/ci.yml`).
+Chaque push sur `main` lance lint, tests et build, puis publie `dist/` sur GitHub Pages (`.github/workflows/ci.yml`).
