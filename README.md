@@ -15,5 +15,6 @@ npm run build    # site statique dans dist/
 - `static/` : fichiers copiés tels quels dans `dist/` (images, favicon…).
 - `reference/artifact.html` : prototype initial (artifact, un seul fichier), gardé comme référence. Non construit.
 - `reference/handoff.md` : architecture, contenu et identité visuelle du prototype.
+- `reference/sncf/` : visuels de trains SNCF servant de modèle aux silhouettes de `src/ui/trains.tsx`. Ignoré par git, non redistribuable.
 
 Chaque push sur `main` lance lint, tests et build, puis publie `dist/` sur GitHub Pages (`.github/workflows/ci.yml`).

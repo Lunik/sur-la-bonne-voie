@@ -4,7 +4,7 @@ import {
   type BoardTool, type CarRef, type Commit, type RepoState, type Session, type Step, type Toast,
 } from '../game/index.ts';
 import { strings } from './strings.ts';
-import { CarToken, Yard } from './Yard.tsx';
+import { CarToken, LocoToken, Yard } from './Yard.tsx';
 
 export interface BoardProps {
   session: Session;
@@ -188,7 +188,7 @@ function Legend({ line }: { line: number }) {
   if (line >= 4) items.push(['colleague', sample({ label: 'G', origin: 'collègue' }), l.colleague], ['revert', sample({ label: '↩C', kind: 'revert' }), l.revert]);
   return (
     <ul className="legend">
-      <li><span className="legend-head" aria-hidden="true" />{l.head}</li>
+      <li><LocoToken />{l.head}</li>
       {items.map(([key, c, text]) => <li key={key}><CarToken repo={legendRepo} commit={c} />{text}</li>)}
       {line >= 4 && <li><CarToken repo={legendRepo} commit={sample({ label: 'A' })} gone />{l.gone}</li>}
     </ul>

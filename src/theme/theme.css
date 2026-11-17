@@ -38,6 +38,18 @@
   --l-coll: #c4407e;
   --l-merge: #6d4fd8;
   --l-rev: #8a939b;
+  /* Train families (ui/trains.tsx): bodies stay pale so the branch stripe stays the loud colour;
+     the locomotive carries the family accent. */
+  --t-trim: #2a333b;
+  --t-vent: #8a939b;
+  --t-idf: #3c9ad6;
+  --t-ter: #24539f;
+  --t-agc: #b8263a;
+  --t-steel: #d3d8dc;
+  --t-sybic: #3d5f8f;
+  --t-silver: #e2e5e8;
+  --t-pearl: #f6f4ef;
+  --t-pearl-band: #9aa2a9;
 
   /* Network lines */
   --n1: #2f5bd3; --n2: #d4610f; --n3: #128a6c; --n4: #6d4fd8; --n5: #c9372c;
@@ -58,6 +70,7 @@
   --line: #2a343e; --line-2: #3a4652; --on-ink: #12181e; --focus: #f2b705;
   --rail: #7d8891; --sleeper: #34404b; --lane-drop: rgba(242, 183, 5, .14);
   --car: #e9edf0; --car-edge: #9aa5ae; --roof: #b9c2c9; --glass: #24313d; --bogie: #57636e; --rev-car: #3b4957;
+  --t-trim: #24313d; --t-steel: #c4cad0; --t-silver: #d6dbdf; --t-pearl: #ebe9e4;
   --n1: #6a8ff0; --n2: #f08a3c; --n3: #3cc29e; --n4: #9d84f2; --n5: #ef6a5f; --on-line: #12181e;
   --good: #4fc982; --danger: #f06a5e;
   color-scheme: dark;

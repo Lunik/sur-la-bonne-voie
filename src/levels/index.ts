@@ -4,6 +4,9 @@ import { ancestors, build, exec, sig, stripPrimes, tipOf, type Commit, type Matc
 /** Gestures and buttons of the board (jalon 3). */
 export type Tool = 'commit' | 'branch' | 'rebase' | 'merge' | 'cherry-pick' | 'squash' | 'revert' | 'push' | 'pull' | 'pull-rebase' | 'recover';
 
+/** Rolling stock drawn for a station (ui/trains.tsx). */
+export type Train = 'francilien' | 'regio2n' | 'regiolis' | 'agc' | 'corail' | 'tgv' | 'tgv-m' | 'infra';
+
 export interface Line {
   title: string;
   /** Gated engine commands this line teaches; a station allows those of its line and every line before. */
@@ -62,6 +65,8 @@ interface Common {
   line: number;
   title: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
+  /** Rolling stock of the station: suburban on line 1, regional on 2, Corail on 3, TGV on 4, works train on 5. */
+  train: Train;
   brief: string;
   /** Shown after the win: the Git commands (or idea) to remember. */
   learn: string;

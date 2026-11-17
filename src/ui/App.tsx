@@ -10,6 +10,7 @@ import { Post } from './Post.tsx';
 import { loadProgress, saveProgress, type Progress } from './progress.ts';
 import { DepartureBoard, Header, NetworkMap } from './Screens.tsx';
 import { strings } from './strings.ts';
+import { TrainContext } from './trains.tsx';
 
 const isOpen = (p: Progress, i: number) => p.unlockAll || i === 0 || (p.stars[stations[i - 1].id] ?? 0) > 0;
 /** Prediction boards are shuffled here, outside the reducer, so it stays pure. */
@@ -91,61 +92,63 @@ export function App() {
   return (
     <div className="wrap">
       <Header />
-      <NetworkMap
-        current={station}
-        stars={shown.stars}
-        isOpen={(i) => isOpen(shown, i)}
-        unlockAll={shown.unlockAll}
-        onUnlockAll={(on) => setProgress((p) => ({ ...p, unlockAll: on }))}
-        onPick={load}
-      />
-      <DepartureBoard session={session} />
-      <Board
-        key={`board-${loads}`}
-        session={session}
-        tool={tool}
-        gesturesOff={gesturesOff}
-        selected={selected}
-        onSelect={setSelected}
-        run={run}
-        toast={toast}
-      />
-      {station.type === 'predict' && <Prediction session={session} onGuess={(i) => dispatch({ type: 'guess', option: i })} />}
-      <Post
-        key={`post-${loads}`}
-        session={session}
-        tool={tool}
-        onTool={(t) => {
-          setTool(t);
-          setSelected(null);
-        }}
-        keyboardMode={keyboardMode}
-        onKeyboardMode={(on) => {
-          setKeyboardMode(on);
-          setSelected(null);
-          toast({ tone: 'info', text: on ? strings.toastKeyboardOn : strings.toastKeyboardOff });
-        }}
-        gesturesOff={gesturesOff}
-        hintShown={hintShown}
-        onHint={() => setHintShown((h) => !h)}
-        onUndo={undo}
-        onRestart={() => load(index)}
-        run={run}
-        toast={shownToast}
-      />
-      {status === 'ready' && station.type !== 'predict' && (
-        <Ready seconds={station.timeLimit!} brief={station.brief} onGo={() => dispatch({ type: 'start' })} />
-      )}
-      {status === 'failed' && <Failure session={session} onUndo={undo} onHint={() => load(index, { hint: true })} onRetry={() => load(index)} />}
-      {status === 'won' && victoryShown && (
-        <Victory
-          session={session}
-          stars={starsOf(session)}
-          totalStars={Object.values(shown.stars).reduce((a, b) => a + b, 0)}
-          onNext={() => load(index === stations.length - 1 ? 0 : index + 1)}
-          onRetry={() => load(index)}
+      <TrainContext value={station.train}>
+        <NetworkMap
+          current={station}
+          stars={shown.stars}
+          isOpen={(i) => isOpen(shown, i)}
+          unlockAll={shown.unlockAll}
+          onUnlockAll={(on) => setProgress((p) => ({ ...p, unlockAll: on }))}
+          onPick={load}
         />
-      )}
+        <DepartureBoard session={session} />
+        <Board
+          key={`board-${loads}`}
+          session={session}
+          tool={tool}
+          gesturesOff={gesturesOff}
+          selected={selected}
+          onSelect={setSelected}
+          run={run}
+          toast={toast}
+        />
+        {station.type === 'predict' && <Prediction session={session} onGuess={(i) => dispatch({ type: 'guess', option: i })} />}
+        <Post
+          key={`post-${loads}`}
+          session={session}
+          tool={tool}
+          onTool={(t) => {
+            setTool(t);
+            setSelected(null);
+          }}
+          keyboardMode={keyboardMode}
+          onKeyboardMode={(on) => {
+            setKeyboardMode(on);
+            setSelected(null);
+            toast({ tone: 'info', text: on ? strings.toastKeyboardOn : strings.toastKeyboardOff });
+          }}
+          gesturesOff={gesturesOff}
+          hintShown={hintShown}
+          onHint={() => setHintShown((h) => !h)}
+          onUndo={undo}
+          onRestart={() => load(index)}
+          run={run}
+          toast={shownToast}
+        />
+        {status === 'ready' && station.type !== 'predict' && (
+          <Ready seconds={station.timeLimit!} brief={station.brief} onGo={() => dispatch({ type: 'start' })} />
+        )}
+        {status === 'failed' && <Failure session={session} onUndo={undo} onHint={() => load(index, { hint: true })} onRetry={() => load(index)} />}
+        {status === 'won' && victoryShown && (
+          <Victory
+            session={session}
+            stars={starsOf(session)}
+            totalStars={Object.values(shown.stars).reduce((a, b) => a + b, 0)}
+            onNext={() => load(index === stations.length - 1 ? 0 : index + 1)}
+            onRetry={() => load(index)}
+          />
+        )}
+      </TrainContext>
     </div>
   );
 }

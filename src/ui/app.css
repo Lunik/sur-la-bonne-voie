@@ -131,9 +131,22 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .car-body.merge { --liv: var(--l-merge); }
 .car-body.revert { --liv: var(--l-rev); }
 .car-body .body, .loco-body .body { fill: var(--car); stroke: var(--car-edge); stroke-width: 1.25; }
-.car-body .roof { fill: var(--roof); }
+.roof { fill: var(--roof); }
 .car-body .pane, .loco-body .pane { fill: var(--glass); }
 .car-body .stripe { fill: var(--liv); }
+/* Train families: body tint and accent, before the revert rules so a revert car stays dark. */
+.trim { fill: var(--t-trim); }
+.vent { fill: var(--t-vent); opacity: .55; }
+.rib { fill: none; stroke: var(--car-edge); stroke-width: 1; }
+.t-francilien { --acc: var(--t-idf); }
+.t-regiolis { --acc: var(--t-ter); }
+.t-agc { --acc: var(--t-agc); }
+.t-corail { --acc: var(--t-sybic); }
+.t-tgv-m { --acc: var(--t-pearl-band); }
+.accent { fill: var(--acc); }
+.t-corail .body { fill: var(--t-steel); }
+.loco-body.t-corail .body, .t-tgv .body { fill: var(--t-silver); }
+.t-tgv-m .body { fill: var(--t-pearl); }
 .car-body .label { font: 600 16px var(--f-display); fill: var(--car-ink); text-anchor: middle; dominant-baseline: central; }
 .car-body .label.long { font-size: 12.5px; }
 .car-body .sub { font-size: 10px; fill: var(--car-ink); opacity: .65; }
@@ -181,7 +194,7 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .legend { list-style: none; margin: -14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 14px; color: var(--muted); }
 .legend li { display: inline-flex; align-items: center; gap: 8px; }
 .legend .car-token { width: 40px; }
-.legend-head { display: inline-block; width: 30px; height: 14px; border: 1px solid var(--car-edge); border-radius: 3px 9px 3px 3px; background: linear-gradient(90deg, var(--car) 68%, var(--brand) 68%); }
+.loco-token { display: block; width: 46px; overflow: visible; }
 
 /* ---------- Prediction ---------- */
 .prono { display: grid; gap: 14px; }

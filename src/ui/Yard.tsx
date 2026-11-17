@@ -1,7 +1,8 @@
-import { useId, useLayoutEffect, useRef, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
+import { use, useId, useLayoutEffect, useRef, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
 import { ancestors, stripPrimes, type Commit, type RepoState } from '../game/index.ts';
 import { lastColumn, layout, livery, type Row } from './layout.ts';
 import { strings } from './strings.ts';
+import { TrainContext, trains } from './trains.tsx';
 
 // Board geometry in SVG units (1 unit = 1 px at scale 1; CSS `--k` scales the whole board).
 const SLOT = 78; // car pitch
@@ -40,14 +41,12 @@ export function CarBody({ repo, commit: c, coupled, gone, flags = [], selected }
   const kind = c.kind === 'merge' ? 'merge' : c.kind === 'revert' ? 'revert' : `c${livery(repo, c.origin)}`;
   const flagWidths = flags.map((f) => f.name.length * 6.1 + 10);
   const flagX = flagWidths.map((_, i) => flagWidths.slice(0, i).reduce((sum, w) => sum + w + 3, 0));
+  const train = use(TrainContext);
   return (
-    <g className={`car-body ${kind}`}>
+    <g className={`car-body t-${train} ${kind}`}>
       {selected && <rect className="sel" x={-5} y={-7} width={CAR_W + 10} height={CAR_H + 20} rx={8} />}
       {coupled && <rect className="coupler" x={CAR_W - SLOT} y={CAR_H - 12} width={SLOT - CAR_W} height={3} />}
-      <rect className="roof" x={9} y={-3} width={CAR_W - 18} height={4} rx={1.5} />
-      <rect className="body" x={0.75} y={0.75} width={CAR_W - 1.5} height={CAR_H - 1.5} rx={6} />
-      <rect className="pane" x={6} y={7} width={9} height={10} rx={2} />
-      <rect className="pane" x={CAR_W - 15} y={7} width={9} height={10} rx={2} />
+      {trains[train].car}
       {recreated ? (
         <>
           <rect className="stripe" x={1} y={23} width={CAR_W - 2} height={2} />
@@ -59,9 +58,6 @@ export function CarBody({ repo, commit: c, coupled, gone, flags = [], selected }
       <text className={`label${raw.length > 2 ? ' long' : ''}`} x={CAR_W / 2} y={17}>
         {c.kind === 'merge' ? <>M<tspan className="sub" dx={1}>+{stripPrimes(repo.commits[c.parents[1]].label)}</tspan></> : c.label}
       </text>
-      <rect className="frame" x={7} y={CAR_H} width={18} height={2} rx={1} />
-      <rect className="frame" x={CAR_W - 25} y={CAR_H} width={18} height={2} rx={1} />
-      {[11, 21, CAR_W - 21, CAR_W - 11].map((cx) => <circle key={cx} className="wheel" cx={cx} cy={CAR_H + 4.5} r={3.6} />)}
       {c.cargo && <rect className="cargo" x={7} y={8.5} width={7} height={7} rx={1} transform="rotate(45 10.5 12)" />}
       {gone && (
         <g className="gone" transform={`translate(${CAR_W - 3} -2)`}>
@@ -79,29 +75,32 @@ export function CarBody({ repo, commit: c, coupled, gone, flags = [], selected }
   );
 }
 
-/** HEAD: a modern locomotive, nose to the right, its front painted signal yellow. Same baseline as a car. */
+/** HEAD: the station's locomotive (or cab car), nose to the right, its front painted signal yellow. Same baseline as a car. */
 export function LocoBody() {
   const clip = useId();
-  const outline = 'M0 4 Q0 -6 9 -6 H58 C76 -6 90 8 97 24 Q100 31 95 34 H0 Z';
+  const train = use(TrainContext);
+  const { outline, nose, roof, paint, front } = trains[train].loco;
   return (
-    <g className="loco-body">
+    <g className={`loco-body t-${train}`}>
       <rect className="coupler" x={CAR_W - SLOT} y={CAR_H - 12} width={SLOT - CAR_W} height={3} />
-      <path className="panto" d="M22 -6 L30 -14 L38 -6 M26 -14 H34" />
+      {roof}
       <path className="body" d={outline} />
       <g clipPath={`url(#${clip})`}>
-        <rect className="nose" x={74} y={-8} width={30} height={44} />
-        <rect className="nose" x={0} y={25} width={100} height={4} />
+        {paint}
+        <rect className="nose" x={nose} y={-10} width={110 - nose} height={50} />
       </g>
       <defs><clipPath id={clip}><path d={outline} /></clipPath></defs>
-      <path className="pane" d="M64 0 H70 C78 1 84 6 88 13 H64 Z" />
-      <rect className="pane" x={7} y={4} width={10} height={10} rx={2} />
-      <rect className="pane" x={21} y={4} width={10} height={10} rx={2} />
-      <text className="head" x={47} y={20}>HEAD</text>
-      <circle className="lamp" cx={94} cy={30} r={1.8} />
-      <rect className="frame" x={8} y={CAR_H} width={20} height={2} rx={1} />
-      <rect className="frame" x={62} y={CAR_H} width={20} height={2} rx={1} />
-      {[13, 23, 67, 77].map((cx) => <circle key={cx} className="wheel" cx={cx} cy={CAR_H + 4.5} r={3.6} />)}
+      {front}
     </g>
+  );
+}
+
+/** The locomotive alone, for the legend. */
+export function LocoToken() {
+  return (
+    <svg className="loco-token" viewBox={`-2 -16 ${LOCO_W + 4} ${CAR_H + 26}`} aria-hidden="true">
+      <LocoBody />
+    </svg>
   );
 }
 
