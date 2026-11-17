@@ -1,0 +1,27 @@
+/* Design tokens, same names and values as reference/artifact.html.
+   Jalon 3 ports the full :root set (liveries, board, cars). */
+:root {
+  --bg: #f3f4f6;
+  --ink: #0f1b2a;
+  --brand: #ffc21a;
+  --f-display: "Inter Tight", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0a0f16; --ink: #e8edf3; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0a0f16; --ink: #e8edf3; color-scheme: dark; }
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--bg);
+  color: var(--ink);
+  font: 15.5px/1.55 var(--f-body);
+}
+h1 { font-family: var(--f-display); }
+pre, input { font-family: var(--f-mono); }

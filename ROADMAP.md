@@ -47,11 +47,11 @@ Découpage proposé :
 Tâches :
 
 - [ ] Valider le découpage ci-dessus (ou l’ajuster) et le consigner dans `docs/architecture.md`.
-- [ ] Choisir le modèle d’état : `useReducer` + contexte React, état du moteur immuable (clone par commande).
+- [x] Choisir le modèle d’état : `useReducer` + contexte React, état du moteur immuable (clone par commande).
 - [ ] Choisir JavaScript + JSDoc ou TypeScript (voir Décisions ouvertes).
-- [ ] Fixer les conventions : langue du code (anglais) et du contenu (français), nommage, format des commits.
-- [ ] Ajouter un lint minimal (ESLint config React par défaut) dans la CI.
-- [ ] Prévoir l’internationalisation des textes : tous les libellés dans un seul module, même si seul le français existe.
+- [x] Fixer les conventions : langue du code (anglais) et du contenu (français), nommage, format des commits.
+- [x] Ajouter un lint minimal (oxlint, config React par défaut du modèle Vite) et `tsc` dans la CI.
+- [x] Prévoir l’internationalisation des textes : tous les libellés dans un seul module, même si seul le français existe.
 
 Critère de sortie : `npm test`, `npm run lint` et `npm run build` passent en CI ; le découpage est documenté et validé par le propriétaire.
 
