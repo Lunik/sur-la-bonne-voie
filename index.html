@@ -1,0 +1,988 @@
+<title>Gare de triage</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Identité : signalétique ferroviaire contemporaine. Fond neutre, surfaces blanches, une seule couleur de marque (jaune signal = HEAD),
+   des livrées par voie. Mise en page : en-tête illustré, plan du réseau, tableau des départs, plateau, poste d’aiguillage. */
+:root{
+  --bg:#f3f4f6; --surface:#ffffff; --sunk:#eef1f4; --ink:#0f1b2a; --muted:#5b6676; --line:#e3e7ec; --line2:#cfd6de;
+  --track:#a3adba; --slab:#eaedf1;
+  --brand:#ffc21a; --on-brand:#0f1b2a; --star:#d99a00;
+  --car:#f2f4f7; --car-edge:#c4ccd6; --roof:#dfe4ea; --glass:#18232f; --led:#ffc21a; --bogie:#3b4653; --gangway:#cbd2da; --lamp:#fff4cc;
+  --rev-car:#2a3441; --rev-roof:#212a35; --rev-edge:#4a5768;
+  --l-main:#1f5fd6; --l-feat:#f07a1a; --l-hot:#0fa287; --l-coll:#d23f7a; --l-merge:#7a4fe0; --l-rev:#8a95a3; --danger:#e0413a;
+  --n1:#1f5fd6; --n2:#d8670c; --n3:#0c8f77; --n4:#7a4fe0; --n5:#d23a33; --on-line:#ffffff;
+  --board:#0d1726; --board2:#16243a; --board-chip:#24344d; --on-board:#eef3fa; --board-text:#c5d0df; --board-muted:#8a9bb4;
+  --good:#16834a; --bad:#c9362f; --okd:#5fd08f; --kod:#ff8a80;
+  --f-display:"Inter Tight","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --slot:82px; --rowh:100px; --gap:24px; --car-h:46px; --loco-w:104px; --loco-h:63px;
+  --shadow:0 1px 2px rgba(15,27,42,.05),0 10px 30px rgba(15,27,42,.06);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a0f16; --surface:#111923; --sunk:#0d141d; --ink:#e8edf3; --muted:#97a3b3; --line:#1e2935; --line2:#2d3a4a;
+  --track:#5b697a; --slab:#19232e; --car:#e4e8ed; --car-edge:#98a3b0; --roof:#c9d0d8; --gangway:#8d98a6; --bogie:#29323d; --star:#ffc21a;
+  --n1:#5b8cf0; --n2:#f39a3d; --n3:#35c4a2; --n4:#a17ff2; --n5:#f06a62; --on-line:#0a0f16;
+  --good:#4fc982; --bad:#f07068; --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 30px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a0f16; --surface:#111923; --sunk:#0d141d; --ink:#e8edf3; --muted:#97a3b3; --line:#1e2935; --line2:#2d3a4a;
+  --track:#5b697a; --slab:#19232e; --car:#e4e8ed; --car-edge:#98a3b0; --roof:#c9d0d8; --gangway:#8d98a6; --bogie:#29323d; --star:#ffc21a;
+  --n1:#5b8cf0; --n2:#f39a3d; --n3:#35c4a2; --n4:#a17ff2; --n5:#f06a62; --on-line:#0a0f16;
+  --good:#4fc982; --bad:#f07068; --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 30px rgba(0,0,0,.25); color-scheme:dark}
+@media (max-width:640px){:root{--slot:64px; --rowh:92px; --gap:20px; --car-h:42px; --loco-w:86px; --loco-h:56px}}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:15.5px/1.55 var(--f-body);-webkit-font-smoothing:antialiased;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 72px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;gap:20px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-.015em}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+code{font-family:var(--f-mono);font-size:.86em}
+.small{font-size:13px;color:var(--muted)}
+
+/* ---------- En-tête ---------- */
+.top{display:grid;gap:22px;padding-top:26px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:34px;height:34px;flex:none}
+.logo .lb{fill:var(--ink)} .logo .lr{fill:none;stroke:var(--brand);stroke-width:3.2;stroke-linecap:round} .logo .ld{fill:var(--brand)}
+.brand-name{font:700 17px var(--f-display);letter-spacing:-.01em}
+.brand-sub{font:500 12px var(--f-body);color:var(--muted);padding-left:10px;border-left:1px solid var(--line2)}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:28px;align-items:center}
+@media (max-width:880px){.hero{grid-template-columns:minmax(0,1fr)}}
+.hero h1{font-size:clamp(2.05rem,4.4vw,3.15rem);font-weight:700;letter-spacing:-.03em}
+.hero h1 em{font-style:normal;background:linear-gradient(transparent 62%,var(--brand) 62% 90%,transparent 90%)}
+.hero-txt{display:grid;gap:14px}
+.hero-txt p{color:var(--muted);font-size:1.05rem;max-width:52ch}
+.facts{list-style:none;display:flex;flex-wrap:wrap;gap:8px 28px;padding:0;margin:4px 0 0;font-size:13px;color:var(--muted)}
+.facts b{display:block;font:700 26px/1.1 var(--f-display);color:var(--ink);letter-spacing:-.02em}
+
+/* ---------- Plan du réseau ---------- */
+.net{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 20px;display:grid;gap:14px;box-shadow:var(--shadow)}
+.net-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px}
+.net-head h2{font-size:1.1rem}
+.net-head .tot{font:600 13px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.lines{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px 28px}
+.line{display:grid;gap:6px;min-width:0}
+.lname{font:600 14px var(--f-display);display:flex;align-items:center;gap:8px}
+.lname b{background:var(--lc);color:var(--on-line);border-radius:6px;padding:2px 7px;font:700 12px var(--f-display)}
+.stations{display:flex;gap:2px;position:relative;overflow-x:auto;padding:2px 0 4px;width:fit-content;max-width:100%}
+.stations::before{content:"";position:absolute;left:32px;right:32px;top:17px;height:4px;background:var(--lc);border-radius:2px}
+.station{position:relative;flex:0 0 64px;display:grid;justify-items:center;gap:2px;background:none;border:none;padding:2px 0;min-height:44px}
+.station .dot{width:34px;height:34px;border-radius:50%;background:var(--surface);border:4px solid var(--lc);display:grid;place-items:center;font:700 13px var(--f-display);color:var(--ink);z-index:1;transition:transform .15s}
+.station:hover:not(:disabled) .dot{transform:scale(1.08)}
+.station.done .dot{background:var(--lc);color:var(--on-line)}
+.station.cur .dot{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--ink)}
+.station .sn{font:600 10px var(--f-body);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.station .ss{font-size:11px;color:var(--star);letter-spacing:.06em;line-height:1}
+.station.locked{cursor:not-allowed}
+.station.locked .dot{border-color:var(--line2);color:var(--line2);background:var(--sunk)}
+.station.locked .ss{color:var(--muted);font:500 10px var(--f-body)}
+.unlock{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
+.unlock input{width:18px;height:18px;accent-color:var(--ink)}
+
+/* ---------- Tableau des départs ---------- */
+.board{background:var(--board);color:var(--on-board);border-radius:18px;padding:20px 22px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px 28px}
+@media (max-width:780px){.board{grid-template-columns:minmax(0,1fr)}}
+.board .lbl{font:600 11px var(--f-body);letter-spacing:.14em;color:var(--board-muted);text-transform:uppercase}
+.board h2{font-size:1.8rem;font-weight:700;color:var(--on-board)}
+.board .brief{color:var(--board-text);max-width:60ch}
+.tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{background:var(--brand);color:var(--on-brand);font:600 12px var(--f-body);padding:4px 10px;border-radius:20px}
+.tag.alt{background:var(--board-chip);color:var(--on-board)}
+.lamps{display:inline-flex;gap:3px;align-items:flex-end;height:18px;margin-left:8px}
+.lamps i{width:5px;border-radius:1.5px;background:var(--board-chip)}
+.lamps i:nth-child(1){height:6px}.lamps i:nth-child(2){height:9px}.lamps i:nth-child(3){height:12px}.lamps i:nth-child(4){height:15px}.lamps i:nth-child(5){height:18px}
+.lamps i.on{background:var(--brand)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 12.5px var(--f-mono);color:var(--on-board);border:1px solid var(--board-chip);border-radius:20px;padding:4px 11px;font-variant-numeric:tabular-nums}
+.chip#clock{color:var(--brand);border-color:var(--brand)}
+.chip.hot,.chip#clock.hot{color:var(--board);background:var(--kod);border-color:var(--kod)}
+.goal{background:var(--board2);border-radius:14px;padding:12px 14px;display:grid;gap:8px;min-width:0;align-content:start;overflow-x:auto}
+.rules{list-style:none;margin:0;padding:0;display:grid;gap:7px;font-size:14.5px}
+.rules li{display:grid;grid-template-columns:20px 1fr;gap:8px;color:var(--board-text);align-items:start}
+.rules .ck{width:18px;height:18px;margin-top:2px;border-radius:50%;border:1.5px solid var(--board-muted);display:grid;place-items:center;font:700 11px/1 var(--f-body);color:var(--board)}
+.rules li.ok{color:var(--on-board)}
+.rules li.ok .ck{background:var(--okd);border-color:var(--okd)}
+.orders{margin:0;padding-left:1.5em;font:14px/1.8 var(--f-mono);color:var(--brand)}
+
+/* ---------- Plateau ---------- */
+.yard{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:44px 18px 20px;overflow-x:auto;display:grid;gap:var(--gap);position:relative;box-shadow:var(--shadow)}
+.voie{display:flex;align-items:center;gap:14px;width:max-content;min-width:100%}
+.sign{width:118px;flex:none;min-height:48px;border-radius:10px;border:none;background:var(--ink);color:var(--surface);padding:8px 11px;
+  font:600 14px/1.15 var(--f-display);text-align:left;display:grid;gap:4px;align-content:center;position:relative;z-index:3;overflow-wrap:anywhere;transition:transform .15s}
+.sign small{font:500 10.5px/1.2 var(--f-body);color:color-mix(in srgb,var(--surface) 68%,transparent)}
+.sign small em{font-style:normal;font-weight:700;background:var(--brand);color:var(--on-brand);border-radius:4px;padding:1px 5px;margin-right:3px}
+button.sign:hover{transform:translateY(-1px)}
+.sign.head{box-shadow:inset 4px 0 0 var(--brand)}
+.voie.remote .sign{background:transparent;color:var(--ink);border:1.5px dashed var(--line2)}
+.voie.remote .sign small{color:var(--muted)}
+.track{position:relative;height:var(--rowh);flex:none}
+.rail{position:absolute;right:0;bottom:10px;height:8px;border-top:2px solid var(--track);border-bottom:2px solid var(--track);background:var(--slab);z-index:0}
+.voie.remote .rail{border-top-style:dashed;border-bottom-style:dashed}
+.fork{position:absolute;bottom:14px;overflow:visible;z-index:0;pointer-events:none}
+.fork path{fill:none;vector-effect:non-scaling-stroke}
+.fork .r1{stroke:var(--track);stroke-width:8} .fork .r2{stroke:var(--slab);stroke-width:4}
+.bumper{position:absolute;bottom:10px;width:9px;height:26px;border-radius:3px;background:var(--bogie);z-index:1}
+.bumper::after{content:"";position:absolute;top:3px;left:1.5px;width:6px;height:6px;border-radius:50%;background:var(--danger)}
+
+/* Voiture (un commit) */
+.wagon{--liv:var(--l-main);position:absolute;bottom:29px;width:calc(var(--slot) - 8px);height:var(--car-h);border-radius:10px 10px 5px 5px;
+  background:linear-gradient(var(--roof) 0 6px,var(--car) 6px);border:1px solid var(--car-edge);z-index:2;touch-action:none;user-select:none;-webkit-user-select:none}
+.wagon.c0{--liv:var(--l-main)} .wagon.c1{--liv:var(--l-feat)} .wagon.c2{--liv:var(--l-hot)} .wagon.c3{--liv:var(--l-coll)} .wagon.cm{--liv:var(--l-merge)}
+.wagon.cr{--liv:var(--l-rev);--car:var(--rev-car);--roof:var(--rev-roof);border-color:var(--rev-edge)}
+.wagon .gl{position:absolute;left:5px;right:5px;top:10px;height:19px;border-radius:4px;background:var(--glass);display:grid;place-items:center;overflow:hidden}
+.wagon .gl::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 0 58%,rgba(255,255,255,.09) 58% 72%,transparent 72%)}
+.wagon b{position:relative;z-index:1;font:700 14px/1 var(--f-mono);color:var(--led);letter-spacing:.02em;text-shadow:0 0 8px color-mix(in srgb,var(--led) 45%,transparent);white-space:nowrap}
+.wagon b small{font-size:.72em;opacity:.85}
+.wagon.long b{font-size:11px}
+.wagon .lv{position:absolute;left:-1px;right:-1px;bottom:6px;height:5px;background:var(--liv)}
+.wagon.fresh .lv{height:8px;background:linear-gradient(var(--liv) 0 3px,transparent 3px 5px,var(--liv) 5px 8px)}
+.wagon .bg{position:absolute;bottom:-8px;width:22px;height:7px;border-radius:2px 2px 4px 4px;background:var(--bogie)}
+.wagon .bg.l{left:6px} .wagon .bg.r{right:6px}
+.wagon .bg::before,.wagon .bg::after{content:"";position:absolute;bottom:-4px;width:8px;height:8px;border-radius:50%;background:var(--bogie);box-shadow:0 0 0 1.5px var(--slab)}
+.wagon .bg::before{left:0} .wagon .bg::after{right:0}
+.wagon:not(.first)::before{content:"";position:absolute;left:-9px;top:12px;width:8px;height:20px;border-radius:2px;background:repeating-linear-gradient(90deg,var(--gangway) 0 2px,var(--car-edge) 2px 3px)}
+.wagon .pl{position:absolute;top:-6px;left:7px;width:11px;height:11px;transform:rotate(45deg);background:var(--danger);border:2px solid var(--surface);border-radius:2px;z-index:3}
+.wagon .dep{position:absolute;top:-8px;right:-7px;width:18px;height:18px;border-radius:50%;background:var(--ink);display:grid;place-items:center;z-index:3}
+.wagon .dep svg{width:10px;height:10px;fill:none;stroke:var(--surface);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.wagon.grab{cursor:grab}
+.wagon.sel{outline:3px solid var(--brand);outline-offset:3px}
+.flag{position:absolute;bottom:calc(100% + 9px);left:-1px;display:flex;gap:3px;white-space:nowrap;z-index:4}
+.flag span{background:var(--ink);color:var(--surface);font:600 10px/1 var(--f-mono);padding:3px 6px;border-radius:5px}
+.flag span.r{background:var(--surface);color:var(--ink);border:1px dashed var(--ink);padding:2px 5px}
+
+/* Motrice (HEAD) */
+.loco{position:absolute;bottom:18px;width:var(--loco-w);height:var(--loco-h);z-index:2;pointer-events:none}
+.loco svg{width:100%;height:100%;overflow:visible;display:block}
+.loco .mb{fill:var(--car);stroke:var(--car-edge);stroke-width:1;vector-effect:non-scaling-stroke}
+.loco .mr{fill:var(--roof)} .loco .ml{fill:var(--brand)} .loco .mg{fill:var(--glass)} .loco .mh{fill:var(--lamp)}
+.loco .mt{fill:var(--led);font:700 9.5px var(--f-mono);letter-spacing:.08em}
+.loco .mw{fill:var(--bogie)} .loco .mwh{fill:var(--bogie);stroke:var(--slab);stroke-width:1.5}
+.loco .mp{fill:none;stroke:var(--bogie);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round} .loco .mgw{fill:var(--gangway)}
+
+.voie.drop-ok .rail{background:color-mix(in srgb,var(--brand) 50%,var(--slab))}
+.voie.drop-ok .sign{box-shadow:0 0 0 3px var(--brand)}
+.ghost{position:fixed;z-index:50;pointer-events:none;transform:translate(-50%,-60%) rotate(-3deg);filter:drop-shadow(0 12px 18px rgba(15,27,42,.28))}
+.ghost .wagon{position:relative;bottom:auto}
+
+/* Illustration d’en-tête */
+.yard.deco{padding:46px 22px 24px;gap:var(--gap);background:var(--surface)}
+.deco .sign,.deco .flag{display:none}
+.deco .voie{gap:0}
+
+/* Plateaux miniatures (objectif, pronostics) */
+.yard.mini{zoom:.62;--slab:#1d2b41;--track:#4d5f7a;--ink:var(--on-board);--surface:var(--board);
+  background:transparent;border:none;box-shadow:none;border-radius:0;padding:34px 0 4px;overflow:visible}
+.mini .sign{width:96px;min-height:40px}
+.mini .sign small{display:none}
+.mini .wagon b{font-size:17px} .mini .wagon.long b{font-size:13px}
+
+/* Voie de garage, légende */
+.casse{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--sunk);border:1px dashed var(--line2);border-radius:14px;padding:10px 14px}
+.casse p{font:500 13px var(--f-body);color:var(--muted);margin-right:4px}
+.gw{min-width:54px;min-height:40px;border-radius:7px;border:1px solid var(--line2);background:var(--glass);opacity:.45;padding:2px 8px;filter:grayscale(.6)}
+.gw b{font:700 13px var(--f-mono);color:var(--led)}
+.gw.can{opacity:.8;filter:none}
+.gw.can:hover{opacity:1}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.sw{--liv:var(--l-main);display:inline-block;width:30px;height:17px;border-radius:5px 5px 3px 3px;background:var(--car);border:1px solid var(--car-edge);position:relative;flex:none}
+.sw::after{content:"";position:absolute;left:-1px;right:-1px;bottom:3px;height:3px;background:var(--liv)}
+.sw.fr{--liv:var(--l-feat)} .sw.fr::after{height:7px;background:linear-gradient(var(--liv) 0 2px,transparent 2px 4.5px,var(--liv) 4.5px)}
+.sw.m{--liv:var(--l-merge)} .sw.co{--liv:var(--l-coll)}
+.sw.rv{--liv:var(--l-rev);background:var(--rev-car);border-color:var(--rev-edge)}
+.sw.hz::before{content:"";position:absolute;top:-4px;left:4px;width:8px;height:8px;transform:rotate(45deg);background:var(--danger);border:1.5px solid var(--surface)}
+.sw.dp::before{content:"";position:absolute;top:-5px;right:-5px;width:11px;height:11px;border-radius:50%;background:var(--ink)}
+.sw.hd{width:38px;border-radius:5px 14px 3px 3px;--liv:var(--brand)}
+
+/* Pronostic */
+.prono{display:grid;gap:12px}
+.prono h3{font-size:1.25rem}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:14px}
+.opt{background:var(--board);border:2px solid transparent;border-radius:16px;padding:12px 14px 14px;text-align:left;display:grid;gap:6px;min-width:0;color:var(--on-board);transition:transform .15s,border-color .15s;overflow:hidden}
+.opt:hover:not(:disabled){transform:translateY(-2px);border-color:var(--brand)}
+.opt .ol{font:600 11px var(--f-body);letter-spacing:.14em;color:var(--board-muted);text-transform:uppercase}
+.opt.no{border-color:var(--kod);opacity:.7;cursor:not-allowed}
+.opt.yes{border-color:var(--okd)}
+.opt .why{font-size:13.5px;color:var(--kod)}
+.opt .yard.mini{overflow-x:auto}
+
+/* Poste d’aiguillage */
+.post{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:840px){.post{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start;min-width:0;box-shadow:var(--shadow)}
+.panel h3{font-size:1.05rem;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tool{border:1px solid var(--line2);background:var(--surface);border-radius:12px;padding:10px 12px;min-height:60px;text-align:left;display:grid;grid-template-columns:24px 1fr;gap:1px 10px;align-items:center;position:relative;transition:border-color .15s,background-color .15s}
+.tool:hover{border-color:var(--ink)}
+.tool svg,.btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tool svg{grid-row:span 2}
+.tool b{font:600 14px/1.2 var(--f-display)}
+.tool small{font:500 11px var(--f-mono);color:var(--muted)}
+.tool.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.tool.on small{color:color-mix(in srgb,var(--surface) 65%,transparent)}
+.nv{position:absolute;top:-8px;right:8px;background:var(--brand);color:var(--on-brand);font:700 9.5px var(--f-body);padding:2px 6px;border-radius:5px;letter-spacing:.06em}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--ink);background:var(--ink);color:var(--surface);border-radius:12px;padding:9px 14px;min-height:44px;font:600 14.5px var(--f-display);position:relative;transition:transform .1s}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:18px;height:18px}
+.btn small{font:500 11px var(--f-mono);opacity:.65}
+.btn.quiet{background:var(--surface);color:var(--ink);border-color:var(--line2)}
+.btn.quiet:hover{border-color:var(--ink)}
+.btn .nv{top:-9px;right:-6px}
+.toast{min-height:1.5em;font-weight:600}
+.toast.good{color:var(--good)} .toast.bad{color:var(--bad)} .toast.info{color:var(--muted)}
+.switch-lbl{display:flex;align-items:center;gap:8px;font:500 13px var(--f-body);color:var(--muted);cursor:pointer}
+.switch-lbl input{width:18px;height:18px;accent-color:var(--ink)}
+.quai{border:1px dashed var(--brand);background:color-mix(in srgb,var(--brand) 10%,var(--surface));border-radius:10px;padding:8px 12px;font-size:14px}
+.term{background:var(--board);color:var(--board-text);border-radius:12px;padding:12px 14px;font:12.5px/1.65 var(--f-mono);min-height:9.5em;max-height:14em;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.term .p{color:var(--brand)} .term .e{color:var(--kod)} .term .o{color:var(--okd)}
+.cli{display:flex;align-items:center;gap:8px;background:var(--board);border-radius:12px;padding:6px 8px 6px 12px}
+.cli span{font:700 14px var(--f-mono);color:var(--brand);white-space:nowrap}
+.cli input{flex:1;min-width:0;background:transparent;border:none;color:var(--on-board);font:14px var(--f-mono);min-height:36px}
+.cli input::placeholder{color:var(--board-muted)}
+.cli button{border:none;background:var(--brand);color:var(--on-brand);border-radius:8px;font:700 13px var(--f-body);padding:6px 12px;min-height:36px}
+.help{font:12px var(--f-mono);color:var(--muted);display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.help code{background:var(--sunk);border:1px solid var(--line);border-radius:6px;padding:3px 7px;cursor:pointer}
+.help code:hover{border-color:var(--ink)}
+.hint{border-left:3px solid var(--brand);padding:4px 0 4px 12px;color:var(--muted);font-size:.95rem}
+
+/* Fenêtres */
+.win{position:fixed;inset:0;background:color-mix(in srgb,var(--board) 55%,transparent);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:grid;place-items:center;z-index:60;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.win .card{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:26px;max-width:460px;width:100%;display:grid;gap:12px;text-align:center;
+  box-shadow:0 30px 80px rgba(10,15,22,.35)}
+.win h2{font-size:2rem;font-weight:700}
+.win h2.ko{color:var(--bad)}
+.win .stars{font-size:2.3rem;letter-spacing:.12em;color:var(--star)}
+.win .learn{background:var(--board);color:var(--brand);border-radius:12px;padding:12px 14px;font:13px/1.65 var(--f-mono);text-align:left;white-space:pre-wrap}
+.win .row{justify-content:center}
+
+@media (prefers-reduced-motion:no-preference){
+  .wagon.new{animation:slidein .6s cubic-bezier(.2,.8,.2,1)}
+  .yard.leave .voie.go .wagon,.yard.leave .voie.go .loco{transition:transform 1.6s cubic-bezier(.55,0,.85,.4);transform:translateX(130vw)}
+  .shake{animation:shake .35s}
+  .chip.hot{animation:blink 1s steps(2) infinite}
+}
+@media (max-width:640px){
+  .yard.deco{zoom:.64;padding:40px 16px 20px;overflow:hidden}
+  .station{flex-basis:56px} .stations::before{left:28px;right:28px}
+  .sign{width:90px;font-size:13px;padding:7px 8px} .voie{gap:10px}
+  .yard{padding:40px 12px 16px}
+}
+@keyframes slidein{from{transform:translateX(-36px);opacity:0}to{transform:none;opacity:1}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes blink{50%{opacity:.55}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect class="lb" width="40" height="40" rx="10"/><path class="lr" d="M8 28h24"/><path class="lr" d="M8 28c11 0 12-13 24-13"/><circle class="ld" cx="32" cy="15" r="3.4"/></svg>
+      <span class="brand-name">Gare de triage</span><span class="brand-sub">Apprendre Git en jouant</span>
+    </div>
+    <div class="hero">
+      <div class="hero-txt">
+        <h1>Apprenez Git en <em>composant des trains</em>.</h1>
+        <p>Chaque voiture est un commit, chaque voie une branche, et la motrice, c’est HEAD. Du premier commit au grand départ du vendredi, avec des pronostics, des pannes, des budgets serrés et des départs contre la montre.</p>
+        <ul class="facts"><li><b>5</b>lignes</li><li><b>21</b>stations</li><li><b>7</b>types de défis</li></ul>
+      </div>
+      <div class="yard deco" id="hero-art" aria-hidden="true"></div>
+    </div>
+  </header>
+
+  <nav class="net" aria-label="Plan du réseau">
+    <div class="net-head"><h2>Plan du réseau</h2><span class="tot" id="tot"></span>
+      <label class="unlock"><input type="checkbox" id="unlock"> Tout débloquer (pour tester)</label></div>
+    <div class="lines" id="net"></div>
+  </nav>
+
+  <section class="board" aria-label="Tableau des départs">
+    <div style="display:grid;gap:9px;align-content:start;min-width:0">
+      <p class="lbl" id="lv-where"></p>
+      <h2 id="lv-name"></h2>
+      <div class="tags" id="lv-tags"></div>
+      <p class="brief" id="lv-brief"></p>
+      <div class="chips" id="lv-chips"></div>
+    </div>
+    <div class="goal" id="goal"></div>
+  </section>
+
+  <div class="yard" id="yard" aria-label="Plateau des voies"></div>
+  <div class="casse" id="casse" hidden></div>
+  <div class="legend" id="legend"></div>
+
+  <section class="prono" id="prono" hidden>
+    <h3>Votre pronostic&nbsp;: quel plateau après ces ordres&nbsp;?</h3>
+    <div class="opts" id="opts"></div>
+    <p class="toast" id="prono-toast" aria-live="polite"></p>
+  </section>
+
+  <section class="post" id="post">
+    <div class="panel">
+      <h3>Poste d’aiguillage <label class="switch-lbl" id="expert-wrap"><input type="checkbox" id="expert"> Mode clavier seul</label></h3>
+      <div id="gestures" style="display:grid;gap:12px">
+        <div class="tools" id="tools" role="group" aria-label="Outil de manœuvre"></div>
+        <p class="small" id="tool-help"></p>
+        <div class="row" id="buttons"></div>
+      </div>
+      <p class="quai" id="quai" hidden></p>
+      <div class="row">
+        <button class="btn quiet" type="button" id="b-undo">Annuler</button>
+        <button class="btn quiet" type="button" id="b-reset">Recommencer</button>
+        <button class="btn quiet" type="button" id="b-hint">Indice</button>
+      </div>
+      <p class="hint" id="hint" hidden></p>
+      <p class="toast" id="toast" aria-live="polite"></p>
+    </div>
+    <div class="panel">
+      <h3>Terminal <span class="small" id="moves">0 manœuvre</span></h3>
+      <div class="term" id="term" aria-live="polite"></div>
+      <form class="cli" id="cli"><span>$ git</span><input id="cmd" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="commit" aria-label="Commande git"><button type="submit">Entrée</button></form>
+      <p class="help" id="cli-help"></p>
+    </div>
+  </section>
+</div>
+<div class="win" id="win" hidden></div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NB=' ';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const LET='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const raw=l=>l.replace(/′/g,'');
+
+/* ================= Moteur Git miniature ================= */
+function fresh(){ return {c:{},b:{},order:[],head:'main',next:0,n:0,remote:{},rl:{},pending:null,cargo:{},allow:null,noM:false,noForce:false}; }
+const clone=s=>JSON.parse(JSON.stringify(s));
+function mk(s,parents,label,origin,kind,cargo){ const id='k'+(s.n++); s.c[id]={id,parents,label,origin,kind:kind||'n',cargo:cargo||null}; return id; }
+function setTip(s,b,id){ s.b[b]=id; (s.rl[b]=s.rl[b]||[]).unshift(id); }
+function anc(s,id){ const set=new Set(),st=[id]; while(st.length){ const x=st.pop(); if(!x||set.has(x)) continue; set.add(x); st.push(...s.c[x].parents);} return set; }
+function fp(s,id){ const out=[]; let x=id; while(x){ out.push(x); x=s.c[x].parents[0]; } return out; }
+function reach(s){ const r=new Set(); [...Object.values(s.b),...Object.values(s.remote)].forEach(t=>{ if(t) anc(s,t).forEach(x=>r.add(x)); }); return r; }
+function orphans(s){ const r=reach(s), p=new Set(s.pending||[]); return Object.keys(s.c).filter(id=>!r.has(id)&&!p.has(id)); }
+function normLabel(l){ return l.toUpperCase().replace(/['’`]/g,'′'); }
+function findLabel(s,l){ const L=normLabel(l), r=reach(s); const c=Object.values(s.c).filter(c=>c.label===L); return (c.find(x=>r.has(x.id))||c[c.length-1])?.id; }
+function refTip(s,x){
+  if(!x) throw new Error('fatal: précisez une voie.');
+  if(x in s.b) return s.b[x];
+  if(x.startsWith('origin/') && s.remote[x.slice(7)]) return s.remote[x.slice(7)];
+  throw new Error(`fatal: voie inconnue « ${x} ».`);
+}
+function resolve(s,ref){
+  let m;
+  if((m=ref.match(/^(.+)~(\d+)$/))){ let x=resolve(s,m[1]); for(let i=0;i<+m[2];i++) x=x&&s.c[x].parents[0]; return x; }
+  if((m=ref.match(/^(.+)\^$/))){ const x=resolve(s,m[1]); return x&&s.c[x].parents[0]; }
+  if((m=ref.match(/^(.+)@\{(\d+)\}$/))){ const b=m[1]==='HEAD'?s.head:m[1]; return (s.rl[b]||[])[+m[2]]; }
+  if(ref==='HEAD') return s.b[s.head];
+  if(ref in s.b) return s.b[ref];
+  if(ref.startsWith('origin/')) return s.remote[ref.slice(7)];
+  return findLabel(s,ref);
+}
+function doMerge(s,tX,name,out){
+  const H=s.head,tH=s.b[H];
+  if(anc(s,tH).has(tX)){ out.push('Already up to date.'); return null; }
+  if(anc(s,tX).has(tH)){ setTip(s,H,tX); out.push(`Fast-forward · ${H} avance jusqu’à ${s.c[tX].label}, sans voiture de jonction`); return 'merge'; }
+  if(s.noM) throw new Error('Panne de la grue de jonction : seuls les fast-forward passent. Raccrochez d’abord la voie (rebase).');
+  const id=mk(s,[tH,tX],'M',H,'m'); setTip(s,H,id);
+  out.push(`Merge made by the 'ort' strategy · voiture de jonction M (relie ${s.c[tX].label})`); return 'merge';
+}
+function doRebase(s,tX,name,out){
+  const H=s.head,tH=s.b[H],aX=anc(s,tX);
+  if(anc(s,tH).has(tX)){ out.push(`Current branch ${H} is up to date.`); return null; }
+  const list=fp(s,tH).filter(id=>!aX.has(id)).reverse().filter(id=>s.c[id].kind!=='m');
+  if(!list.length){ setTip(s,H,tX); out.push(`Fast-forward · ${H} rejoint ${name}`); return 'rebase'; }
+  let base=tX; const made=[];
+  for(const id of list){ const o=s.c[id]; base=mk(s,[base],o.label+'′',o.origin,o.kind==='r'?'r':'n',o.cargo); made.push(s.c[base].label); }
+  setTip(s,H,base);
+  out.push(`Successfully rebased refs/heads/${H} · voitures recréées : ${made.join(', ')}`);
+  out.push(`  (les anciennes ${list.map(i=>s.c[i].label).join(', ')} partent sur la voie de garage)`);
+  return 'rebase';
+}
+function exec(s,line){
+  const t=line.trim().replace(/^git\s+/,'').split(/\s+/).filter(Boolean);
+  let cmd=t[0]; const out=[]; let kind=null;
+  if(!cmd) return {out,kind};
+  if(cmd==='checkout') cmd='switch';
+  const gate=c=>{ if(s.allow && !s.allow.includes(c)) throw new Error(`git ${c} n’est pas encore au programme : il s’apprend plus loin sur le réseau.`); };
+  const H=s.head, tH=s.b[H];
+  switch(cmd){
+    case 'commit':{
+      gate('commit'); let label,origin=H,cargo;
+      if(s.pending&&s.pending.length){ label=s.pending.map(id=>raw(s.c[id].label)).join(''); cargo=s.pending.map(id=>s.c[id].cargo).find(Boolean); origin=s.c[s.pending[0]].origin;
+        out.push(`[${H} ${label}] ${s.pending.length} voitures soudées en un seul`); s.pending=null; }
+      else { label=LET[s.next++]; cargo=s.cargo[label]; out.push(`[${H} ${label}] nouvelle voiture accrochée`); }
+      const id=mk(s,tH?[tH]:[],label,origin,'n',cargo); setTip(s,H,id); if(!s.order.includes(H)) s.order.push(H); kind='commit'; break; }
+    case 'branch':{
+      gate('branch'); const x=t[1]; if(!x) throw new Error('fatal: donnez un nom à la nouvelle voie.');
+      if(x in s.b) throw new Error(`fatal: la voie « ${x} » existe déjà.`);
+      if(!/^[a-z0-9][a-z0-9_-]{0,14}$/i.test(x)) throw new Error('fatal: nom de voie invalide (lettres, chiffres, tirets).');
+      if(s.order.length>=3) throw new Error('Le plateau n’a que trois voies.');
+      s.b[x]=tH; s.rl[x]=[tH]; s.order.push(x); out.push(`Voie « ${x} » posée au niveau de la voiture ${s.c[tH].label}.`); kind='branch'; break; }
+    case 'switch':{
+      if(t[1]==='-c'||t[1]==='-b'){ const r=exec(s,'branch '+(t[2]||'')); out.push(...r.out); s.head=t[2]; out.push(`Switched to a new branch '${t[2]}'`); kind='branch'; break; }
+      if(t[1]&&t[1].startsWith('origin/')) throw new Error('Le quai distant se consulte, il ne se conduit pas.');
+      if(!t[1]||!(t[1] in s.b)) throw new Error(`fatal: voie inconnue « ${t[1]||''} ». Pour en créer une : switch -c nom.`);
+      if(t[1]===H){ out.push(`Already on '${H}'`); break; }
+      s.head=t[1]; out.push(`Switched to branch '${t[1]}' · la motrice change de voie`); break; }
+    case 'merge':{
+      gate('merge'); const x=t[1]; const tX=refTip(s,x); if(x===H) throw new Error('fatal: impossible de fusionner une voie avec elle-même.');
+      kind=doMerge(s,tX,x,out); break; }
+    case 'rebase':{
+      gate('rebase'); const x=t[1]; const tX=refTip(s,x); if(x===H) throw new Error('fatal: impossible de rebaser une voie sur elle-même.');
+      kind=doRebase(s,tX,x,out); break; }
+    case 'cherry-pick':{
+      gate('cherry-pick'); const l=t[1]; if(!l) throw new Error('fatal: précisez la voiture à copier (ex. D).');
+      const id=findLabel(s,l); if(!id) throw new Error(`fatal: voiture « ${normLabel(l)} » introuvable.`);
+      if(anc(s,tH).has(id)) throw new Error(`La voiture ${s.c[id].label} est déjà sur la voie ${H}.`);
+      if(s.c[id].kind==='m') throw new Error('Copier une voiture de jonction : pas sur ce réseau.');
+      const o=s.c[id]; const n=mk(s,[tH],raw(o.label)+'′',o.origin,o.kind==='r'?'r':'n',o.cargo); setTip(s,H,n);
+      out.push(`[${H} ${s.c[n].label}] copie de la voiture ${o.label}`); kind='cherry-pick'; break; }
+    case 'reset':{
+      gate('reset'); let mode='mixed', ref='HEAD';
+      t.slice(1).forEach(a=>{ if(a==='--soft'||a==='--hard'||a==='--mixed') mode=a.slice(2); else ref=a; });
+      const target=resolve(s,ref); if(!target) throw new Error(`fatal: référence « ${ref} » introuvable.`);
+      if(target===tH){ out.push(`HEAD is now at ${s.c[tH].label}`); break; }
+      const before=reach(s);
+      if(mode==='hard') s.pending=null;
+      else { const ch=fp(s,tH), i=ch.indexOf(target); s.pending = i>0 ? ch.slice(0,i).reverse().concat(s.pending||[]) : null; }
+      setTip(s,H,target);
+      const after=reach(s), pend=new Set(s.pending||[]);
+      const lost=[...before].filter(x=>!after.has(x)&&!pend.has(x));
+      out.push(`HEAD is now at ${s.c[target].label}`);
+      if(s.pending&&s.pending.length) out.push(`  ${s.pending.map(id=>s.c[id].label).join(', ')} dételées, en attente sur le quai (commit pour les souder)`);
+      if(lost.length) out.push(`  ${lost.map(id=>s.c[id].label).join(', ')} partent sur la voie de garage`);
+      kind='reset'; break; }
+    case 'revert':{
+      gate('revert'); const l=t[1]; if(!l) throw new Error('fatal: précisez la voiture à inverser (ex. C).');
+      const id=findLabel(s,l); if(!id) throw new Error(`fatal: voiture « ${normLabel(l)} » introuvable.`);
+      if(!anc(s,tH).has(id)) throw new Error(`La voiture ${s.c[id].label} n’est pas sur la voie ${H}.`);
+      if(s.c[id].kind!=='n') throw new Error('Cette voiture ne s’inverse pas sur ce réseau.');
+      const n=mk(s,[tH],'↩'+raw(s.c[id].label),H,'r'); setTip(s,H,n);
+      out.push(`[${H} ${s.c[n].label}] voiture inverse : annule l’effet de ${s.c[id].label}`); kind='revert'; break; }
+    case 'push':{
+      gate('push'); const force=t.includes('--force')||t.includes('-f'); const r=s.remote[H];
+      if(r===tH){ out.push('Everything up-to-date'); break; }
+      if(r && !anc(s,tH).has(r)){
+        if(!force) throw new Error(`! [rejected] ${H} -> ${H} (fetch first) · origin/${H} a des voitures que vous n’avez pas. Intégrez-les (pull) avant de pousser.`);
+        if(s.noForce) throw new Error('Refusé : des voyageurs sont à bord de ce train. Le push forcé est interdit sur ce réseau.');
+        out.push('+ forced update · des voyageurs ont perdu leurs voitures !');
+      }
+      s.remote[H]=tH; out.push(`To origin · ${H} -> ${H} · le train part !`); kind='push'; break; }
+    case 'pull':{
+      gate('pull'); const r=s.remote[H]; if(!r) throw new Error(`Aucun quai distant pour la voie ${H}.`);
+      out.push(`From origin · origin/${H} récupéré`);
+      kind = (t.includes('--rebase') ? doRebase(s,r,'origin/'+H,out) : doMerge(s,r,'origin/'+H,out)) ? 'pull' : null; break; }
+    case 'fetch': out.push('Le quai distant est déjà affiché sur le plateau : rien de nouveau.'); break;
+    case 'reflog':{
+      const b=t.slice(1).find(x=>x!=='show')||H;
+      (s.rl[b]||[]).slice(0,8).forEach((id,i)=>out.push(`${b}@{${i}}: ${s.c[id].label}${i===0?'   (position actuelle)':''}`)); break; }
+    case 'log':{
+      fp(s,tH).forEach(id=>{ const c=s.c[id]; const n=Object.keys(s.b).filter(b=>s.b[b]===id).map(b=>b===H?'HEAD -> '+b:b).concat(Object.keys(s.remote).filter(b=>s.remote[b]===id).map(b=>'origin/'+b));
+        out.push(`${c.label}${n.length?'  ('+n.join(', ')+')':''}`); }); break; }
+    case 'status':{
+      out.push(`On branch ${H}`); if(s.pending&&s.pending.length) out.push(`Voitures dételées sur le quai : ${s.pending.map(id=>s.c[id].label).join(', ')}`);
+      const r=s.remote[H]; if(r){ const a=anc(s,tH), b=anc(s,r); const ahead=[...a].filter(x=>!b.has(x)).length, behind=[...b].filter(x=>!a.has(x)).length;
+        out.push(ahead||behind?`Votre voie : ${ahead} voiture(s) d’avance, ${behind} de retard sur origin/${H}`:`À jour avec origin/${H}`); } break; }
+    case 'help': out.push('Commandes : '+(s.allow||['commit','branch','merge','rebase','cherry-pick','reset','revert','push','pull']).join(' · ')+' · switch · log · status · reflog'); break;
+    case '_coll':{ const label=LET[s.next++]; const id=mk(s,[s.remote.main],label,'collègue','n',s.cargo[label]); s.remote.main=id; break; }
+    default: throw new Error(`git: « ${cmd} » n’est pas une commande de ce poste. Tapez help.`);
+  }
+  return {out,kind};
+}
+function build(cmds,cargo){ const s=fresh(); s.cargo=cargo||{}; cmds.forEach(c=>exec(s,c)); return s; }
+function chainSig(s,tip,mode){ return fp(s,tip).reverse().map(id=>{ const c=s.c[id];
+  if(c.kind==='m') return 'M('+raw(s.c[c.parents[1]].label)+')';
+  if(mode==='shape') return c.origin+(c.label.includes('′')?'′':'');
+  return mode==='raw'?raw(c.label):c.label; }).join('-'); }
+function tipOf(s,n){ return n.startsWith('origin/')?s.remote[n.slice(7)]:s.b[n]; }
+function sig(s,names,mode){ return names.map(n=>{ const t=tipOf(s,n); return n+':'+(t?chainSig(s,t,mode):'∅'); }).join(' | '); }
+
+/* Règles */
+const onRef=(s,r)=>{ const t=tipOf(s,r); return t?[...anc(s,t)]:[]; };
+const contains=(s,r,L)=>onRef(s,r).some(id=>s.c[id].kind==='n' && raw(s.c[id].label).split('').includes(L));
+const noCargo=(s,r,c)=>!onRef(s,r).some(id=>s.c[id].cargo===c);
+const noMerge=(s,r)=>!onRef(s,r).some(id=>s.c[id].kind==='m');
+const reverted=(s,r,L)=>onRef(s,r).some(id=>s.c[id].kind==='r' && raw(s.c[id].label)==='↩'+L);
+const same=s=>!!s.remote.main && s.remote.main===s.b.main;
+
+/* ================= Réseau ================= */
+const ALLOW=[['commit','branch'],['merge','rebase'],['cherry-pick','reset'],['push','pull','revert'],[]];
+const TOOLSET=[['commit','branch'],['rebase','merge'],['cherry','souder'],['revert','push','pull','pullr'],['recover']];
+const CH=[
+  {nom:'Le dépôt',col:'var(--n1)',cli:['commit','switch -c feature','switch main','log']},
+  {nom:'Les jonctions',col:'var(--n2)',cli:['merge feature','switch feature','rebase main','log']},
+  {nom:'Le tri',col:'var(--n3)',cli:['cherry-pick D','reset --soft HEAD~3','commit','status']},
+  {nom:'Les grandes lignes',col:'var(--n4)',cli:['push','pull --rebase','revert C','status']},
+  {nom:'Les accidents',col:'var(--n5)',cli:['reflog','reset --hard feature@{1}','cherry-pick F','push']}
+];
+CH.forEach((c,i)=>{ c.allow=ALLOW.slice(0,i+1).flat(); c.tools=TOOLSET.slice(0,i+1).flat(); });
+const TOOLS={rebase:{k:'drag',b:'Déplacer la rame',s:'git rebase'},merge:{k:'drag',b:'Atteler la voie',s:'git merge'},cherry:{k:'drag',b:'Copier une voiture',s:'git cherry-pick'},
+  souder:{k:'tap',b:'Souder des voitures',s:'reset --soft + commit'},revert:{k:'tap',b:'Voiture inverse',s:'git revert'}};
+const BTNS={commit:['Ajouter une voiture','commit'],branch:['Nouvelle voie','switch -c'],push:['Pousser','push'],pull:['Tirer','pull'],pullr:['Tirer en rebasant','pull --rebase']};
+const TAG={compo:'Composition',regles:'Règlement',prono:'Pronostic',budget:'Budget serré',clavier:'Clavier seul',chrono:'Contre la montre',panne:'Panne'};
+const SHORT={compo:'compo',regles:'règles',prono:'prono',budget:'budget',clavier:'clavier',chrono:'chrono',panne:'panne'};
+
+const A2=['commit','commit'];
+const FORK=['commit','commit','switch -c feature','commit','commit','switch main','commit'];
+const TRI=['commit','commit','switch -c feature','commit','commit','commit','switch main'];
+const LEVELS=[
+  /* ---- Ligne 1 · Le dépôt ---- */
+  {ch:0,nom:'Première voiture',type:'compo',diff:1,start:A2,target:[...A2,'commit'],par:1,nouveau:['commit'],
+   brief:'La motrice (HEAD) attend sur la voie main. Accrochez-lui un nouvelle voiture.',
+   hint:'Bouton « Ajouter une voiture », ou tapez commit.',learn:'git commit'},
+  {ch:0,nom:'Voie de service',type:'compo',diff:1,start:A2,target:[...A2,'switch -c feature','commit'],par:2,nouveau:['branch'],
+   brief:'Posez une voie feature, conduisez-y la motrice et accrochez-y une voiture. La voie main ne doit pas bouger.',
+   hint:'« Nouvelle voie », puis « Ajouter une voiture ». Au clavier : switch -c feature, puis commit.',learn:'git switch -c feature\ngit commit'},
+  {ch:0,nom:'Aller-retour',type:'compo',diff:2,match:'shape',start:A2,target:[...A2,'switch -c feature','commit','commit','switch main','commit'],par:4,
+   brief:'Deux voitures sur une voie feature, puis une voiture sur main. Pour changer de voie, touchez sa pancarte&nbsp;: la motrice y va.',
+   hint:'Nouvelle voie, deux voitures, touchez la pancarte main, une voiture. Au clavier : switch -c feature, commit, commit, switch main, commit.',learn:'git switch -c feature\ngit commit\ngit commit\ngit switch main\ngit commit'},
+  {ch:0,nom:'La bifurcation',type:'prono',diff:2,start:A2,cmds:['switch -c fix','commit','switch main','commit','commit'],
+   wrong:[{cmds:['switch -c fix','commit','commit','commit'],why:'Sans git switch main, la motrice reste sur fix : toutes les voitures y vont.'},
+          {cmds:['commit','commit','commit'],why:'git switch -c fix crée bien une nouvelle voie et y conduit la motrice : le première voiture part dessus.'}],
+   brief:'Le chef de gare va lancer cet ordre de manœuvre. À quoi ressemblera le plateau&nbsp;?',learn:'C’est la motrice (HEAD) qui décide où s’accroche chaque nouvelle voiture.'},
+  /* ---- Ligne 2 · Les jonctions ---- */
+  {ch:1,nom:'La jonction',type:'compo',diff:2,start:FORK,target:[...FORK,'merge feature'],par:1,tool:'merge',nouveau:['merge','rebase'],
+   brief:'Le panier (C, D) est prêt, mais main a reçu E entre-temps. Faites entrer feature dans main avec une voiture de jonction.',
+   hint:'Outil « Atteler la voie », glissez une voiture de feature sur main. Au clavier : merge feature (la motrice est déjà sur main).',learn:'git switch main\ngit merge feature'},
+  {ch:1,nom:'Remise à niveau',type:'compo',diff:2,start:FORK,target:[...FORK,'switch feature','rebase main'],par:1,tool:'rebase',
+   brief:'Raccrochez toute la rame feature derrière E, comme si elle était partie de là. Les voitures déplacées reçoivent un double filet&nbsp;: ce sont de nouveaux commits.',
+   hint:'Outil « Déplacer la rame », glissez une voiture de feature sur main. Au clavier : switch feature, puis rebase main.',learn:'git switch feature\ngit rebase main'},
+  {ch:1,nom:'Le double filet',type:'prono',diff:3,start:FORK,cmds:['switch feature','rebase main'],
+   wrong:[{cmds:['merge feature'],why:'Ça, c’est git merge : une voiture de jonction M apparaît sur main.'},
+          {cmds:['rebase feature'],why:'Ça, ce serait main raccrochée derrière feature : rebase déplace la voie où se trouve la motrice.'}],
+   brief:'Ordre de manœuvre&nbsp;: switch feature, puis rebase main. Quel plateau obtient-on&nbsp;?',learn:'rebase déplace la voie de la motrice et recrée ses voitures (C′, D′).'},
+  {ch:1,nom:'Ligne directe',type:'compo',budget:2,diff:3,start:FORK,target:[...FORK,'switch feature','rebase main','switch main','merge feature'],par:2,
+   brief:'Livrez le panier sur main en ligne droite, sans voiture de jonction. Budget strict&nbsp;: 2 manœuvres, pas une de plus.',
+   hint:'D’abord « Déplacer la rame » (feature derrière E), puis « Atteler la voie » : main avance simplement. C’est un fast-forward.',
+   learn:'git switch feature\ngit rebase main\ngit switch main\ngit merge feature   # fast-forward'},
+  {ch:1,nom:'La grue en panne',type:'regles',panne:true,noM:true,diff:4,par:4,
+   start:['commit','commit','switch -c feature','commit','switch main','switch -c hotfix','commit','switch main','commit'],
+   rules:[['main contient le panier C',s=>contains(s,'main','C')],['main contient le correctif D',s=>contains(s,'main','D')],['Aucune voiture de jonction sur main',s=>noMerge(s,'main')]],
+   brief:'Deux voies à livrer sur main, mais la grue de jonction est en panne&nbsp;: seuls les fast-forward passent.',
+   hint:'Pour chaque voie : « Déplacer la rame » derrière main, puis « Atteler la voie » (fast-forward). Quatre manœuvres.',
+   learn:'git switch feature && git rebase main\ngit switch main && git merge feature\ngit switch hotfix && git rebase main\ngit switch main && git merge hotfix'},
+  /* ---- Ligne 3 · Le tri ---- */
+  {ch:2,nom:'L’express du correctif',type:'compo',diff:2,start:TRI,target:[...TRI,'cherry-pick D'],par:1,tool:'cherry',nouveau:['cherry','souder'],
+   brief:'La voiture D transporte le correctif de la TVA. Elle doit partir sur main tout de suite&nbsp;; C et E ne sont pas prêtes.',
+   hint:'Outil « Copier une voiture », glissez D sur main. Au clavier : cherry-pick D.',learn:'git switch main\ngit cherry-pick D'},
+  {ch:2,nom:'La soudure',type:'compo',match:'raw',diff:3,tool:'souder',par:2,
+   start:['commit','commit','switch -c feature','commit','commit','commit','switch main','commit'],
+   target:['commit','commit','switch -c feature','commit','commit','commit','switch main','commit','switch feature','reset --soft HEAD~3','commit','rebase main'],
+   brief:'Trois voitures «&nbsp;en cours&nbsp;» (C, D, E)&nbsp;: le relecteur veut une seule voiture, posée derrière F.',
+   hint:'Outil « Souder », touchez C : de C au bout, tout est soudé. Puis « Déplacer la rame » sur main. Au clavier : switch feature, reset --soft HEAD~3, commit, rebase main.',
+   learn:'git switch feature\ngit reset --soft HEAD~3\ngit commit\ngit rebase main'},
+  {ch:2,nom:'La voiture suspecte',type:'regles',diff:3,cargo:{D:'debug'},start:TRI,par:2,
+   rules:[['main contient C',s=>contains(s,'main','C')],['main contient E',s=>contains(s,'main','E')],['Aucune voiture chargée de debug sur main',s=>noCargo(s,'main','debug')]],
+   brief:'La voiture D (losange rouge) contient du code de débogage. C et E doivent rejoindre main, mais jamais D.',
+   hint:'Un merge ou un rebase emmènerait D. Copiez plutôt C, puis E, sur main.',learn:'git switch main\ngit cherry-pick C\ngit cherry-pick E'},
+  {ch:2,nom:'La copie',type:'prono',diff:3,start:TRI,cmds:['cherry-pick E'],
+   wrong:[{cmds:['switch feature','reset --hard D','switch main','cherry-pick E'],why:'cherry-pick copie : la voiture E reste aussi sur feature.'},
+          {cmds:['merge feature'],why:'Ça, c’est git merge : toute la rame arrive sur main, C et D compris.'}],
+   brief:'La motrice est sur main. Ordre&nbsp;: cherry-pick E. Quel plateau&nbsp;?',learn:'cherry-pick copie une voiture : l’original ne bouge pas.'},
+  {ch:2,nom:'La release',type:'compo',keyboard:true,diff:4,start:FORK,target:[...FORK,'switch -c release','cherry-pick D'],par:2,
+   brief:'Les gestes sont hors service. Au clavier seulement&nbsp;: posez une voie release au bout de main et copiez-y la voiture D.',
+   hint:'switch -c release, puis cherry-pick D.',learn:'git switch -c release\ngit cherry-pick D'},
+  /* ---- Ligne 4 · Les grandes lignes ---- */
+  {ch:3,nom:'Premier départ',type:'compo',diff:2,start:['commit','commit','push','commit'],target:['commit','commit','push','commit','push'],par:1,nouveau:['push','pull','pullr','revert'],
+   brief:'En face, le quai distant origin&nbsp;: ce qui y est poussé est parti chez tous les voyageurs (pastille fléchée). Faites partir la voiture C.',
+   hint:'Bouton « Pousser », ou push.',learn:'git push'},
+  {ch:3,nom:'Push rejeté',type:'regles',diff:3,start:['commit','commit','push','commit','_coll'],par:2,
+   rules:[['origin/main contient votre voiture C',s=>contains(s,'origin/main','C')],['origin/main contient la voiture D du collègue',s=>contains(s,'origin/main','D')],
+          ['Ligne droite : aucune voiture de jonction',s=>noMerge(s,'origin/main')],['main et origin/main identiques',same]],
+   brief:'Un collègue a poussé la voiture D pendant que vous accrochiez C. Votre push sera refusé&nbsp;: intégrez son travail en ligne droite, puis poussez.',
+   hint:'« Tirer en rebasant » (pull --rebase) raccroche C derrière D. Puis « Pousser ».',learn:'git pull --rebase\ngit push'},
+  {ch:3,nom:'La voiture fautive est partie',type:'regles',diff:4,noForce:true,cargo:{C:'bug'},start:['commit','commit','commit','push'],par:2,tool:'revert',
+   rules:[['origin/main annule l’effet de la voiture C',s=>reverted(s,'origin/main','C')],['L’histoire publiée reste intacte (C toujours là)',s=>contains(s,'origin/main','C')],['main et origin/main identiques',same]],
+   brief:'La voiture C (losange rouge) a cassé la prod, et elle est déjà partie. Impossible de la retirer du train&nbsp;: des voyageurs sont à bord. Annulez son effet proprement.',
+   hint:'Outil « Voiture inverse », touchez C (git revert C), puis « Pousser ». Reculer la voie puis forcer le push est interdit ici.',learn:'git revert C\ngit push'},
+  {ch:3,nom:'Départ imminent',type:'regles',time:80,diff:4,par:4,start:['commit','commit','push','switch -c feature','commit','commit','switch main','_coll'],
+   rules:[['origin/main contient le panier C et D',s=>contains(s,'origin/main','C')&&contains(s,'origin/main','D')],['origin/main contient la voiture E du collègue',s=>contains(s,'origin/main','E')],
+          ['Aucune voiture de jonction',s=>noMerge(s,'origin/main')],['main et origin/main identiques',same]],
+   brief:'Le train part dans 80 secondes. Livrez le panier (C, D) avec la voiture E du collègue, en ligne droite, et faites partir le tout.',
+   hint:'Sur main : « Tirer ». Puis « Déplacer la rame » feature sur main, « Atteler la voie » (fast-forward) et « Pousser ».',
+   learn:'git pull\ngit switch feature && git rebase main\ngit switch main && git merge feature\ngit push'},
+  /* ---- Ligne 5 · Les accidents ---- */
+  {ch:4,nom:'La casse',type:'compo',diff:3,start:['commit','commit','switch -c feature','commit','commit','commit','reset --hard C'],
+   target:['commit','commit','switch -c feature','commit','commit','commit','reset --hard C','reset --hard E'],par:1,nouveau:['recover'],
+   brief:'Un collègue a lancé reset --hard C sur feature&nbsp;: D et E sont parties sur la voie de garage. Récupérez-les.',
+   hint:'Touchez E sur la voie de garage, sous le plateau (reset --hard E). Au clavier : reflog, puis reset --hard feature@{1}.',learn:'git reflog\ngit reset --hard feature@{1}'},
+  {ch:4,nom:'Soft ou hard&nbsp;?',type:'prono',diff:3,start:['commit','commit','commit','commit'],cmds:['reset --soft HEAD~2','commit'],
+   wrong:[{cmds:['reset --hard HEAD~2'],why:'--hard jette les voitures. --soft les garde sur le quai, prêts à être soudés par le commit suivant.'},
+          {cmds:['commit'],why:'reset --soft recule d’abord la voie de deux voitures.'}],
+   brief:'Ordre&nbsp;: reset --soft HEAD~2, puis commit. Quel plateau&nbsp;?',learn:'reset --soft recule la voie mais garde les changements : le commit suivant les soude.'},
+  {ch:4,nom:'La livraison du vendredi',type:'regles',budget:7,time:150,diff:5,noForce:true,cargo:{D:'debug'},par:5,
+   start:['commit','commit','push','switch -c feature','commit','commit','commit','switch main','switch -c hotfix','commit','switch main','_coll'],
+   rules:[['origin/main contient la voiture G du collègue',s=>contains(s,'origin/main','G')],['origin/main contient le correctif F',s=>contains(s,'origin/main','F')],
+          ['origin/main contient C et E',s=>contains(s,'origin/main','C')&&contains(s,'origin/main','E')],['Aucune voiture debug sur origin/main',s=>noCargo(s,'origin/main','debug')],
+          ['Aucune voiture de jonction sur origin/main',s=>noMerge(s,'origin/main')],['main et origin/main identiques',same]],
+   brief:'Vendredi, 17&nbsp;h. Le collègue a poussé G, le correctif F attend sur hotfix, le panier C-D-E sur feature (D contient du debug). Tout doit partir proprement&nbsp;: 7 manœuvres maximum, 150 secondes.',
+   hint:'« Tirer » sur main, puis copiez F, C et E sur main, puis « Pousser ». Cinq manœuvres.',learn:'git pull\ngit cherry-pick F\ngit cherry-pick C\ngit cherry-pick E\ngit push'}
+];
+LEVELS.forEach(L=>{ L.tags=[L.type]; if(L.budget) L.tags.push('budget'); if(L.keyboard) L.tags.push('clavier'); if(L.time) L.tags.push('chrono'); if(L.panne) L.tags.push('panne'); });
+
+/* ================= État ================= */
+let cur=0,S,T,tNames,hist=[],moves=0,tool=null,sel=null,lines=[],newIds=new Set(),done=false,timer=null,tLeft=0,wrongs=0,cmdHist=[],cmdPos=0;
+let stars={}, unlockAll=false;
+try{ stars=JSON.parse(localStorage.getItem('gare2.stars')||'{}'); unlockAll=localStorage.getItem('gare2.unlock')==='1'; const c=+localStorage.getItem('gare2.cur'); if(c>=0&&c<LEVELS.length) cur=c; }catch(e){}
+function save(){ try{ localStorage.setItem('gare2.stars',JSON.stringify(stars)); localStorage.setItem('gare2.unlock',unlockAll?'1':'0'); localStorage.setItem('gare2.cur',String(cur)); }catch(e){} }
+const lvl=()=>LEVELS[cur];
+const unlocked=i=>unlockAll||i===0||(stars[i-1]||0)>0;
+if(!unlocked(cur)) cur=0;
+const toolsOf=L=>CH[L.ch].tools;
+const gesturesOff=()=>{ const L=lvl(); return L.type==='prono'||L.keyboard||$('expert').checked; };
+function toast(m,k){ const t=$('toast'); t.textContent=m; t.className='toast '+(k||''); }
+
+function load(i){
+  stopTimer(); cur=i; save(); const L=lvl(), C=CH[L.ch];
+  S=build(L.start,L.cargo); S.allow=C.allow; S.noM=!!L.noM; S.noForce=!!L.noForce;
+  if(L.target){ T=build(L.target,L.cargo); tNames=Object.keys(T.b).concat(Object.keys(T.remote).map(b=>'origin/'+b)); } else { T=null; tNames=[]; }
+  hist=[]; moves=0; sel=null; newIds=new Set(); done=false; wrongs=0;
+  const dragTools=toolsOf(L).filter(t=>TOOLS[t]);
+  tool = L.tool || (dragTools.length?dragTools[dragTools.length-1]:null);
+  if(L.tool==null && dragTools.includes('rebase')) tool='rebase';
+  lines=[`<span class="o"># Ligne ${L.ch+1} · ${esc(L.nom.replace(/&nbsp;/g,' '))}</span>`];
+  $('hint').hidden=true; $('hint').textContent=L.hint||'';
+  $('expert').checked=!!L.keyboard; $('expert').disabled=!!L.keyboard;
+  $('expert-wrap').hidden = L.type==='prono';
+  renderBoard(); renderNet(); renderTools(); render();
+  $('post').hidden = L.type==='prono'; $('prono').hidden = L.type!=='prono';
+  if(L.type==='prono') renderProno();
+  toast(L.keyboard?'Gestes hors service : tapez vos commandes dans le terminal.':'La motrice attend vos ordres.','info');
+  $('yard').classList.remove('leave');
+  if(L.time) ready();
+}
+
+/* ---------- Plan du réseau ---------- */
+function renderNet(){
+  let h='', total=0;
+  CH.forEach((c,ci)=>{
+    const idx=LEVELS.map((L,i)=>[L,i]).filter(([L])=>L.ch===ci);
+    h+=`<div class="line" style="--lc:${c.col}"><span class="lname"><b>L${ci+1}</b>${esc(c.nom)}</span><div class="stations">`+
+      idx.map(([L,i],j)=>{ const open=unlocked(i), st=stars[i]||0; total+=st;
+        const tg=L.tags.includes('chrono')?'chrono':L.tags.includes('clavier')?'clavier':L.tags.includes('budget')?'budget':L.tags.includes('panne')?'panne':L.type;
+        return `<button type="button" class="station${i===cur?' cur':''}${st?' done':''}${open?'':' locked'}" data-lv="${i}" ${open?'':'disabled'} aria-label="Station ${j+1}, ${esc(L.nom.replace(/&nbsp;/g,' '))}${open?'':', verrouillée'}" title="${esc(L.nom.replace(/&nbsp;/g,' '))}">
+          <span class="dot">${j+1}</span><span class="sn">${SHORT[tg]}</span><span class="ss">${open?('★'.repeat(st)+'☆'.repeat(3-st)):'fermée'}</span></button>`; }).join('')+`</div></div>`;
+  });
+  $('net').innerHTML=h; $('tot').textContent=`${total} / ${LEVELS.length*3} étoiles`; $('unlock').checked=unlockAll;
+}
+
+/* ---------- Tableau des départs ---------- */
+function renderBoard(){
+  const L=lvl(), C=CH[L.ch], j=LEVELS.filter(x=>x.ch===L.ch).indexOf(L);
+  $('lv-where').innerHTML=`Ligne ${L.ch+1} · ${esc(C.nom)} · station ${j+1}`;
+  $('lv-name').innerHTML=L.nom;
+  $('lv-tags').innerHTML=L.tags.map((t,k)=>`<span class="tag${k?' alt':''}">${TAG[t]}</span>`).join('')+`<span class="lamps" aria-label="Difficulté ${L.diff} sur 5">${[1,2,3,4,5].map(n=>`<i class="${n<=L.diff?'on':''}"></i>`).join('')}</span>`;
+  $('lv-brief').innerHTML=L.brief;
+  let g='';
+  if(L.type==='prono') g=`<p class="lbl">Ordre de manœuvre</p><ol class="orders">${L.cmds.map(c=>`<li>git ${esc(c)}</li>`).join('')}</ol>`;
+  else if(L.rules) g=`<p class="lbl">Règlement à respecter</p><ul class="rules" id="rules"></ul>`;
+  else g=`<p class="lbl">Train attendu</p><div class="yard mini">${yardHTML(T,false)}</div>`;
+  $('goal').innerHTML=g;
+  renderChips();
+}
+function renderChips(){
+  const L=lvl(); let c=[];
+  if(L.type==='prono') c.push(`<span class="chip">★★★ du premier coup</span>`);
+  else c.push(`<span class="chip">★★★ en ${L.par} manœuvre${L.par>1?'s':''}</span>`);
+  if(L.budget) c.push(`<span class="chip${moves>=L.budget-1?' hot':''}">Budget : ${moves} / ${L.budget}</span>`);
+  if(L.time) c.push(`<span class="chip${tLeft<=15&&timer?' hot':''}" id="clock">Départ dans ${fmt(tLeft||L.time)}</span>`);
+  $('lv-chips').innerHTML=c.join('');
+}
+const fmt=s=>{ s=Math.max(0,Math.ceil(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+
+/* ---------- Plateau ---------- */
+function layout(s){
+  const rows=[], placed={};
+  const add=(name,kind,tip)=>{
+    const ch=[]; let x=tip; while(x && !(x in placed)){ ch.unshift(x); x=s.c[x].parents[0]; }
+    const f=x?placed[x]:null, fork=f?f.col:-1, ri=rows.length;
+    const cells=ch.map((id,j)=>({id,col:fork+1+j})); cells.forEach(c=>placed[c.id]={row:ri,col:c.col});
+    rows.push({name,kind,fork,forkRow:f?f.row:-1,cells});
+  };
+  if(s.b.main) add('main','local',s.b.main);
+  s.order.forEach(b=>{ if(b!=='main'&&s.b[b]) add(b,'local',s.b[b]); });
+  Object.keys(s.remote).forEach(b=>{ const t=s.remote[b]; if(t&&!(t in placed)) add('origin/'+b,'remote',t); });
+  return rows;
+}
+const ICON={
+  rebase:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h7M3 7h18"/><path d="M10 18c4 0 5-11 9-11"/><path d="M16 4l3 3-3 3"/></svg>',
+  merge:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v3c0 5 6 6 6 11v4M18 3v3c0 5-6 6-6 11"/></svg>',
+  cherry:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 4H6a2 2 0 0 0-2 2v10"/></svg>',
+  souder:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+  revert:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>',
+  commit:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M12 9v6M9 12h6"/></svg>',
+  branch:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18"/><path d="M3 18c8 0 9-11 18-11"/></svg>',
+  push:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>',
+  pull:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 7L7 17M15 17H7V9"/></svg>',
+  pullr:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11M7 9l5 5 5-5M4 20h16"/></svg>',
+  dep:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9l6-6M4.5 3H9v4.5"/></svg>'
+};
+const LOCO_PATH='M3,10 Q3,7 7,7 H58 C78,7 92,20 101,40 Q103,44 103,48 Q103,52 99,52 H5 Q3,52 3,50 Z';
+function locoSVG(){ return `<svg viewBox="0 0 104 63" preserveAspectRatio="none" aria-hidden="true"><defs><clipPath id="mclip"><path d="${LOCO_PATH}"/></clipPath></defs>
+  <rect class="mgw" x="-8" y="19" width="9" height="20" rx="2"/><path class="mp" d="M18 7 L27 1 L36 7 M22 1 H32"/>
+  <path class="mb" d="${LOCO_PATH}"/><g clip-path="url(#mclip)"><rect class="mr" x="0" y="0" width="110" height="13"/><path class="ml" d="M0,41 H56 C72,41 87,36 106,28 V35 C87,43 72,47 56,47 H0 Z"/></g>
+  <rect class="mg" x="9" y="16" width="46" height="16" rx="3"/><text class="mt" x="32" y="27.2" text-anchor="middle">HEAD</text>
+  <path class="mg" d="M61,16 H68 C78,17 86,24 91,32 H61 Z"/><ellipse class="mh" cx="99.5" cy="45" rx="2.2" ry="1.5"/>
+  <rect class="mw" x="10" y="52" width="24" height="6" rx="2"/><rect class="mw" x="62" y="52" width="24" height="6" rx="2"/>
+  <circle class="mwh" cx="16" cy="59" r="3.6"/><circle class="mwh" cx="28" cy="59" r="3.6"/><circle class="mwh" cx="68" cy="59" r="3.6"/><circle class="mwh" cx="80" cy="59" r="3.6"/></svg>`; }
+function yardHTML(s,live,deco){
+  const rows=layout(s);
+  const colorOf=o=>{ if(o==='collègue') return 3; const i=s.order.indexOf(o); return i<=0?0:Math.min(i,2); };
+  const flags={}; Object.keys(s.b).forEach(b=>(flags[s.b[b]]=flags[s.b[b]]||[]).push({n:b}));
+  Object.keys(s.remote).forEach(b=>{ const t=s.remote[b]; if(t)(flags[t]=flags[t]||[]).push({n:'origin/'+b,r:true}); });
+  const gone=new Set(); Object.values(s.remote).forEach(t=>{ if(t) anc(s,t).forEach(x=>gone.add(x)); });
+  const withLoco=live||deco;
+  let max=0; rows.forEach(r=>{ const end=(r.cells.length?r.cells[r.cells.length-1].col:r.fork)+(withLoco&&r.kind==='local'&&s.head===r.name?1:0); max=Math.max(max,end); });
+  const W=`calc(var(--slot) * ${max+2} + ${withLoco?36:12}px)`;
+  const dragOk=live&&!gesturesOff()&&tool;
+  let h='';
+  rows.forEach((r,ri)=>{
+    const isHead=r.kind==='local'&&s.head===r.name, start=r.fork+1;
+    h+=`<div class="voie${isHead?' go':''}${r.kind==='remote'?' remote':''}" ${r.kind==='local'?`data-row="${esc(r.name)}"`:''}>`;
+    if(!deco){
+      if(live&&r.kind==='local') h+=`<button type="button" class="sign${isHead?' head':''}" data-sw="${esc(r.name)}">${esc(r.name)}<small>${isHead?'<em>HEAD</em>motrice ici':'conduire la motrice ici'}</small></button>`;
+      else h+=`<span class="sign">${esc(r.name)}<small>${r.kind==='remote'?'quai distant':''}</small></span>`;
+    }
+    h+=`<div class="track" style="width:${W}"><span class="rail" style="left:calc(var(--slot) * ${Math.max(start,0)})"></span>`;
+    if(r.fork>=0) h+=`<svg class="fork" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style="left:calc(var(--slot) * ${r.fork+1} - var(--slot) * .9);width:calc(var(--slot) * .9);height:calc(${ri-r.forkRow} * (var(--rowh) + var(--gap)))"><path class="r1" d="M0,0 C55,0 45,100 100,100"/><path class="r2" d="M0,0 C55,0 45,100 100,100"/></svg>`;
+    r.cells.forEach((cell,j)=>{
+      const c=s.c[cell.id]; const cls=c.kind==='m'?'cm':c.kind==='r'?'cr':'c'+colorOf(c.origin);
+      const fl=(flags[cell.id]||[]).filter(f=>live||!rows.some(rr=>rr.name===f.n&&rr.cells.length));
+      const lab=c.kind==='m'?`M<small>+${esc(raw(s.c[c.parents[1]].label))}</small>`:esc(c.label);
+      h+=`<div class="wagon ${cls}${c.label.includes('′')?' fresh':''}${raw(c.label).length>2?' long':''}${j===0&&r.fork<0?' first':''}${live&&newIds.has(cell.id)?' new':''}${live&&sel&&sel.id===cell.id?' sel':''}${dragOk?' grab':''}"
+        style="left:calc(var(--slot) * ${cell.col} + 4px)" data-id="${cell.id}" data-from="${esc(r.name)}" title="Voiture ${esc(c.label)}${c.cargo?' · chargement '+c.cargo:''}${gone.has(cell.id)?' · partie sur origin':''}">
+        <span class="gl"><b>${lab}</b></span><span class="lv"></span><span class="bg l"></span><span class="bg r"></span>${c.cargo?'<span class="pl"></span>':''}${gone.has(cell.id)?`<span class="dep">${ICON.dep}</span>`:''}
+        ${fl.length&&!deco?`<span class="flag">${fl.map(f=>`<span class="${f.r?'r':''}">${esc(f.n)}</span>`).join('')}</span>`:''}</div>`;
+    });
+    if(isHead&&withLoco){ const lc=(r.cells.length?r.cells[r.cells.length-1].col:r.fork)+1; h+=`<div class="loco" style="left:calc(var(--slot) * ${lc} + 4px)">${locoSVG()}</div>`; }
+    if(live) h+=`<span class="bumper" style="left:calc(var(--slot) * ${max+1} + 34px)"></span>`;
+    h+=`</div></div>`;
+  });
+  return h;
+}
+function renderTools(){
+  const L=lvl(), ts=toolsOf(L), nv=L.nouveau||[];
+  const drag=ts.filter(t=>TOOLS[t]);
+  $('tools').innerHTML=drag.map(t=>`<button class="tool" type="button" data-tool="${t}">${ICON[t]}<b>${TOOLS[t].b}</b><small>${TOOLS[t].s}</small>${nv.includes(t)?'<span class="nv">NOUVEAU</span>':''}</button>`).join('');
+  $('tools').hidden=!drag.length;
+  $('buttons').innerHTML=ts.filter(t=>BTNS[t]).map(t=>`<button class="btn" type="button" data-btn="${t}">${ICON[t]}${BTNS[t][0]}<small>${BTNS[t][1]}</small>${nv.includes(t)?'<span class="nv">NOUVEAU</span>':''}</button>`).join('');
+  $('cli-help').innerHTML='Essayez&nbsp;: '+CH[L.ch].cli.map(c=>`<code>${esc(c)}</code>`).join('');
+}
+function renderLegend(){
+  const ch=lvl().ch, it=['<span><i class="sw hd"></i>motrice jaune&nbsp;: HEAD</span>'];
+  if(ch>=1) it.push('<span><i class="sw fr"></i>double filet&nbsp;: commit recréé</span>','<span><i class="sw m"></i>M&nbsp;: voiture de jonction</span>');
+  if(ch>=2) it.push('<span><i class="sw hz"></i>losange rouge&nbsp;: chargement suspect</span>');
+  if(ch>=3) it.push('<span><i class="sw dp"></i>pastille&nbsp;: partie sur origin</span>','<span><i class="sw co"></i>livrée rose&nbsp;: collègue</span>','<span><i class="sw rv"></i>caisse sombre&nbsp;: voiture inverse</span>');
+  $('legend').innerHTML=it.join('');
+}
+function render(){
+  const L=lvl();
+  $('yard').innerHTML=yardHTML(S,true);
+  document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('on',b.dataset.tool===tool));
+  $('gestures').hidden=gesturesOff();
+  const tk=tool&&TOOLS[tool]?TOOLS[tool].k:null;
+  $('tool-help').textContent= tk==='tap' ? (tool==='souder'?'Touchez le première voiture de la série : de cette voiture au bout de la voie, tout est soudé en un seul.':'Touchez la voiture dont il faut annuler l’effet.')
+    : tk==='drag' ? 'Glissez une voiture sur une autre voie, ou touchez la voiture puis la voie. Touchez une pancarte pour y conduire la motrice.'
+    : 'Touchez une pancarte pour y conduire la motrice.';
+  $('moves').textContent=moves+(moves>1?' manœuvres':' manœuvre')+(L.budget?` / ${L.budget}`:'');
+  $('term').innerHTML=lines.join('\n'); $('term').scrollTop=1e9;
+  const pend=S.pending&&S.pending.length; $('quai').hidden=!pend;
+  if(pend) $('quai').innerHTML=`Sur le quai, dételées&nbsp;: <b>${S.pending.map(id=>esc(S.c[id].label)).join(', ')}</b>. Un <code>commit</code> les soude en une seule voiture.`;
+  const orph=orphans(S), can=toolsOf(L).includes('recover')&&L.type!=='prono';
+  $('casse').hidden=!orph.length;
+  if(orph.length) $('casse').innerHTML=`<p>Voie de garage${can?' · touchez une voiture pour la récupérer':''}</p>`+orph.map(id=>`<button type="button" class="gw${can?' can':''}" data-orphan="${id}" aria-label="Voiture ${esc(S.c[id].label)} sur la voie de garage"><b>${esc(S.c[id].label)}</b></button>`).join('');
+  if(L.rules&&$('rules')) $('rules').innerHTML=L.rules.map(([t,f])=>{ const ok=f(S); return `<li class="${ok?'ok':''}"><span class="ck" aria-label="${ok?'respectée':'pas encore'}">${ok?'✓':''}</span>${esc(t)}</li>`; }).join('');
+  renderChips(); renderLegend();
+  newIds=new Set();
+}
+
+/* ---------- Exécution ---------- */
+function solved(){
+  const L=lvl(); if(L.type==='prono') return false;
+  let ok=true; if(T) ok=sig(S,tNames,L.match)===sig(T,tNames,L.match);
+  if(L.rules) ok=ok&&L.rules.every(r=>r[1](S));
+  return ok;
+}
+function run(cmds,msg,asOne){
+  if(done) return false;
+  const snap=clone(S), before=new Set(Object.keys(S.c)); let count=0;
+  try{ for(const c of cmds){ lines.push(`<span class="p">$ git ${esc(c)}</span>`); const r=exec(S,c); r.out.forEach(o=>lines.push(esc(o))); if(r.kind) count++; } }
+  catch(err){ S=snap; lines.push(`<span class="e">${esc(err.message)}</span>`); toast(err.message,'bad'); shake($('yard')); render(); return false; }
+  if(asOne) count=Math.min(count,1);
+  if(count) hist.push({S:snap,moves});
+  moves+=count;
+  Object.keys(S.c).forEach(k=>{ if(!before.has(k)) newIds.add(k); });
+  sel=null;
+  const L=lvl();
+  if(solved()){ render(); victory(); return true; }
+  if(L.budget&&moves>=L.budget){ render(); fail('Budget épuisé','Toutes les manœuvres autorisées sont utilisées et le train n’est pas conforme.',true); return true; }
+  if(count) toast(msg||'Manœuvre effectuée.','info');
+  render(); return true;
+}
+function shake(el){ el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+function starsFor(L){ if(L.type==='prono') return Math.max(1,3-wrongs); return moves<=L.par?3:moves<=L.par+1?2:1; }
+function victory(){
+  done=true; stopTimer(); const L=lvl(), st=starsFor(L);
+  stars[cur]=Math.max(stars[cur]||0,st); save(); renderNet();
+  toast('Tchou tchou ! Le train est conforme.','good');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(L.type!=='prono') $('yard').classList.add('leave');
+  setTimeout(()=>{
+    const last=cur===LEVELS.length-1, next=LEVELS[cur+1];
+    const lineDone = !last && next.ch!==L.ch;
+    const total=Object.values(stars).reduce((a,b)=>a+b,0);
+    modal(`<h2 id="m-t">${last?'Réseau terminé&nbsp;!':lineDone?`Ligne ${L.ch+1} terminée&nbsp;!`:'Tchou tchou&nbsp;!'}</h2>
+      <div class="stars" aria-label="${st} étoiles sur 3">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>
+      <p>${L.type==='prono'?(wrongs?`Trouvé après ${wrongs} erreur${wrongs>1?'s':''}.`:'Du premier coup.'):`${moves} manœuvre${moves>1?'s':''}, objectif ${L.par}.`}${L.time?` Il restait ${fmt(tLeft)}.`:''}</p>
+      ${lineDone?`<p class="small">Prochaine ligne&nbsp;: <b>${esc(CH[next.ch].nom)}</b>, avec de nouveaux outils.</p>`:''}
+      ${last?`<p class="small">${total} étoiles sur ${LEVELS.length*3}.</p>`:''}
+      <p class="small">Ce qu’il fallait retenir&nbsp;:</p><div class="learn">${esc(L.learn)}</div>
+      <div class="row">${st<3?'<button class="btn quiet" type="button" id="m-retry">Viser 3 étoiles</button>':''}<button class="btn" type="button" id="m-next">${last?'Revoir le réseau':'Station suivante'}</button></div>`,
+      {next:()=>load(last?0:cur+1), retry:()=>load(cur)});
+  }, reduce||L.type==='prono'?300:1500);
+}
+function fail(title,txt,canUndo){
+  done=true; stopTimer();
+  modal(`<h2 class="ko" id="m-t">${esc(title)}</h2><p>${esc(txt)}</p>
+    <div class="row">${canUndo&&hist.length?'<button class="btn quiet" type="button" id="m-undo">Annuler la dernière manœuvre</button>':''}<button class="btn quiet" type="button" id="m-hint">Voir l’indice</button><button class="btn" type="button" id="m-retry">Recommencer</button></div>`,
+    {retry:()=>load(cur), undo:()=>{ done=false; undo(); }, hint:()=>{ load(cur); $('hint').hidden=false; }});
+}
+function modal(html,act){
+  const w=$('win'); w.innerHTML=`<div class="card" role="dialog" aria-modal="true" aria-labelledby="m-t">${html}</div>`; w.hidden=false;
+  const bind=(id,f)=>{ const b=$(id); if(b) b.onclick=()=>{ w.hidden=true; f(); }; };
+  bind('m-next',act.next||(()=>{})); bind('m-retry',act.retry||(()=>{})); bind('m-undo',act.undo||(()=>{})); bind('m-hint',act.hint||(()=>{})); bind('m-go',act.go||(()=>{}));
+  (w.querySelector('#m-next,#m-go,#m-retry')||w.querySelector('button')).focus();
+}
+function ready(){
+  const L=lvl(); tLeft=L.time; renderChips();
+  modal(`<h2 id="m-t">Départ dans ${L.time}&nbsp;s</h2><p>${L.brief}</p><p class="small">Le chrono démarre quand vous prenez le poste.</p><div class="row"><button class="btn" type="button" id="m-go">Prendre le poste</button></div>`,
+    {go:()=>startTimer()});
+}
+function startTimer(){ stopTimer(); let last=performance.now(); timer=setInterval(()=>{ const n=performance.now(); tLeft-=(n-last)/1000; last=n; const c=$('clock'); if(c){ c.textContent='Départ dans '+fmt(tLeft); c.classList.toggle('hot',tLeft<=15); } if(tLeft<=0){ fail('Le train est parti sans vous','Le chrono est arrivé à zéro avant que le train soit conforme.',false); } },200); }
+function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
+function undo(){ const h=hist.pop(); if(!h){ toast('Rien à annuler.','info'); return; } S=h.S; moves=h.moves; lines.push('<span class="o"># manœuvre annulée</span>'); sel=null; toast('Dernière manœuvre annulée.','info'); render(); if(lvl().time&&!timer&&tLeft>0) startTimer(); }
+
+/* ---------- Pronostic ---------- */
+let opts=[];
+function renderProno(){
+  const L=lvl();
+  opts=[{cmds:L.cmds,ok:true},...L.wrong].map(o=>({...o})).sort(()=>Math.random()-.5);
+  $('opts').innerHTML=opts.map((o,i)=>{ const s=build(L.start.concat(o.cmds),L.cargo);
+    return `<button type="button" class="opt" data-opt="${i}"><span class="ol">Plateau ${'ABC'[i]}</span><div class="yard mini">${yardHTML(s,false)}</div><span class="why"></span></button>`; }).join('');
+  $('prono-toast').textContent='';
+}
+$('opts').addEventListener('click',e=>{
+  const b=e.target.closest('[data-opt]'); if(!b||done||b.disabled) return;
+  const o=opts[+b.dataset.opt], L=lvl();
+  if(o.ok){
+    b.classList.add('yes'); done=true;
+    $('prono-toast').textContent='Exact ! Regardez le plateau.'; $('prono-toast').className='toast good';
+    const before=new Set(Object.keys(S.c)); L.cmds.forEach(c=>exec(S,c)); Object.keys(S.c).forEach(k=>{ if(!before.has(k)) newIds.add(k); });
+    render(); setTimeout(()=>{ done=false; victory(); },1100);
+  } else {
+    wrongs++; b.classList.add('no'); b.disabled=true; b.querySelector('.why').textContent=o.why;
+    $('prono-toast').textContent=`Raté. Il reste ${Math.max(1,3-wrongs)} étoile${3-wrongs>1?'s':''} à gagner.`; $('prono-toast').className='toast bad';
+  }
+});
+
+/* ---------- Gestes ---------- */
+function act(src,dst){
+  if(done||src.from===dst) return;
+  const w=S.c[src.id].label;
+  if(tool==='rebase'){ if(src.from.startsWith('origin/')) return toast('Le quai distant ne se déplace pas : il se remplit avec push.','bad');
+    run([`switch ${src.from}`,`rebase ${dst}`],`Rame ${src.from} raccrochée au bout de ${dst}.`,true); }
+  else if(tool==='cherry') run([`switch ${dst}`,`cherry-pick ${w}`],`Voiture ${w} copiée sur ${dst}.`,true);
+  else if(tool==='merge') run([`switch ${dst}`,`merge ${src.from}`],`${src.from} attelée à ${dst}.`,true);
+}
+function act1(src){
+  if(done) return;
+  if(src.from.startsWith('origin/')) return toast('Cette voiture est sur le quai distant : on n’y touche pas directement.','bad');
+  const chain=fp(S,S.b[src.from]), k=chain.indexOf(src.id), w=S.c[src.id].label;
+  if(tool==='souder'){
+    if(k<1) return toast(k===0?'Touchez le première voiture de la série : il en faut au moins deux à souder.':'Cette voiture n’est pas sur cette voie.','bad');
+    run([`switch ${src.from}`,`reset --soft HEAD~${k+1}`,'commit'],`${k+1} voitures soudées en un seul.`,true);
+  } else if(tool==='revert') run([`switch ${src.from}`,`revert ${w}`],`Voiture inverse de ${w} accrochée.`,true);
+}
+let drag=null, ghost=null, clickGuard=0;
+$('yard').addEventListener('pointerdown',e=>{
+  const w=e.target.closest('.wagon'); if(!w||done||gesturesOff()||!tool) return;
+  drag={id:w.dataset.id,from:w.dataset.from,x:e.clientX,y:e.clientY,moved:false,el:w};
+});
+document.addEventListener('pointermove',e=>{
+  if(!drag||TOOLS[tool].k!=='drag') return;
+  if(!drag.moved && Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>8){
+    drag.moved=true; ghost=document.createElement('div'); ghost.className='ghost'; ghost.innerHTML=drag.el.outerHTML; document.body.appendChild(ghost);
+    ghost.firstElementChild.classList.remove('new','sel');
+  }
+  if(drag.moved){
+    e.preventDefault(); ghost.style.left=e.clientX+'px'; ghost.style.top=e.clientY+'px';
+    document.querySelectorAll('#yard .voie').forEach(v=>v.classList.remove('drop-ok'));
+    const v=document.elementFromPoint(e.clientX,e.clientY)?.closest('#yard .voie[data-row]'); if(v&&v.dataset.row!==drag.from) v.classList.add('drop-ok');
+  }
+},{passive:false});
+document.addEventListener('pointerup',e=>{
+  if(!drag) return; const d=drag; drag=null; clickGuard=performance.now()+80;
+  if(ghost){ ghost.remove(); ghost=null; }
+  document.querySelectorAll('#yard .voie').forEach(v=>v.classList.remove('drop-ok'));
+  if(TOOLS[tool].k==='tap'){ if(!d.moved) act1(d); return; }
+  const v=document.elementFromPoint(e.clientX,e.clientY)?.closest('#yard .voie'); const row=v&&v.dataset.row;
+  if(d.moved){
+    if(row&&row!==d.from) act(d,row);
+    else { toast(v&&v.classList.contains('remote')?'Le quai distant se remplit avec push.':'Déposez la voiture sur une autre voie.','info'); sel=null; render(); }
+    return;
+  }
+  if(sel&&d.from!==sel.from&&!d.from.startsWith('origin/')){ act(sel,d.from); return; }
+  sel=(sel&&sel.id===d.id)?null:{id:d.id,from:d.from};
+  toast(sel?`Voiture ${S.c[d.id].label} choisie. Touchez maintenant la voie de destination.`:'','info'); render();
+});
+document.addEventListener('pointercancel',()=>{ drag=null; if(ghost){ ghost.remove(); ghost=null; } });
+$('yard').addEventListener('click',e=>{
+  const sw=e.target.closest('[data-sw]');
+  if(sw){ if(lvl().type==='prono'||done) return; if(sel&&sw.dataset.sw!==sel.from&&!gesturesOff()){ act(sel,sw.dataset.sw); return; }
+    if(gesturesOff()&&lvl().keyboard){ toast('Gestes hors service : tapez switch '+sw.dataset.sw+'.','bad'); return; }
+    run([`switch ${sw.dataset.sw}`],`Motrice sur ${sw.dataset.sw}.`); return; }
+  if(performance.now()<clickGuard) return;
+  const v=e.target.closest('.voie[data-row]'); if(v&&sel&&v.dataset.row!==sel.from) act(sel,v.dataset.row);
+});
+$('casse').addEventListener('click',e=>{
+  const b=e.target.closest('[data-orphan]'); if(!b||done) return; const L=lvl();
+  if(!toolsOf(L).includes('recover')) return toast('Récupérer une voiture de la voie de garage s’apprend sur la ligne 5.','info');
+  if(gesturesOff()&&L.keyboard) return toast('Gestes hors service : utilisez reset --hard.','bad');
+  run([`reset --hard ${S.c[b.dataset.orphan].label}`],`Voie ${S.head} ramenée jusqu’à la voiture ${S.c[b.dataset.orphan].label}.`,true);
+});
+
+/* ---------- Boutons, terminal ---------- */
+$('tools').addEventListener('click',e=>{ const b=e.target.closest('[data-tool]'); if(!b) return; tool=b.dataset.tool; sel=null; render(); });
+$('buttons').addEventListener('click',e=>{
+  const b=e.target.closest('[data-btn]'); if(!b||done) return; const k=b.dataset.btn;
+  if(k==='commit') run(['commit'],'Voiture accrochée.');
+  else if(k==='branch'){ const n=['feature','fix','release','hotfix'].find(x=>!(x in S.b)); run([`switch -c ${n}`],`Voie ${n} posée, la motrice y passe.`); }
+  else if(k==='push') run(['push'],'Le train part vers origin !');
+  else if(k==='pull') run(['pull'],'Travail du quai distant récupéré.');
+  else if(k==='pullr') run(['pull --rebase'],'Votre voie est raccrochée derrière origin.');
+});
+$('b-undo').onclick=()=>{ if(!done) undo(); };
+$('b-reset').onclick=()=>load(cur);
+$('b-hint').onclick=()=>{ $('hint').hidden=!$('hint').hidden; };
+$('expert').onchange=()=>{ sel=null; render(); toast($('expert').checked?'Mode clavier : tapez les commandes dans le terminal.':'Les gestes sont de retour.','info'); if($('expert').checked) $('cmd').focus(); };
+$('net').addEventListener('click',e=>{ const b=e.target.closest('[data-lv]'); if(b&&!b.disabled) load(+b.dataset.lv); });
+$('unlock').onchange=()=>{ unlockAll=$('unlock').checked; save(); renderNet(); };
+$('cli').addEventListener('submit',e=>{ e.preventDefault(); const v=$('cmd').value.trim(); if(!v||done) return; cmdHist.push(v); cmdPos=cmdHist.length; $('cmd').value=''; run([v.replace(/^git\s+/,'')]); });
+$('cmd').addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp'&&cmdPos>0){ e.preventDefault(); $('cmd').value=cmdHist[--cmdPos]; }
+  else if(e.key==='ArrowDown'){ e.preventDefault(); cmdPos=Math.min(cmdHist.length,cmdPos+1); $('cmd').value=cmdHist[cmdPos]||''; }
+});
+$('cli-help').addEventListener('click',e=>{ const c=e.target.closest('code'); if(c){ $('cmd').value=c.textContent; $('cmd').focus(); } });
+
+$('hero-art').innerHTML=yardHTML(build(['commit','commit','switch -c feature','commit','commit','switch main','commit','switch feature','rebase main']),false,true);
+load(cur);
+})();
+</script>
+
