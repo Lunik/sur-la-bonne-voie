@@ -107,7 +107,9 @@ Vérifications : tests `node:test` (chaque station gagnée en `par` au clavier p
 
 Écarts avec la liste ci-dessous :
 
-- Rendu HTML + SVG comme le prototype, pas SVG pur : CSS porté tel quel pour la fidélité. `layout(state)` reste pur et testé (`src/ui/layout.test.ts`).
+- Identité visuelle refaite après le portage (demande du propriétaire, interface jugée trop « générée ») : thème clair épuré, Barlow (signalétique ferroviaire) et IBM Plex Mono pour le terminal, pancartes en plaques émaillées, jaune signal réservé à HEAD (nez de la motrice). Le critère « fidèle au prototype » ne vaut donc plus pour le visuel, seulement pour le comportement.
+- Plateau en SVG pur (voies avec traverses, aiguillages, voitures, motrice redessinées) ; `layout(state)` reste pur et testé (`src/ui/layout.test.ts`).
+- Déplacements animés : une voiture qui change de voie glisse, une voiture recréée (rebase, cherry-pick, soudure) part de l’original, une nouvelle voiture sort de la place de la motrice, le train part en accélérant, le plateau suit la motrice sur un écran étroit. Tout est coupé avec `prefers-reduced-motion`.
 - Les gestes sont traduits par `game/gestures.ts` (pur, testé) ; un geste refusé à mi-chemin est annulé en entier (`levels.runStep`, partagé avec le test de contenu).
 - Pas de contexte React : l’état descend par props depuis `App.tsx`.
 - Fenêtres en `<dialog>` natif ; Échap ignoré pour ne pas laisser le joueur sans issue.
@@ -182,7 +184,7 @@ Critère de sortie : nom et domaine arrêtés, page d’accueil en ligne, premi�
 Décisions à prendre par le propriétaire, avant ou pendant le jalon 0 :
 
 - [ ] **JavaScript + JSDoc ou TypeScript ?** Recommandation : TypeScript pour le moteur et le schéma de station, où les types attrapent le plus d’erreurs.
-- [ ] **Rendu du plateau : SVG pur ou HTML + SVG comme le prototype ?** Recommandation : SVG pur, plus simple à mettre à l’échelle et à tester.
+- [x] **Rendu du plateau : SVG pur ou HTML + SVG comme le prototype ?** SVG pur, retenu à la refonte visuelle du jalon 3.
 - [ ] **Langue de l’interface** : français seul pour la 1.0, anglais plus tard ?
 - [ ] **Nom du jeu** : nécessaire au plus tard au jalon 7, utile dès maintenant pour le dépôt et le domaine.
 

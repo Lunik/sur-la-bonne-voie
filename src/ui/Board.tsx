@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type MouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import {
-  allowedTools, dragStep, firstParentChain, isDragTool, isTapTool, orphans, recoverStep, tapStep,
-  type BoardTool, type CarRef, type Session, type Step, type Toast,
+  allowedTools, emptyRepo, dragStep, firstParentChain, isDragTool, isTapTool, orphans, recoverStep, tapStep,
+  type BoardTool, type CarRef, type Commit, type RepoState, type Session, type Step, type Toast,
 } from '../game/index.ts';
 import { strings } from './strings.ts';
-import { Car, Yard } from './Yard.tsx';
+import { CarToken, Yard } from './Yard.tsx';
 
 export interface BoardProps {
   session: Session;
@@ -47,13 +47,14 @@ export function Board({ session, tool, gesturesOff, selected, onSelect, run, toa
 
   /** Row under the pointer, on this board only. */
   const rowAt = (x: number, y: number) => {
-    const v = document.elementFromPoint(x, y)?.closest<HTMLElement>('.voie');
-    if (!v || !yard.current?.contains(v)) return null;
-    return { row: v.dataset.row ?? null, remote: v.dataset.remote !== undefined };
+    const lane = document.elementFromPoint(x, y)?.closest<HTMLElement | SVGElement>('[data-lane]');
+    if (!lane || !yard.current?.contains(lane)) return null;
+    const remote = lane.dataset.remote !== undefined;
+    return { row: remote ? null : lane.dataset.lane ?? null, remote };
   };
 
   const onPointerDown = (e: ReactPointerEvent) => {
-    const w = (e.target as Element).closest<HTMLElement>('.wagon');
+    const w = (e.target as Element).closest<SVGElement>('.car');
     if (!w || done || gesturesOff || !tool) return;
     drag.current = { id: w.dataset.id!, row: w.dataset.from!, x: e.clientX, y: e.clientY, moved: false };
   };
@@ -122,7 +123,8 @@ export function Board({ session, tool, gesturesOff, selected, onSelect, run, toa
       return run(`switch ${row}`, strings.done.switch(row));
     }
     if (performance.now() < clickGuard.current) return;
-    const row = target.closest<HTMLElement>('.voie[data-row]')?.dataset.row;
+    const lane = target.closest<HTMLElement | SVGElement>('[data-lane]');
+    const row = lane && lane.dataset.remote === undefined ? lane.dataset.lane : undefined;
     if (row && selected && row !== selected.row) dropOn(selected, row);
   };
 
@@ -148,8 +150,6 @@ export function Board({ session, tool, gesturesOff, selected, onSelect, run, toa
         ref={yard}
         repo={repo}
         variant="live"
-        aria-label={strings.yard}
-        fresh={session.fresh}
         selected={selected?.id}
         grab={!gesturesOff && !!tool}
         dropRow={dropRow}
@@ -159,7 +159,7 @@ export function Board({ session, tool, gesturesOff, selected, onSelect, run, toa
       />
       {ghost && (
         <div className="ghost" style={{ left: ghost.x, top: ghost.y }}>
-          <Car repo={repo} commit={repo.commits[ghost.id]} row={ghost.row} />
+          <CarToken repo={repo} commit={repo.commits[ghost.id]} />
         </div>
       )}
       {siding.length > 0 && (
@@ -167,7 +167,7 @@ export function Board({ session, tool, gesturesOff, selected, onSelect, run, toa
           <p>{strings.siding}{canRecover && station.type !== 'predict' ? strings.sidingRecover : ''}</p>
           {siding.map((id) => (
             <button key={id} type="button" className={`gw${canRecover ? ' can' : ''}`} aria-label={strings.sidingCar(label(id))} onClick={() => recover(id)}>
-              <b>{label(id)}</b>
+              <CarToken repo={repo} commit={repo.commits[id]} />
             </button>
           ))}
         </div>
@@ -177,15 +177,20 @@ export function Board({ session, tool, gesturesOff, selected, onSelect, run, toa
   );
 }
 
+const sample = (patch: Partial<Commit> & { label: string }): Commit => ({ id: 'x', parents: [], origin: 'main', kind: 'normal', cargo: null, ...patch });
+const legendRepo: RepoState = { ...emptyRepo(), commits: { m: sample({ label: 'D' }) } };
+
 function Legend({ line }: { line: number }) {
   const l = strings.legend;
-  const items: [string, string][] = [['hd', l.head]];
-  if (line >= 2) items.push(['fr', l.fresh], ['m', l.merge]);
-  if (line >= 3) items.push(['hz', l.cargo]);
-  if (line >= 4) items.push(['dp', l.gone], ['co', l.colleague], ['rv', l.revert]);
+  const items: [string, Commit, string][] = [];
+  if (line >= 2) items.push(['fresh', sample({ label: 'C′', origin: 'feature' }), l.fresh], ['merge', sample({ label: 'M', kind: 'merge', parents: ['m', 'm'] }), l.merge]);
+  if (line >= 3) items.push(['cargo', sample({ label: 'D', cargo: 'debug' }), l.cargo]);
+  if (line >= 4) items.push(['colleague', sample({ label: 'G', origin: 'collègue' }), l.colleague], ['revert', sample({ label: '↩C', kind: 'revert' }), l.revert]);
   return (
-    <div className="legend">
-      {items.map(([cls, text]) => <span key={cls}><i className={`sw ${cls}`} />{text}</span>)}
-    </div>
+    <ul className="legend">
+      <li><span className="legend-head" aria-hidden="true" />{l.head}</li>
+      {items.map(([key, c, text]) => <li key={key}><CarToken repo={legendRepo} commit={c} />{text}</li>)}
+      {line >= 4 && <li><CarToken repo={legendRepo} commit={sample({ label: 'A' })} gone />{l.gone}</li>}
+    </ul>
   );
 }

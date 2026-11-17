@@ -130,7 +130,7 @@ test('predictions: wrong guesses cost a star, the right one wins and shows the b
   s = reduce(s, { type: 'guess', option: 1 });
   assert.equal(s.status, 'won');
   assert.equal(stars(s), 2);
-  assert.ok(s.fresh.length > 0);
+  assert.equal(s.repo, s0.options[1].board, 'the board shows the right answer');
 });
 
 test('gesture refusals', () => {

@@ -3,7 +3,7 @@
 import { build, type RepoState } from '../engine/index.ts';
 import { isWon, predictBoards, runStep, startBoard, type Station, type Step } from '../levels/index.ts';
 
-export { ancestors, build, firstParentChain, orphans, stripPrimes, type Commit, type RepoState } from '../engine/index.ts';
+export { ancestors, build, emptyRepo, firstParentChain, orphans, stripPrimes, type Commit, type RepoState } from '../engine/index.ts';
 export { allowedTools, lines, type Line, type Station, type Step, type Tool } from '../levels/index.ts';
 export { stations } from '../levels/stations.ts';
 export * from './gestures.ts';
@@ -42,8 +42,6 @@ export interface Session {
   /** Predictions: the three boards, in display order. */
   options: Option[];
   wrongs: number;
-  /** Commits created by the last step, to animate them. */
-  fresh: string[];
   /** Feedback of the last step; `null` keeps the UI's default message. */
   toast: Toast | null;
 }
@@ -74,7 +72,6 @@ export function newSession(station: Station, order: number[] = [0, 1, 2]): Sessi
     timeLeft: !predict && station.timeLimit ? station.timeLimit : null,
     options: predict ? order.map((i) => ({ board: boards[i], why: whys[i], ruledOut: false })) : [],
     wrongs: 0,
-    fresh: [],
     toast: null,
   };
 }
@@ -84,8 +81,6 @@ export const shuffled = (n: number, random = Math.random) =>
     .map((i) => ({ i, k: random() }))
     .sort((a, b) => a.k - b.k)
     .map((x) => x.i);
-
-const newIds = (before: RepoState, after: RepoState) => Object.keys(after.commits).filter((id) => !(id in before.commits));
 
 function step(session: Session, action: Extract<Action, { type: 'step' }>): Session {
   const { station } = session;
@@ -100,8 +95,7 @@ function step(session: Session, action: Extract<Action, { type: 'step' }>): Sess
       ...session,
       log: [...session.log, ...echoed, { kind: 'command', text: result.command }, { kind: 'error', text: result.error }],
       toast: { tone: 'bad', text: result.error },
-      fresh: [],
-    };
+      };
   }
   const moves = session.moves + result.moves;
   const next: Session = {
@@ -110,7 +104,6 @@ function step(session: Session, action: Extract<Action, { type: 'step' }>): Sess
     moves,
     history: result.moves ? [...session.history, { repo: session.repo, moves: session.moves }] : session.history,
     log: [...session.log, ...echoed],
-    fresh: newIds(session.repo, result.state),
     toast: result.moves ? { tone: 'info', text: action.message } : session.toast,
   };
   if (isWon(station, next.repo)) return { ...next, status: 'won' };
@@ -136,8 +129,7 @@ export function reduce(session: Session, action: Action): Session {
         log: [...session.log, { kind: 'undo' }],
         status: 'playing',
         failure: null,
-        fresh: [],
-        toast: { tone: 'info', text: action.message },
+            toast: { tone: 'info', text: action.message },
       };
     }
     case 'start':
@@ -151,7 +143,7 @@ export function reduce(session: Session, action: Action): Session {
       const option = session.options[action.option];
       if (session.status !== 'playing' || !option || option.ruledOut) return session;
       if (option.why === null) {
-        return { ...session, repo: option.board, fresh: newIds(session.repo, option.board), status: 'won' };
+        return { ...session, repo: option.board, status: 'won' };
       }
       return {
         ...session,

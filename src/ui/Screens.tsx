@@ -9,26 +9,22 @@ const heroBoard = build(['commit', 'commit', 'switch -c feature', 'commit', 'com
 const lineColor = (line: number) => ({ '--lc': `var(--n${line})` }) as CSSProperties;
 
 export function Header() {
-  const [before, em, after] = strings.heroTitle;
   return (
     <header className="top">
       <div className="brand">
-        <svg className="logo" viewBox="0 0 40 40" aria-hidden="true">
-          <rect className="lb" width="40" height="40" rx="10" />
-          <path className="lr" d="M8 28h24" />
-          <path className="lr" d="M8 28c11 0 12-13 24-13" />
-          <circle className="ld" cx="32" cy="15" r="3.4" />
+        <svg className="logo" viewBox="0 0 32 32" aria-hidden="true">
+          <rect className="logo-plate" width="32" height="32" rx="6" />
+          <path className="logo-rail" d="M6 22h20" />
+          <path className="logo-rail" d="M6 22c9 0 10-10 20-10" />
+          <circle className="logo-signal" cx="25" cy="12" r="2.6" />
         </svg>
         <span className="brand-name">{strings.appTitle}</span>
         <span className="brand-sub">{strings.appSubtitle}</span>
       </div>
       <div className="hero">
         <div className="hero-txt">
-          <h1>{before}<em>{em}</em>{after}</h1>
-          <p>{strings.heroText}</p>
-          <ul className="facts">
-            {strings.facts(lines.length, stations.length).map(([n, label]) => <li key={label}><b>{n}</b>{label}</li>)}
-          </ul>
+          <h1>{strings.heroTitle}</h1>
+          <p>{strings.heroText(lines.length, stations.length)}</p>
         </div>
         <Yard repo={heroBoard} variant="deco" />
       </div>
@@ -56,10 +52,10 @@ export function NetworkMap({ current, stars, isOpen, unlockAll, onUnlockAll, onP
           <input type="checkbox" checked={unlockAll} onChange={(e) => onUnlockAll(e.target.checked)} /> {strings.unlockAll}
         </label>
       </div>
-      <div className="lines">
+      <ol className="lines">
         {lines.map((line, li) => (
-          <div key={line.title} className="line" style={lineColor(li + 1)}>
-            <span className="lname"><b>L{li + 1}</b>{line.title}</span>
+          <li key={line.title} className="line" style={lineColor(li + 1)}>
+            <span className="lname"><b aria-label={strings.lineBadge(li + 1)}>{li + 1}</b>{line.title}</span>
             <div className="stations">
               {stations.map((s, i) => {
                 if (s.line !== li + 1) return null;
@@ -85,9 +81,9 @@ export function NetworkMap({ current, stars, isOpen, unlockAll, onUnlockAll, onP
                 );
               })}
             </div>
-          </div>
+          </li>
         ))}
-      </div>
+      </ol>
     </nav>
   );
 }
@@ -95,44 +91,57 @@ export function NetworkMap({ current, stars, isOpen, unlockAll, onUnlockAll, onP
 export function DepartureBoard({ session }: { session: Session }) {
   const { station: s, repo } = session;
   return (
-    <section className="board" aria-label={strings.departures}>
+    <section className="board" aria-label={strings.departures} style={lineColor(s.line)}>
       <div className="board-main">
-        <p className="lbl">{strings.where(s.line, lines[s.line - 1].title, indexInLine(s))}</p>
+        <p className="where">
+          <b className="line-badge" aria-label={strings.lineBadge(s.line)}>{s.line}</b>
+          {strings.where(lines[s.line - 1].title, indexInLine(s))}
+        </p>
         <h2>{fr(s.title)}</h2>
-        <div className="tags">
-          {tags(s).map((t, k) => <span key={t} className={`tag${k ? ' alt' : ''}`}>{strings.tag[t]}</span>)}
-          <span className="lamps" role="img" aria-label={strings.difficulty(s.difficulty)}>
-            {[1, 2, 3, 4, 5].map((n) => <i key={n} className={n <= s.difficulty ? 'on' : ''} />)}
-          </span>
-        </div>
+        <p className="tags">{tags(s).map((t) => <span key={t} className="tag">{strings.tag[t]}</span>)}</p>
         <p className="brief">{fr(s.brief)}</p>
-        <div className="chips">
-          {s.type === 'predict' ? <span className="chip">{strings.chipFirstTry}</span> : (
-            <>
-              <span className="chip">{strings.chipPar(s.par)}</span>
-              {s.budget !== undefined && <span className={`chip${session.moves >= s.budget - 1 ? ' hot' : ''}`}>{strings.chipBudget(session.moves, s.budget)}</span>}
-              {session.timeLeft !== null && (
-                <span className={`chip clock${session.timeLeft <= 15 && session.status === 'playing' ? ' hot' : ''}`}>{strings.chipClock(session.timeLeft)}</span>
-              )}
-            </>
+        <dl className="facts">
+          <div>
+            <dt>{strings.factDifficulty}</dt>
+            <dd>
+              <span className="lamps" role="img" aria-label={strings.difficulty(s.difficulty)}>
+                {[1, 2, 3, 4, 5].map((n) => <i key={n} className={n <= s.difficulty ? 'on' : ''} />)}
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt>{strings.factStars}</dt>
+            <dd>{s.type === 'predict' ? strings.factFirstTry : strings.factPar(s.par)}</dd>
+          </div>
+          {s.type !== 'predict' && s.budget !== undefined && (
+            <div className={session.moves >= s.budget - 1 ? 'hot' : undefined}>
+              <dt>{strings.factBudget}</dt>
+              <dd>{strings.factBudgetValue(session.moves, s.budget)}</dd>
+            </div>
           )}
-        </div>
+          {session.timeLeft !== null && (
+            <div className={`clock${session.timeLeft <= 15 && session.status === 'playing' ? ' hot' : ''}`}>
+              <dt>{strings.factClock}</dt>
+              <dd>{strings.clock(session.timeLeft)}</dd>
+            </div>
+          )}
+        </dl>
       </div>
       <div className="goal">
         {s.type === 'predict' ? (
           <>
-            <p className="lbl">{strings.goalOrders}</p>
+            <h3>{strings.goalOrders}</h3>
             <ol className="orders">{s.answer.map((c, i) => <li key={i}>git {c}</li>)}</ol>
           </>
         ) : s.rules ? (
           <>
-            <p className="lbl">{strings.goalRules}</p>
+            <h3>{strings.goalRules}</h3>
             <ul className="rules">
               {s.rules.map((r) => {
                 const ok = r.check(repo);
                 return (
                   <li key={r.text} className={ok ? 'ok' : ''}>
-                    <span className="ck" role="img" aria-label={ok ? strings.ruleOk : strings.ruleTodo}>{ok ? '✓' : ''}</span>
+                    <span className="ck" role="img" aria-label={ok ? strings.ruleOk : strings.ruleTodo} />
                     {fr(r.text)}
                   </li>
                 );
@@ -141,7 +150,7 @@ export function DepartureBoard({ session }: { session: Session }) {
           </>
         ) : session.target && (
           <>
-            <p className="lbl">{strings.goalTarget}</p>
+            <h3>{strings.goalTarget}</h3>
             <Yard repo={session.target} variant="mini" />
           </>
         )}
