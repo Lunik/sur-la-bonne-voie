@@ -138,6 +138,17 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .trim { fill: var(--t-trim); }
 .vent { fill: var(--t-vent); opacity: .55; }
 .rib { fill: none; stroke: var(--car-edge); stroke-width: 1; }
+.glint { fill: var(--glint); }
+.door { fill: var(--t-door); }
+.door.acc { fill: var(--acc, var(--t-door)); }
+.door-line { fill: none; stroke: var(--t-trim); stroke-width: .8; opacity: .6; }
+.seam, .louvre { fill: none; stroke: var(--t-trim); stroke-width: .6; opacity: .55; }
+.wiper { fill: none; stroke: var(--t-trim); stroke-width: .9; stroke-linecap: round; }
+.gangway { fill: var(--t-trim); }
+.buffer-head, .tank { fill: var(--bogie); }
+.rod { fill: none; stroke: var(--bogie); stroke-width: .9; }
+.hub, .spring, .insul { fill: var(--roof); }
+.pan { fill: var(--bogie); }
 .t-francilien { --acc: var(--t-idf); }
 .t-regiolis { --acc: var(--t-ter); }
 .t-agc { --acc: var(--t-agc); }
@@ -153,7 +164,8 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .car-body.revert .body { fill: var(--rev-car); stroke: var(--rev-car); }
 .car-body.revert .label { fill: var(--rev-label); }
 .car-body.revert .pane { fill: color-mix(in srgb, var(--rev-label) 22%, var(--rev-car)); }
-.frame, .coupler, .loco-body .coupler { fill: var(--bogie); }
+.coupler { fill: var(--bogie); }
+.frame { fill: var(--t-trim); }
 .wheel { fill: var(--bogie); stroke: var(--surface); stroke-width: 1.5; }
 .cargo { fill: var(--danger); stroke: var(--surface); stroke-width: 1.5; }
 .gone circle { fill: var(--ink); }
@@ -164,7 +176,7 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .flag.remote text { fill: var(--ink); }
 .sel { fill: none; stroke: var(--brand); stroke-width: 2.5; }
 .loco-body .nose { fill: var(--brand); }
-.loco-body .panto { fill: none; stroke: var(--bogie); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.loco-body .panto { fill: none; stroke: var(--bogie); stroke-width: 1.2; stroke-linejoin: round; stroke-linecap: round; }
 .loco-body .head { font: 600 9px var(--f-display); letter-spacing: .1em; fill: var(--car-ink); text-anchor: middle; }
 .loco-body .lamp { fill: var(--lamp); }
 

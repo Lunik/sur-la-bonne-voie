@@ -45,7 +45,7 @@ export function CarBody({ repo, commit: c, coupled, gone, flags = [], selected }
   return (
     <g className={`car-body t-${train} ${kind}`}>
       {selected && <rect className="sel" x={-5} y={-7} width={CAR_W + 10} height={CAR_H + 20} rx={8} />}
-      {coupled && <rect className="coupler" x={CAR_W - SLOT} y={CAR_H - 12} width={SLOT - CAR_W} height={3} />}
+      {coupled && trains[train].link}
       {trains[train].car}
       {recreated ? (
         <>
@@ -82,7 +82,7 @@ export function LocoBody() {
   const { outline, nose, roof, paint, front } = trains[train].loco;
   return (
     <g className={`loco-body t-${train}`}>
-      <rect className="coupler" x={CAR_W - SLOT} y={CAR_H - 12} width={SLOT - CAR_W} height={3} />
+      {trains[train].link}
       {roof}
       <path className="body" d={outline} />
       <g clipPath={`url(#${clip})`}>
