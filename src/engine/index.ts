@@ -61,7 +61,7 @@ const DEFAULT_HELP = ['commit', 'branch', 'merge', 'rebase', 'cherry-pick', 'res
 function fail(message: string): never {
   throw new EngineError(message);
 }
-const stripPrimes = (label: string) => label.replaceAll(PRIME, '');
+export const stripPrimes = (label: string) => label.replaceAll(PRIME, '');
 /** Lookup by a player-typed name: ignores inherited keys such as `toString` or `constructor`. */
 const own = <T>(record: Record<string, T>, key: string): T | undefined => (Object.hasOwn(record, key) ? record[key] : undefined);
 

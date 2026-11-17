@@ -59,7 +59,7 @@ Critère de sortie : `npm test`, `npm run lint` et `npm run build` passent en CI
 
 But : réécrire le moteur du prototype (§ 4.1 du handoff) en module autonome, couvert par des tests unitaires. Livrable : `src/engine/` + ses tests, aucune interface.
 
-Statut au 17/11/2026 : **fait, en attente de relecture.** `src/engine/` (moteur + `messages.ts`) et tests par famille de commandes ; `prototype-stations.test.ts` rejoue les 21 stations (cibles, solutions = `par`, pronostics distincts).
+Statut au 17/11/2026 : **fait, en attente de relecture.** `src/engine/` (moteur + `messages.ts`) et tests par famille de commandes ; le rejeu des 21 stations est passé dans `src/levels/stations.test.ts` au jalon 2.
 
 1. Modèle d’état : commits `{id, parents, label, origin, kind, cargo}`, voies, HEAD, `origin`, reflog, quai (`pending`), drapeaux `allow` / `noM` / `noForce`. Limites du prototype (3 voies, 8 positions de reflog) rendues configurables.
 2. Analyse de commande : `exec(state, ligne)` renvoie `{state, output}` ou une erreur, sans mutation (atomicité par construction, plus besoin de clone + restauration).
@@ -78,12 +78,22 @@ Critère de sortie : toutes les commandes du tableau ci-dessus testées ; les co
 
 But : décrire une station comme une donnée lisible, puis porter les 5 lignes et 21 stations du prototype. Livrable : `src/levels/` et un test qui joue chaque station.
 
-- [ ] Schéma de station avec des noms explicites : `line`, `title`, `type` (`compo`, `rules`, `predict`), `difficulty`, `start`, `target` ou `rules`, `par`, `budget`, `timeLimit`, `keyboardOnly`, `noMerge`, `noForce`, `match`, `tools`, `newTools`, `hint`, `solution`. Les noms courts du prototype (`ch`, `diff`, `noM`…) disparaissent.
-- [ ] Règles de victoire en prédicats nommés et réutilisables (`contains`, `noCargo`, `noMerge`, `reverted`, `same`).
-- [ ] Validation du schéma au chargement : champ manquant ou incohérent = erreur explicite en développement.
-- [ ] Portage des 21 stations, ligne par ligne, avec relecture des textes (accords, vocabulaire ferroviaire du § 6 du handoff).
-- [ ] Test de contenu : chaque station se résout avec `solution` en ≤ `par` coups ; chaque pronostic a une bonne réponse et deux fausses.
-- [ ] Lignes et outils : déblocage par ligne (`ALLOW` / `TOOLSET` du prototype) décrit dans les données, pas dans le code.
+Statut au 17/11/2026 : **fait, en attente de relecture.** `src/levels/index.ts` (schéma, lignes, règles, `startBoard`, `isWon`, `play`, `validate`), `src/levels/stations.ts` (les 21 stations, seul fichier à toucher pour en ajouter une), `src/levels/stations.test.ts`.
+
+Écarts avec la liste ci-dessous :
+
+- `type` vaut `compo`, `rules` ou `predict` ; un pronostic porte `answer` et `wrong` (deux `{ commands, why }`). Champs ajoutés : `id` (identifiant stable, clé de progression), `brief`, `learn`, `cargo`.
+- `noMerge` / `noForce` deviennent `fastForwardOnly` / `forceForbidden`, les noms du moteur : `noMerge` est déjà le nom d’un prédicat de règle.
+- `tools` devient `tool` (outil sélectionné à l’arrivée) ; les outils débloqués viennent de la ligne.
+- Le test exige `solution` = `par` coups exactement (pas ≤), pour repérer aussi un `par` trop généreux. Il vérifie aussi qu’aucune station n’est gagnée dès le départ.
+- Textes portés tels quels, espaces simples avant « : ? ! » : l’espace insécable revient à l’interface (jalon 3).
+
+- [x] Schéma de station avec des noms explicites : `line`, `title`, `type` (`compo`, `rules`, `predict`), `difficulty`, `start`, `target` ou `rules`, `par`, `budget`, `timeLimit`, `keyboardOnly`, `noMerge`, `noForce`, `match`, `tools`, `newTools`, `hint`, `solution`. Les noms courts du prototype (`ch`, `diff`, `noM`…) disparaissent.
+- [x] Règles de victoire en prédicats nommés et réutilisables (`contains`, `noCargo`, `noMerge`, `reverted`, `same`).
+- [x] Validation du schéma au chargement : champ manquant ou incohérent = erreur explicite en développement.
+- [x] Portage des 21 stations, ligne par ligne, avec relecture des textes (accords, vocabulaire ferroviaire du § 6 du handoff). Aucune faute d’accord relevée ; relecture du propriétaire au jalon 4.
+- [x] Test de contenu : chaque station se résout avec `solution` en ≤ `par` coups ; chaque pronostic a une bonne réponse et deux fausses.
+- [x] Lignes et outils : déblocage par ligne (`ALLOW` / `TOOLSET` du prototype) décrit dans les données, pas dans le code.
 
 Critère de sortie : 21 stations portées, test de contenu vert ; ajouter une station ne demande de toucher qu’un fichier de données.
 
@@ -93,10 +103,11 @@ But : reconstruire l’interface du prototype en composants React qui lisent l�
 
 1. **Thème** : reprendre tels quels les jetons `:root` du prototype (couleurs, livrées, mode sombre), les trois polices et la gouttière mobile.
 2. **Plateau** (`<Yard>`) : calcul de disposition pur (`layout(state)` → positions), rendu SVG des voies, aiguillages, butoirs ; voitures et motrice en composants. Le même composant sert au plateau, à l’objectif miniature, aux pronostics et à l’illustration d’en-tête.
-3. **Terminal** : champ `$ git`, historique ↑ / ↓, suggestions cliquables par ligne, erreurs en rouge.
-4. **Gestes** : glisser (rebase, merge, cherry-pick) et toucher (souder, revert) en Pointer Events, seuil 8 px, repli « toucher puis toucher ». Chaque geste écrit les commandes Git équivalentes dans le terminal.
-5. **Session et progression** : coups, étoiles, budget, chrono, annuler, indice ; `localStorage` en try/catch (nouvelles clés versionnées).
-6. **Écrans** : en-tête illustré, plan du réseau (5 lignes), tableau des départs, poste d’aiguillage, fenêtres de victoire et d’échec (`<dialog>` natif).
+3. **Textes des stations** : espaces insécables français avant « : ? ! » appliquées au rendu.
+4. **Terminal** : champ `$ git`, historique ↑ / ↓, suggestions cliquables par ligne, erreurs en rouge.
+5. **Gestes** : glisser (rebase, merge, cherry-pick) et toucher (souder, revert) en Pointer Events, seuil 8 px, repli « toucher puis toucher ». Chaque geste écrit les commandes Git équivalentes dans le terminal.
+6. **Session et progression** : coups, étoiles, budget, chrono, annuler, indice ; `localStorage` en try/catch (nouvelles clés versionnées).
+7. **Écrans** : en-tête illustré, plan du réseau (5 lignes), tableau des départs, poste d’aiguillage, fenêtres de victoire et d’échec (`<dialog>` natif).
 
 Critère de sortie : les 7 types de défis jouables à la souris, au doigt et au clavier ; rendu visuellement fidèle au prototype en clair et en sombre.
 

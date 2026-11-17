@@ -1,9 +1,10 @@
 // Game session: moves, stars, budget, timer, undo. Pure reducer, no React.
-import { emptyRepo, exec, type RepoState } from '../engine/index.ts';
-import { stations, type Station } from '../levels/index.ts';
+import { build, exec, type RepoState } from '../engine/index.ts';
+import { startBoard, type Station } from '../levels/index.ts';
+import { stations } from '../levels/stations.ts';
 
 export interface Session {
-  station: Station | undefined;
+  station: Station;
   repo: RepoState;
   moves: number;
   log: string[];
@@ -11,8 +12,9 @@ export interface Session {
 
 export type Action = { type: 'command'; line: string };
 
-export function newSession(station: Station | undefined = stations[0]): Session {
-  return { station, repo: emptyRepo(), moves: 0, log: [] };
+export function newSession(station: Station = stations[0]): Session {
+  const repo = station.type === 'predict' ? build(station.start, station.cargo) : startBoard(station);
+  return { station, repo, moves: 0, log: [] };
 }
 
 export function reduce(session: Session, action: Action): Session {
