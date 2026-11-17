@@ -19,10 +19,9 @@ Ce projet est **indépendant** des dépôts ÉtymoLogique visibles dans la sessi
 | Quoi | Où |
 |---|---|
 | Artifact publié (privé, version 4) | https://claude.ai/artifact/3vhQYZr5vypciuf3N1zJow |
-| Source unique du jeu (HTML + CSS + JS, un seul fichier) | `/home/user/gare-de-triage/index.html` |
-| Test de bout en bout (Playwright, résout les 21 stations) | `/home/user/gare-de-triage/test-solutions.js` |
-| Ce handoff | `/home/user/gare-de-triage/HANDOFF.md` |
-| Copie de travail utilisée pour publier | `/tmp/claude-0/-home-user/460b6b8c-9f4c-53f9-a67d-30b6cd02526f/scratchpad/gare-de-triage.html` (peut être effacée) |
+| Source unique du jeu (HTML + CSS + JS, un seul fichier) | `index.html` (dépôt `sur-la-bonne-voie`, restauré depuis l’artifact) |
+| Test de bout en bout (Playwright, résout les 21 stations) | **perdu** : resté dans la session cloud (`/home/user/gare-de-triage/test-solutions.js`), à réécrire |
+| Ce handoff | `handoff.md` |
 
 L’artifact est **privé** : seules les personnes à qui le propriétaire donne accès (menu Partager) peuvent l’ouvrir.
 
@@ -125,7 +124,7 @@ Relancer : `cd /home/user/gare-de-triage && node test-solutions.js` (le script l
 5. **Pas d’audio**, pas d’animation de voie de garage ; l’animation de départ du train est coupée par `prefers-reduced-motion`.
 6. **Accessibilité** : le plateau est utilisable au clavier via le terminal et via toucher-puis-toucher, mais les voitures ne sont pas focalisables une à une. Contraste et mode sombre ont été conçus, pas audités.
 7. **Persistance** : seulement par navigateur (`localStorage`) ; rien n’est partagé ni lu par Claude.
-8. **Accords grammaticaux** : le passage « wagon → voiture » a été fait par remplacement ; un accord cassé a été trouvé et corrigé (« La voiture suspecte »). Relire les textes de `hint`, `learn` et `brief` à la recherche d’autres accords oubliés.
+8. **Accords grammaticaux** : le passage « wagon → voiture » avait cassé sept accords (« un nouvelle voiture », « le première voiture », « soudées en un seul »…) ; corrigés le 2026-11-17.
 9. **Case « Tout débloquer »** : outil de test, à retirer avant diffusion.
 10. **Nom** : non tranché ; l’en-tête affiche « Gare de triage » et le titre de page est `<title>Gare de triage</title>`.
 

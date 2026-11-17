@@ -416,7 +416,7 @@ function exec(s,line){
     case 'commit':{
       gate('commit'); let label,origin=H,cargo;
       if(s.pending&&s.pending.length){ label=s.pending.map(id=>raw(s.c[id].label)).join(''); cargo=s.pending.map(id=>s.c[id].cargo).find(Boolean); origin=s.c[s.pending[0]].origin;
-        out.push(`[${H} ${label}] ${s.pending.length} voitures soudées en un seul`); s.pending=null; }
+        out.push(`[${H} ${label}] ${s.pending.length} voitures soudées en une seule`); s.pending=null; }
       else { label=LET[s.next++]; cargo=s.cargo[label]; out.push(`[${H} ${label}] nouvelle voiture accrochée`); }
       const id=mk(s,tH?[tH]:[],label,origin,'n',cargo); setTip(s,H,id); if(!s.order.includes(H)) s.order.push(H); kind='commit'; break; }
     case 'branch':{
@@ -535,7 +535,7 @@ const TRI=['commit','commit','switch -c feature','commit','commit','commit','swi
 const LEVELS=[
   /* ---- Ligne 1 · Le dépôt ---- */
   {ch:0,nom:'Première voiture',type:'compo',diff:1,start:A2,target:[...A2,'commit'],par:1,nouveau:['commit'],
-   brief:'La motrice (HEAD) attend sur la voie main. Accrochez-lui un nouvelle voiture.',
+   brief:'La motrice (HEAD) attend sur la voie main. Accrochez-lui une nouvelle voiture.',
    hint:'Bouton « Ajouter une voiture », ou tapez commit.',learn:'git commit'},
   {ch:0,nom:'Voie de service',type:'compo',diff:1,start:A2,target:[...A2,'switch -c feature','commit'],par:2,nouveau:['branch'],
    brief:'Posez une voie feature, conduisez-y la motrice et accrochez-y une voiture. La voie main ne doit pas bouger.',
@@ -545,7 +545,7 @@ const LEVELS=[
    hint:'Nouvelle voie, deux voitures, touchez la pancarte main, une voiture. Au clavier : switch -c feature, commit, commit, switch main, commit.',learn:'git switch -c feature\ngit commit\ngit commit\ngit switch main\ngit commit'},
   {ch:0,nom:'La bifurcation',type:'prono',diff:2,start:A2,cmds:['switch -c fix','commit','switch main','commit','commit'],
    wrong:[{cmds:['switch -c fix','commit','commit','commit'],why:'Sans git switch main, la motrice reste sur fix : toutes les voitures y vont.'},
-          {cmds:['commit','commit','commit'],why:'git switch -c fix crée bien une nouvelle voie et y conduit la motrice : le première voiture part dessus.'}],
+          {cmds:['commit','commit','commit'],why:'git switch -c fix crée bien une nouvelle voie et y conduit la motrice : la première voiture part dessus.'}],
    brief:'Le chef de gare va lancer cet ordre de manœuvre. À quoi ressemblera le plateau&nbsp;?',learn:'C’est la motrice (HEAD) qui décide où s’accroche chaque nouvelle voiture.'},
   /* ---- Ligne 2 · Les jonctions ---- */
   {ch:1,nom:'La jonction',type:'compo',diff:2,start:FORK,target:[...FORK,'merge feature'],par:1,tool:'merge',nouveau:['merge','rebase'],
@@ -614,7 +614,7 @@ const LEVELS=[
    brief:'Un collègue a lancé reset --hard C sur feature&nbsp;: D et E sont parties sur la voie de garage. Récupérez-les.',
    hint:'Touchez E sur la voie de garage, sous le plateau (reset --hard E). Au clavier : reflog, puis reset --hard feature@{1}.',learn:'git reflog\ngit reset --hard feature@{1}'},
   {ch:4,nom:'Soft ou hard&nbsp;?',type:'prono',diff:3,start:['commit','commit','commit','commit'],cmds:['reset --soft HEAD~2','commit'],
-   wrong:[{cmds:['reset --hard HEAD~2'],why:'--hard jette les voitures. --soft les garde sur le quai, prêts à être soudés par le commit suivant.'},
+   wrong:[{cmds:['reset --hard HEAD~2'],why:'--hard jette les voitures. --soft les garde sur le quai, prêtes à être soudées par le commit suivant.'},
           {cmds:['commit'],why:'reset --soft recule d’abord la voie de deux voitures.'}],
    brief:'Ordre&nbsp;: reset --soft HEAD~2, puis commit. Quel plateau&nbsp;?',learn:'reset --soft recule la voie mais garde les changements : le commit suivant les soude.'},
   {ch:4,nom:'La livraison du vendredi',type:'regles',budget:7,time:150,diff:5,noForce:true,cargo:{D:'debug'},par:5,
@@ -788,7 +788,7 @@ function render(){
   document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('on',b.dataset.tool===tool));
   $('gestures').hidden=gesturesOff();
   const tk=tool&&TOOLS[tool]?TOOLS[tool].k:null;
-  $('tool-help').textContent= tk==='tap' ? (tool==='souder'?'Touchez le première voiture de la série : de cette voiture au bout de la voie, tout est soudé en un seul.':'Touchez la voiture dont il faut annuler l’effet.')
+  $('tool-help').textContent= tk==='tap' ? (tool==='souder'?'Touchez la première voiture de la série : de cette voiture au bout de la voie, tout est soudé en une seule voiture.':'Touchez la voiture dont il faut annuler l’effet.')
     : tk==='drag' ? 'Glissez une voiture sur une autre voie, ou touchez la voiture puis la voie. Touchez une pancarte pour y conduire la motrice.'
     : 'Touchez une pancarte pour y conduire la motrice.';
   $('moves').textContent=moves+(moves>1?' manœuvres':' manœuvre')+(L.budget?` / ${L.budget}`:'');
@@ -906,8 +906,8 @@ function act1(src){
   if(src.from.startsWith('origin/')) return toast('Cette voiture est sur le quai distant : on n’y touche pas directement.','bad');
   const chain=fp(S,S.b[src.from]), k=chain.indexOf(src.id), w=S.c[src.id].label;
   if(tool==='souder'){
-    if(k<1) return toast(k===0?'Touchez le première voiture de la série : il en faut au moins deux à souder.':'Cette voiture n’est pas sur cette voie.','bad');
-    run([`switch ${src.from}`,`reset --soft HEAD~${k+1}`,'commit'],`${k+1} voitures soudées en un seul.`,true);
+    if(k<1) return toast(k===0?'Touchez la première voiture de la série : il en faut au moins deux à souder.':'Cette voiture n’est pas sur cette voie.','bad');
+    run([`switch ${src.from}`,`reset --soft HEAD~${k+1}`,'commit'],`${k+1} voitures soudées en une seule.`,true);
   } else if(tool==='revert') run([`switch ${src.from}`,`revert ${w}`],`Voiture inverse de ${w} accrochée.`,true);
 }
 let drag=null, ghost=null, clickGuard=0;
