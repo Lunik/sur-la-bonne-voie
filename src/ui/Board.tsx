@@ -4,6 +4,7 @@ import {
   type BoardTool, type CarRef, type Commit, type RepoState, type Session, type Step, type Toast,
 } from '../game/index.ts';
 import { strings } from './strings.ts';
+import { fr } from './typography.ts';
 import { CarToken, LocoToken, Yard } from './Yard.tsx';
 
 export interface BoardProps {
@@ -14,12 +15,14 @@ export interface BoardProps {
   onSelect: (car: CarRef | null) => void;
   run: (step: Step, message: string) => void;
   toast: (toast: Toast) => void;
+  /** Feedback line, shown on the yard next to the action. */
+  message: Toast;
 }
 
 const DRAG_THRESHOLD = 8;
 const isRemote = (row: string) => row.startsWith('origin/');
 
-export function Board({ session, tool, gesturesOff, selected, onSelect, run, toast }: BoardProps) {
+export function Board({ session, tool, gesturesOff, selected, onSelect, run, toast, message }: BoardProps) {
   const { repo, station } = session;
   const done = session.status !== 'playing';
   const yard = useRef<HTMLDivElement>(null);
@@ -146,17 +149,20 @@ export function Board({ session, tool, gesturesOff, selected, onSelect, run, toa
 
   return (
     <>
-      <Yard
-        ref={yard}
-        repo={repo}
-        variant="live"
-        selected={selected?.id}
-        grab={!gesturesOff && !!tool}
-        dropRow={dropRow}
-        leaving={session.status === 'won' && station.type !== 'predict'}
-        onPointerDown={onPointerDown}
-        onClick={onClick}
-      />
+      <div className="yard-box">
+        <Yard
+          ref={yard}
+          repo={repo}
+          variant="live"
+          selected={selected?.id}
+          grab={!gesturesOff && !!tool}
+          dropRow={dropRow}
+          leaving={session.status === 'won' && station.type !== 'predict'}
+          onPointerDown={onPointerDown}
+          onClick={onClick}
+        />
+        {station.type !== 'predict' && <p className={`toast ${message.tone}`} aria-live="polite">{fr(message.text)}</p>}
+      </div>
       {ghost && (
         <div className="ghost" style={{ left: ghost.x, top: ghost.y }}>
           <CarToken repo={repo} commit={repo.commits[ghost.id]} />

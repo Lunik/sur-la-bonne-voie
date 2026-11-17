@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import {
   defaultTool, newSession, reduce, shuffled, stars as starsOf, stations,
   type Action, type BoardTool, type CarRef, type Session, type Station, type Step, type Toast,
@@ -34,6 +34,7 @@ export function App() {
   const [hintShown, setHintShown] = useState(false);
   const [victoryShown, setVictoryShown] = useState(false);
   const [loads, setLoads] = useState(0);
+  const stage = useRef<HTMLDivElement>(null);
   const index = stations.indexOf(station);
 
   const load = (i: number, { hint = false } = {}) => {
@@ -46,6 +47,8 @@ export function App() {
     setVictoryShown(false);
     setLoads((n) => n + 1);
     setProgress((p) => ({ ...withWin(p), current: s.id }));
+    // Bring the exercise to the top of the screen: map above, nothing to scroll back to while playing.
+    requestAnimationFrame(() => stage.current?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }));
   };
   const run = (step: Step, message: string) => {
     dispatch({ type: 'step', step, message });
@@ -101,40 +104,47 @@ export function App() {
           onUnlockAll={(on) => setProgress((p) => ({ ...p, unlockAll: on }))}
           onPick={load}
         />
-        <DepartureBoard session={session} />
-        <Board
-          key={`board-${loads}`}
-          session={session}
-          tool={tool}
-          gesturesOff={gesturesOff}
-          selected={selected}
-          onSelect={setSelected}
-          run={run}
-          toast={toast}
-        />
-        {station.type === 'predict' && <Prediction session={session} onGuess={(i) => dispatch({ type: 'guess', option: i })} />}
-        <Post
-          key={`post-${loads}`}
-          session={session}
-          tool={tool}
-          onTool={(t) => {
-            setTool(t);
-            setSelected(null);
-          }}
-          keyboardMode={keyboardMode}
-          onKeyboardMode={(on) => {
-            setKeyboardMode(on);
-            setSelected(null);
-            toast({ tone: 'info', text: on ? strings.toastKeyboardOn : strings.toastKeyboardOff });
-          }}
-          gesturesOff={gesturesOff}
-          hintShown={hintShown}
-          onHint={() => setHintShown((h) => !h)}
-          onUndo={undo}
-          onRestart={() => load(index)}
-          run={run}
-          toast={shownToast}
-        />
+        {/* The whole exercise, kept within one screen on wide displays: sheet and yard on the left, controls on the right. */}
+        <div className="stage" ref={stage}>
+          <div className="stage-main">
+            <DepartureBoard session={session} />
+            <Board
+              key={`board-${loads}`}
+              session={session}
+              tool={tool}
+              gesturesOff={gesturesOff}
+              selected={selected}
+              onSelect={setSelected}
+              run={run}
+              toast={toast}
+              message={shownToast}
+            />
+          </div>
+          <div className="stage-side">
+            {station.type === 'predict' && <Prediction session={session} onGuess={(i) => dispatch({ type: 'guess', option: i })} />}
+            <Post
+              key={`post-${loads}`}
+              session={session}
+              tool={tool}
+              onTool={(t) => {
+                setTool(t);
+                setSelected(null);
+              }}
+              keyboardMode={keyboardMode}
+              onKeyboardMode={(on) => {
+                setKeyboardMode(on);
+                setSelected(null);
+                toast({ tone: 'info', text: on ? strings.toastKeyboardOn : strings.toastKeyboardOff });
+              }}
+              gesturesOff={gesturesOff}
+              hintShown={hintShown}
+              onHint={() => setHintShown((h) => !h)}
+              onUndo={undo}
+              onRestart={() => load(index)}
+              run={run}
+            />
+          </div>
+        </div>
         {status === 'ready' && station.type !== 'predict' && (
           <Ready seconds={station.timeLimit!} brief={station.brief} onGo={() => dispatch({ type: 'start' })} />
         )}

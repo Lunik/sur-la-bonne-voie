@@ -252,6 +252,10 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .btn.quiet { background: var(--surface); color: var(--ink); border-color: var(--line-2); }
 .btn.quiet:hover { border-color: var(--ink); }
 .btn .nv { top: -10px; right: -6px; }
+.btn.sm, .stage .btn.sm { min-height: 30px; padding: 3px 10px; font-size: 14px; }
+.panel h3 .row { gap: 6px; }
+.yard-box { position: relative; display: grid; gap: 6px; }
+.yard-box .toast { padding: 0 4px; }
 .quai { border: 1px dashed var(--line-2); background: var(--sunk); border-radius: 6px; padding: 8px 12px; font-size: 15px; }
 .hint { border-left: 3px solid var(--ink); padding: 2px 0 2px 12px; color: var(--ink-2); }
 .toast { min-height: 1.5em; font-weight: 500; }
@@ -292,6 +296,46 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 }
 @keyframes rise { from { opacity: 0; translate: 0 10px; } }
 @keyframes fade { from { opacity: 0; } }
+
+/* ---------- Stage: the exercise, in one screen on wide displays ---------- */
+.stage { display: grid; gap: 32px; scroll-margin-top: 12px; }
+.stage-main, .stage-side { display: grid; gap: 32px; align-content: start; min-width: 0; }
+@media (min-width: 1100px) {
+  .wrap { max-width: 1280px; }
+  .stage { grid-template-columns: minmax(0, 1fr) 390px; gap: 20px; align-items: start; }
+  .stage-main, .stage-side { gap: 14px; }
+  .stage .legend { margin: 0; font-size: 12.5px; gap: 2px 14px; }
+  .stage .legend .car-token { width: 34px; }
+  /* Four tracks or more: a smaller yard keeps the exercise within the screen. */
+  .stage .yard-live:has(.sign-cell:nth-child(4)) { --k: .88; }
+  .stage .board { gap: 12px 24px; padding-top: 14px; }
+  .stage .board h2 { font-size: 2rem; }
+  .stage .brief { font-size: 16px; }
+  .stage .post { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .stage .panel { padding: 12px 14px; gap: 8px; }
+  .stage .gestures { gap: 8px; }
+  .stage .gestures > .small { font-size: 13px; line-height: 1.4; }
+  .stage .panel h3 { font-size: 16px; }
+  .stage .tools { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .stage .tool { min-height: 44px; padding: 5px 10px; }
+  .stage .tool b { font-size: 14px; }
+  .stage .row { gap: 6px; }
+  .stage .btn { min-height: 32px; padding: 4px 8px; gap: 6px; font-size: 13.5px; }
+  .stage .btn small { font-size: 11px; }
+  .stage .btn svg { width: 18px; height: 18px; }
+  .stage .term { min-height: 6em; max-height: 8.5em; padding: 8px 12px; }
+  .stage .opts { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .stage .opt { padding: 8px 12px 10px; gap: 4px; }
+  /* Feedback floats in the empty bottom-right corner of the yard. */
+  .stage .yard-box .toast {
+    position: absolute; right: 12px; bottom: 8px; max-width: 46%; padding: 4px 10px; border-radius: 6px; text-align: right;
+    font-size: 14px; background: color-mix(in srgb, var(--surface) 92%, transparent); pointer-events: none;
+  }
+  .stage .goal { padding: 10px 14px; gap: 6px; }
+  .stage .rules { gap: 4px; font-size: 14px; }
+  .stage .help { gap: 4px; font-size: 12px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; white-space: nowrap; }
+  .stage .help code { padding: 1px 5px; }
+}
 
 /* ---------- Narrow screens ---------- */
 @media (max-width: 640px) {

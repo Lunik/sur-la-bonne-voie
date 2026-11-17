@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   allowedTools, buttonStep, isButtonTool, isDragTool, isTapTool, lines,
-  type BoardTool, type Session, type Step, type Toast,
+  type BoardTool, type Session, type Step,
 } from '../game/index.ts';
 import { Icon } from './Icon.tsx';
 import { strings } from './strings.ts';
@@ -19,7 +19,6 @@ interface PostProps {
   onUndo: () => void;
   onRestart: () => void;
   run: (step: Step, message: string) => void;
-  toast: Toast;
 }
 
 export function Post(p: PostProps) {
@@ -38,10 +37,11 @@ export function Post(p: PostProps) {
       <div className="panel">
         <h3>
           {strings.post}
-          <label className="switch-lbl">
-            <input type="checkbox" checked={p.keyboardMode} disabled={station.keyboardOnly} onChange={(e) => p.onKeyboardMode(e.target.checked)} />
-            {strings.keyboardMode}
-          </label>
+          <span className="row">
+            <button className="btn quiet sm" type="button" onClick={p.onUndo}>{strings.undo}</button>
+            <button className="btn quiet sm" type="button" onClick={p.onRestart}>{strings.restart}</button>
+            <button className="btn quiet sm" type="button" aria-expanded={p.hintShown} onClick={p.onHint}>{strings.hint}</button>
+          </span>
         </h3>
         {!p.gesturesOff && (
           <div className="gestures">
@@ -83,20 +83,21 @@ export function Post(p: PostProps) {
             {strings.platform}<b>{pending.join(', ')}</b>{strings.platformAfter[0]}<code>{strings.platformAfter[1]}</code>{strings.platformAfter[2]}
           </p>
         )}
-        <div className="row">
-          <button className="btn quiet" type="button" onClick={p.onUndo}>{strings.undo}</button>
-          <button className="btn quiet" type="button" onClick={p.onRestart}>{strings.restart}</button>
-          <button className="btn quiet" type="button" aria-expanded={p.hintShown} onClick={p.onHint}>{strings.hint}</button>
-        </div>
         {p.hintShown && <p className="hint">{fr(station.hint)}</p>}
-        <p className={`toast ${p.toast.tone}`} aria-live="polite">{fr(p.toast.text)}</p>
       </div>
-      <Terminal session={session} run={p.run} />
+      <Terminal session={session} run={p.run} keyboardMode={p.keyboardMode} onKeyboardMode={p.onKeyboardMode} />
     </section>
   );
 }
 
-function Terminal({ session, run }: { session: Session; run: (step: Step, message: string) => void }) {
+interface TerminalProps {
+  session: Session;
+  run: (step: Step, message: string) => void;
+  keyboardMode: boolean;
+  onKeyboardMode: (on: boolean) => void;
+}
+
+function Terminal({ session, run, keyboardMode, onKeyboardMode }: TerminalProps) {
   const { station, log } = session;
   const term = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -120,7 +121,15 @@ function Terminal({ session, run }: { session: Session; run: (step: Step, messag
 
   return (
     <div className="panel">
-      <h3>{strings.terminal} <span className="small">{strings.moves(session.moves, budget)}</span></h3>
+      <h3>
+        <span>{strings.terminal} <span className="small">{strings.moves(session.moves, budget)}</span></span>
+        {station.type !== 'predict' && (
+          <label className="switch-lbl">
+            <input type="checkbox" checked={keyboardMode} disabled={station.keyboardOnly} onChange={(e) => onKeyboardMode(e.target.checked)} />
+            {strings.keyboardMode}
+          </label>
+        )}
+      </h3>
       <div className="term" ref={term} aria-live="polite">
         <div className="o">{strings.logTitle(station.line, station.title)}</div>
         {log.map((l, i) => (
