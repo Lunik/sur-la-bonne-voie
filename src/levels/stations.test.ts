@@ -20,7 +20,6 @@ test('validate catches a broken station', () => {
     { ...base, par: 2, budget: 1 },
     { ...base, line: 9 },
     { ...base, id: 'x', solution: ['merge main'] },
-    { ...base, id: 'y', tool: 'push' },
     { ...played('grue-en-panne'), rules: [{ text: 'typo', check: noMerge('mian') }] },
   ]);
   assert.ok(errors.some((e) => e === 'grue-en-panne : la solution ne gagne pas'));
@@ -28,7 +27,6 @@ test('validate catches a broken station', () => {
   assert.ok(errors.some((e) => e.includes('identifiant en double')));
   assert.ok(errors.some((e) => e.includes('ligne 9 inconnue')));
   assert.ok(errors.some((e) => e.startsWith('x : « merge main » refusée')));
-  assert.ok(errors.some((e) => e.includes('outil push pas encore débloqué')));
 });
 
 test('gates follow the line: merge is not yet taught on line 1', () => {

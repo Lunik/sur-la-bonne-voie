@@ -32,7 +32,7 @@
 .net-head h2 { font-size: 20px; }
 .tot { font-size: 14px; color: var(--muted); }
 .unlock { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); cursor: pointer; }
-.unlock input, .switch-lbl input { width: 17px; height: 17px; accent-color: var(--ink); }
+.unlock input { width: 17px; height: 17px; accent-color: var(--ink); }
 .lines { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 18px 36px; }
 .line { display: grid; gap: 8px; min-width: 0; }
 .lname { display: flex; align-items: center; gap: 9px; font: 600 16px var(--f-display); }
@@ -103,9 +103,6 @@
 .sign.head { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px var(--ink), inset 0 0 0 3px color-mix(in srgb, var(--on-ink) 45%, transparent); }
 .sign.remote { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line-2); }
 .sign.remote small { color: var(--muted); }
-.sign.drop { box-shadow: 0 0 0 3px var(--brand); }
-button.sign:hover { box-shadow: inset 0 0 0 2px var(--ink), inset 0 0 0 3px var(--on-ink); }
-button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px var(--ink), inset 0 0 0 3px var(--on-ink); }
 .yard-mini .sign { padding: 3px 6px; }
 .yard-mini .sign-name { font-size: 12px; }
 .tracks { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
@@ -113,10 +110,6 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .yard-deco .tracks { overflow: hidden; }
 .yard-deco svg { width: 100%; height: auto; }
 
-.lane { fill: transparent; transition: fill .15s; }
-/* Only lanes and cars take the pointer: a drop on a rail or on the locomotive lands on the lane below. */
-.track, .loco { pointer-events: none; }
-.lane.drop { fill: var(--lane-drop); }
 .rail { fill: none; stroke: var(--rail); stroke-width: 2; stroke-linecap: round; }
 .sleepers { fill: none; stroke: var(--sleeper); stroke-width: 5; stroke-dasharray: 3 6; }
 .track.remote .rail { stroke-dasharray: 9 6; }
@@ -174,14 +167,12 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .flag text { font: 500 10.5px var(--f-body); fill: var(--on-ink); text-anchor: middle; }
 .flag.remote rect { fill: var(--surface); stroke: var(--ink); stroke-dasharray: 3 2; }
 .flag.remote text { fill: var(--ink); }
-.sel { fill: none; stroke: var(--brand); stroke-width: 2.5; }
 .loco-body .nose { fill: var(--brand); }
 .loco-body .panto { fill: none; stroke: var(--bogie); stroke-width: 1.2; stroke-linejoin: round; stroke-linecap: round; }
 .loco-body .head { font: 600 9px var(--f-display); letter-spacing: .1em; fill: var(--car-ink); text-anchor: middle; }
 .loco-body .lamp { fill: var(--lamp); }
 
 /* Motion: rolling and coupling run in Yard.tsx (Web Animations); the train leaves with an accelerating pull. */
-.yard-live.grab .car { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 /* The pull waits for the last car to couple. A keyframe, not a transition, so a car that
    joined the train in the winning move leaves with it instead of jumping off screen. */
 .yard-live .depart { animation: depart 1.6s cubic-bezier(.55, 0, .9, .35) var(--move) both; }
@@ -193,16 +184,13 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
   .yard-live .depart, .roll-in { animation: none; }
 }
 
-.ghost { position: fixed; z-index: 50; pointer-events: none; transform: translate(-50%, -60%) rotate(-2deg); }
 .car-token { display: block; width: 82px; overflow: visible; }
 
 /* ---------- Siding, legend ---------- */
 .casse { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; border: 1px dashed var(--line-2); background: var(--sunk); border-radius: 8px; padding: 8px 14px; }
 .casse p { font-size: 14px; color: var(--muted); margin-right: 6px; }
-.gw { background: none; border: 0; border-radius: 6px; padding: 4px; opacity: .45; filter: grayscale(.8); transition: opacity .15s, filter .15s; }
+.gw { padding: 4px; opacity: .6; filter: grayscale(.6); }
 .gw .car-token { width: 58px; }
-.gw.can { opacity: .85; filter: none; }
-.gw.can:hover { opacity: 1; }
 .legend { list-style: none; margin: -14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 14px; color: var(--muted); }
 .legend li { display: inline-flex; align-items: center; gap: 8px; }
 .legend .car-token { width: 40px; }
@@ -221,26 +209,8 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .opt .yard-mini .tracks { overflow-x: auto; }
 
 /* ---------- Switch post and terminal ---------- */
-.post { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
-@media (max-width: 840px) { .post { grid-template-columns: minmax(0, 1fr); } }
 .panel { padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; min-width: 0; }
 .panel h3 { font-size: 18px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-.switch-lbl { display: flex; align-items: center; gap: 8px; font: 500 14px var(--f-body); color: var(--muted); cursor: pointer; }
-.gestures { display: grid; gap: 12px; }
-.tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
-.tool {
-  position: relative; display: grid; grid-template-columns: 22px 1fr; gap: 0 10px; align-items: center; text-align: left;
-  min-height: 56px; padding: 9px 12px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--surface);
-  transition: border-color .15s, background-color .15s, color .15s;
-}
-.tool:hover { border-color: var(--ink); }
-.tool svg, .btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.tool svg { grid-row: span 2; }
-.tool b { font: 600 15px/1.2 var(--f-display); }
-.tool small { font: 12px var(--f-mono); color: var(--muted); }
-.tool.on { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
-.tool.on small { color: color-mix(in srgb, var(--on-ink) 70%, transparent); }
-.nv { position: absolute; top: -9px; right: 8px; background: var(--brand); color: var(--on-brand); font: 600 11.5px/1 var(--f-body); padding: 3px 6px; border-radius: 3px; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; }
 .btn {
   position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 8px 14px;
@@ -251,7 +221,6 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
 .btn small { font: 12px var(--f-mono); opacity: .7; }
 .btn.quiet { background: var(--surface); color: var(--ink); border-color: var(--line-2); }
 .btn.quiet:hover { border-color: var(--ink); }
-.btn .nv { top: -10px; right: -6px; }
 .btn.sm, .stage .btn.sm { min-height: 30px; padding: 3px 10px; font-size: 14px; }
 .panel h3 .row { gap: 6px; }
 .yard-box { position: relative; display: grid; gap: 6px; }
@@ -311,19 +280,12 @@ button.sign.head:hover { box-shadow: inset 4px 0 0 var(--brand), inset 0 0 0 2px
   .stage .board { gap: 12px 24px; padding-top: 14px; }
   .stage .board h2 { font-size: 2rem; }
   .stage .brief { font-size: 16px; }
-  .stage .post { grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .stage .panel { padding: 12px 14px; gap: 8px; }
-  .stage .gestures { gap: 8px; }
-  .stage .gestures > .small { font-size: 13px; line-height: 1.4; }
   .stage .panel h3 { font-size: 16px; }
-  .stage .tools { grid-template-columns: 1fr 1fr; gap: 6px; }
-  .stage .tool { min-height: 44px; padding: 5px 10px; }
-  .stage .tool b { font-size: 14px; }
   .stage .row { gap: 6px; }
   .stage .btn { min-height: 32px; padding: 4px 8px; gap: 6px; font-size: 13.5px; }
   .stage .btn small { font-size: 11px; }
-  .stage .btn svg { width: 18px; height: 18px; }
-  .stage .term { min-height: 6em; max-height: 8.5em; padding: 8px 12px; }
+  .stage .term { min-height: 14em; max-height: 22em; padding: 8px 12px; }
   .stage .opts { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .stage .opt { padding: 8px 12px 10px; gap: 4px; }
   /* Feedback floats in the empty bottom-right corner of the yard. */

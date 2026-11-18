@@ -1,77 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { firstParentChain, tipOf, type RepoState } from '../engine/index.ts';
-import type { PlayedStation, Step } from '../levels/index.ts';
-import {
-  buttonStep, dragStep, newSession, recoverStep, reduce, stars, stations, tapStep,
-  type ButtonTool, type DragTool, type GestureResult, type Session, type TapTool,
-} from './index.ts';
+import type { Step } from '../levels/index.ts';
+import { newSession, reduce, stars, stations, type Session } from './index.ts';
 
 const station = (id: string) => stations.find((s) => s.id === id)!;
 const step = (s: Session, st: Step) => reduce(s, { type: 'step', step: st, message: 'ok' });
-
-/** Car labelled `label` on row `row` (local or `origin/x`). */
-const car = (repo: RepoState, row: string, label: string) => {
-  const id = firstParentChain(repo, tipOf(repo, row)).find((x) => repo.commits[x].label === label);
-  assert.ok(id, `${label} on ${row}`);
-  return { id, row };
-};
-const ok = (r: GestureResult): Step => {
-  assert.ok('step' in r, JSON.stringify(r));
-  return r.step;
-};
-
-type G = ['drag', DragTool, string, string, string] | ['tap', TapTool, string, string] | ['button', ButtonTool] | ['recover', string];
-
-function playGestures(id: string, gestures: G[]): Session {
-  let s = newSession(station(id));
-  s = reduce(s, { type: 'start' });
-  for (const g of gestures) {
-    const r = s.repo;
-    const st =
-      g[0] === 'drag' ? ok(dragStep(r, g[1], car(r, g[2], g[3]), g[4]))
-      : g[0] === 'tap' ? ok(tapStep(r, g[1], car(r, g[2], g[3])))
-      : g[0] === 'button' ? buttonStep(r, g[1])
-      : recoverStep(r, Object.keys(r.commits).find((x) => r.commits[x].label === g[1])!);
-    s = step(s, st);
-    assert.notEqual(s.toast?.tone, 'bad', `${id}: ${s.toast?.text}`);
-  }
-  return s;
-}
-
-const gestureSolutions: [string, G[]][] = [
-  ['premiere-voiture', [['button', 'commit']]],
-  ['voie-de-service', [['button', 'branch'], ['button', 'commit']]],
-  ['jonction', [['drag', 'merge', 'feature', 'D', 'main']]],
-  ['remise-a-niveau', [['drag', 'rebase', 'feature', 'C', 'main']]],
-  ['ligne-directe', [['drag', 'rebase', 'feature', 'D', 'main'], ['drag', 'merge', 'feature', 'D′', 'main']]],
-  ['grue-en-panne', [
-    ['drag', 'rebase', 'feature', 'C', 'main'], ['drag', 'merge', 'feature', 'C′', 'main'],
-    ['drag', 'rebase', 'hotfix', 'D', 'main'], ['drag', 'merge', 'hotfix', 'D′', 'main'],
-  ]],
-  ['express-du-correctif', [['drag', 'cherry-pick', 'feature', 'D', 'main']]],
-  ['soudure', [['tap', 'squash', 'feature', 'C'], ['drag', 'rebase', 'feature', 'CDE', 'main']]],
-  ['voiture-suspecte', [['drag', 'cherry-pick', 'feature', 'C', 'main'], ['drag', 'cherry-pick', 'feature', 'E', 'main']]],
-  ['premier-depart', [['button', 'push']]],
-  ['push-rejete', [['button', 'pull-rebase'], ['button', 'push']]],
-  ['voiture-fautive', [['tap', 'revert', 'main', 'C'], ['button', 'push']]],
-  ['depart-imminent', [['button', 'pull'], ['drag', 'rebase', 'feature', 'C', 'main'], ['drag', 'merge', 'feature', 'D′', 'main'], ['button', 'push']]],
-  ['casse', [['recover', 'E']]],
-  ['livraison-du-vendredi', [
-    ['button', 'pull'], ['drag', 'cherry-pick', 'hotfix', 'F', 'main'],
-    ['drag', 'cherry-pick', 'feature', 'C', 'main'], ['drag', 'cherry-pick', 'feature', 'E', 'main'], ['button', 'push'],
-  ]],
-];
-
-for (const [id, gestures] of gestureSolutions) {
-  test(`gestures win « ${id} » in par`, () => {
-    const s = playGestures(id, gestures);
-    assert.equal(s.status, 'won');
-    assert.equal(s.moves, (station(id) as PlayedStation).par);
-    assert.equal(stars(s), 3);
-  });
-}
-
 test('keyboard solutions win every played station through the reducer', () => {
   for (const st of stations) {
     if (st.type === 'predict') continue;
@@ -82,7 +15,7 @@ test('keyboard solutions win every played station through the reducer', () => {
   }
 });
 
-test('a failing gesture is atomic: the switch is dropped too', () => {
+test('a failing nested step is atomic: the switch is dropped too', () => {
   const s0 = newSession(station('grue-en-panne'));
   const s1 = step(s0, ['switch feature', 'merge main', 'switch main', 'merge feature']);
   assert.equal(s1.repo, s0.repo);
@@ -133,10 +66,3 @@ test('predictions: wrong guesses cost a star, the right one wins and shows the b
   assert.equal(s.repo, s0.options[1].board, 'the board shows the right answer');
 });
 
-test('gesture refusals', () => {
-  const r = newSession(station('push-rejete')).repo;
-  assert.deepEqual(dragStep(r, 'rebase', car(r, 'origin/main', 'D'), 'main'), { refusal: 'remote-fixed' });
-  assert.deepEqual(tapStep(r, 'revert', car(r, 'origin/main', 'D')), { refusal: 'remote-untouchable' });
-  assert.deepEqual(tapStep(r, 'squash', car(r, 'main', 'C')), { refusal: 'squash-needs-two' });
-  assert.deepEqual(dragStep(r, 'merge', car(r, 'main', 'C'), 'main'), { refusal: 'same-row' });
-});

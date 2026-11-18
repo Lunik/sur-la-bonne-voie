@@ -1,6 +1,5 @@
 // Every UI label lives here, so a translation means one more object, not a hunt.
 // Station texts stay in the level data; engine output stays in engine/messages.ts.
-import type { Tool } from '../game/index.ts';
 import { fr } from './typography.ts';
 
 const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`;
@@ -11,7 +10,7 @@ export const clock = (seconds: number) => {
 };
 const starRow = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 
-export type Tag = 'compo' | 'rules' | 'predict' | 'budget' | 'keyboard' | 'timed' | 'breakdown';
+export type Tag = 'compo' | 'rules' | 'predict' | 'budget' | 'timed' | 'breakdown';
 
 export const strings = {
   appTitle: 'Gare de triage',
@@ -27,8 +26,8 @@ export const strings = {
   stars: starRow,
   clock,
   closed: 'fermée',
-  tagShort: { compo: 'compo', rules: 'règles', predict: 'prono', budget: 'budget', keyboard: 'clavier', timed: 'chrono', breakdown: 'panne' } satisfies Record<Tag, string>,
-  tag: { compo: 'Composition', rules: 'Règlement', predict: 'Pronostic', budget: 'Budget serré', keyboard: 'Clavier seul', timed: 'Contre la montre', breakdown: 'Panne' } satisfies Record<Tag, string>,
+  tagShort: { compo: 'compo', rules: 'règles', predict: 'prono', budget: 'budget', timed: 'chrono', breakdown: 'panne' } satisfies Record<Tag, string>,
+  tag: { compo: 'Composition', rules: 'Règlement', predict: 'Pronostic', budget: 'Budget serré', timed: 'Contre la montre', breakdown: 'Panne' } satisfies Record<Tag, string>,
 
   departures: 'Tableau des départs',
   lineBadge: (line: number) => `Ligne ${line}`,
@@ -50,12 +49,10 @@ export const strings = {
   yard: 'Plateau des voies',
   signHead: 'HEAD',
   signHeadHere: 'motrice ici',
-  signDriveHere: 'conduire la motrice ici',
   signRemote: 'quai distant',
   carTitle: (label: string, cargo: string | null, gone: boolean) =>
     `Voiture ${label}${cargo ? ` · chargement ${cargo}` : ''}${gone ? ' · partie sur origin' : ''}`,
   siding: 'Voie de garage',
-  sidingRecover: ' · touchez une voiture pour la récupérer',
   sidingCar: (label: string) => `Voiture ${label} sur la voie de garage`,
   legend: {
     head: fr('motrice jaune : HEAD'),
@@ -72,27 +69,6 @@ export const strings = {
   predictRight: fr('Exact ! Regardez le plateau.'),
   predictWrong: (wrongs: number) => `Raté. Il reste ${plural(Math.max(1, 3 - wrongs), 'étoile')} à gagner.`,
 
-  post: 'Poste d’aiguillage',
-  keyboardMode: 'Mode clavier seul',
-  toolGroup: 'Outil de manœuvre',
-  tools: {
-    rebase: ['Déplacer la rame', 'git rebase'],
-    merge: ['Atteler la voie', 'git merge'],
-    'cherry-pick': ['Copier une voiture', 'git cherry-pick'],
-    squash: ['Souder des voitures', 'reset --soft + commit'],
-    revert: ['Voiture inverse', 'git revert'],
-    commit: ['Ajouter une voiture', 'commit'],
-    branch: ['Nouvelle voie', 'switch -c'],
-    push: ['Pousser', 'push'],
-    pull: ['Tirer', 'pull'],
-    'pull-rebase': ['Tirer en rebasant', 'pull --rebase'],
-    recover: ['Récupérer', 'reset --hard'],
-  } satisfies Record<Tool, [string, string]>,
-  newTool: 'Nouveau',
-  helpSquash: 'Touchez la première voiture de la série : de cette voiture au bout de la voie, tout est soudé en une seule voiture.',
-  helpRevert: 'Touchez la voiture dont il faut annuler l’effet.',
-  helpDrag: 'Glissez une voiture sur une autre voie, ou touchez la voiture puis la voie. Touchez une pancarte pour y conduire la motrice.',
-  helpSigns: 'Touchez une pancarte pour y conduire la motrice.',
   undo: 'Annuler',
   restart: 'Recommencer',
   hint: 'Indice',
@@ -108,39 +84,11 @@ export const strings = {
   enter: 'Entrée',
   tryThese: fr('Essayez : '),
 
-  toastReady: 'La motrice attend vos ordres.',
-  toastKeyboardOnly: fr('Gestes hors service : tapez vos commandes dans le terminal.'),
+  toastReady: 'Tapez vos ordres dans le terminal.',
   toastWon: fr('Tchou tchou ! Le train est conforme.'),
   toastUndone: 'Dernière manœuvre annulée.',
   toastNothingToUndo: 'Rien à annuler.',
-  toastKeyboardOn: fr('Mode clavier : tapez les commandes dans le terminal.'),
-  toastKeyboardOff: 'Les gestes sont de retour.',
-  toastPicked: (label: string) => `Voiture ${label} choisie. Touchez maintenant la voie de destination.`,
-  toastDropElsewhere: 'Déposez la voiture sur une autre voie.',
-  toastRemoteFills: 'Le quai distant se remplit avec push.',
-  toastSwitchKeyboard: (row: string) => fr(`Gestes hors service : tapez switch ${row}.`),
-  toastRecoverLater: 'Récupérer une voiture de la voie de garage s’apprend sur la ligne 5.',
-  toastRecoverKeyboard: fr('Gestes hors service : utilisez reset --hard.'),
-  refusal: {
-    'remote-fixed': fr('Le quai distant ne se déplace pas : il se remplit avec push.'),
-    'remote-untouchable': fr('Cette voiture est sur le quai distant : on n’y touche pas directement.'),
-    'squash-needs-two': fr('Touchez la première voiture de la série : il en faut au moins deux à souder.'),
-    'not-on-row': 'Cette voiture n’est pas sur cette voie.',
-    'same-row': 'Déposez la voiture sur une autre voie.',
-  },
   done: {
-    rebase: (from: string, to: string) => `Rame ${from} raccrochée au bout de ${to}.`,
-    merge: (from: string, to: string) => `${from} attelée à ${to}.`,
-    'cherry-pick': (label: string, to: string) => `Voiture ${label} copiée sur ${to}.`,
-    squash: (n: number) => `${n} voitures soudées en une seule.`,
-    revert: (label: string) => `Voiture inverse de ${label} accrochée.`,
-    recover: (row: string, label: string) => `Voie ${row} ramenée jusqu’à la voiture ${label}.`,
-    commit: 'Voiture accrochée.',
-    branch: (name: string) => `Voie ${name} posée, la motrice y passe.`,
-    push: 'Le train part vers origin !',
-    pull: 'Travail du quai distant récupéré.',
-    'pull-rebase': 'Votre voie est raccrochée derrière origin.',
-    switch: (row: string) => `Motrice sur ${row}.`,
     typed: 'Manœuvre effectuée.',
   },
 
@@ -152,7 +100,7 @@ export const strings = {
   wonPlayed: (moves: number, par: number) => `${plural(moves, 'manœuvre')}, objectif ${par}.`,
   wonTimeLeft: (seconds: number) => ` Il restait ${clock(seconds)}.`,
   nextLine: fr('Prochaine ligne : '),
-  nextLineAfter: ', avec de nouveaux outils.',
+  nextLineAfter: ', avec de nouvelles commandes.',
   networkTotal: (n: number, max: number) => `${n} étoiles sur ${max}.`,
   learn: fr('Ce qu’il fallait retenir :'),
   aimThree: 'Viser 3 étoiles',

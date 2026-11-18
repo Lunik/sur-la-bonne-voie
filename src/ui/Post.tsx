@@ -1,19 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  allowedTools, buttonStep, isButtonTool, isDragTool, isTapTool, lines,
-  type BoardTool, type Session, type Step,
-} from '../game/index.ts';
-import { Icon } from './Icon.tsx';
+import { lines, type Session, type Step } from '../game/index.ts';
 import { strings } from './strings.ts';
 import { fr } from './typography.ts';
 
 interface PostProps {
   session: Session;
-  tool: BoardTool | null;
-  onTool: (tool: BoardTool) => void;
-  keyboardMode: boolean;
-  onKeyboardMode: (on: boolean) => void;
-  gesturesOff: boolean;
   hintShown: boolean;
   onHint: () => void;
   onUndo: () => void;
@@ -21,95 +12,23 @@ interface PostProps {
   run: (step: Step, message: string) => void;
 }
 
-export function Post(p: PostProps) {
-  const { session, tool } = p;
-  const { station, repo } = session;
-  if (station.type === 'predict') return null;
-  const tools = allowedTools(station.line);
-  const isNew = (t: string) => (station.newTools as string[] | undefined)?.includes(t);
-  const boardTools = tools.filter((t): t is BoardTool => isDragTool(t) || isTapTool(t));
-  const buttons = tools.filter(isButtonTool);
-  const help = tool === 'squash' ? strings.helpSquash : tool === 'revert' ? strings.helpRevert : isDragTool(tool) ? strings.helpDrag : strings.helpSigns;
-  const pending = repo.pending.map((id) => repo.commits[id].label);
-
-  return (
-    <section className="post">
-      <div className="panel">
-        <h3>
-          {strings.post}
-          <span className="row">
-            <button className="btn quiet sm" type="button" onClick={p.onUndo}>{strings.undo}</button>
-            <button className="btn quiet sm" type="button" onClick={p.onRestart}>{strings.restart}</button>
-            <button className="btn quiet sm" type="button" aria-expanded={p.hintShown} onClick={p.onHint}>{strings.hint}</button>
-          </span>
-        </h3>
-        {!p.gesturesOff && (
-          <div className="gestures">
-            {boardTools.length > 0 && (
-              <div className="tools" role="group" aria-label={strings.toolGroup}>
-                {boardTools.map((t) => (
-                  <button key={t} type="button" className={`tool${t === tool ? ' on' : ''}`} aria-pressed={t === tool} onClick={() => p.onTool(t)}>
-                    <Icon name={t} />
-                    <b>{strings.tools[t][0]}</b>
-                    <small>{strings.tools[t][1]}</small>
-                    {isNew(t) && <span className="nv">{strings.newTool}</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-            <p className="small">{fr(help)}</p>
-            <div className="row">
-              {buttons.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  className="btn"
-                  onClick={() => {
-                    const step = buttonStep(repo, t);
-                    p.run(step, t === 'branch' ? strings.done.branch(String(step).slice('switch -c '.length)) : strings.done[t]);
-                  }}
-                >
-                  <Icon name={t} />
-                  {strings.tools[t][0]}
-                  <small>{strings.tools[t][1]}</small>
-                  {isNew(t) && <span className="nv">{strings.newTool}</span>}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        {pending.length > 0 && (
-          <p className="quai">
-            {strings.platform}<b>{pending.join(', ')}</b>{strings.platformAfter[0]}<code>{strings.platformAfter[1]}</code>{strings.platformAfter[2]}
-          </p>
-        )}
-        {p.hintShown && <p className="hint">{fr(station.hint)}</p>}
-      </div>
-      <Terminal session={session} run={p.run} keyboardMode={p.keyboardMode} onKeyboardMode={p.onKeyboardMode} />
-    </section>
-  );
-}
-
-interface TerminalProps {
-  session: Session;
-  run: (step: Step, message: string) => void;
-  keyboardMode: boolean;
-  onKeyboardMode: (on: boolean) => void;
-}
-
-function Terminal({ session, run, keyboardMode, onKeyboardMode }: TerminalProps) {
-  const { station, log } = session;
+/** The switch post: a terminal, the only way to move the train. */
+export function Post({ session, hintShown, onHint, onUndo, onRestart, run }: PostProps) {
+  const { station, repo, log } = session;
   const term = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const [history, setHistory] = useState<string[]>([]);
   const [pos, setPos] = useState(0);
   const [value, setValue] = useState('');
-  const budget = station.type === 'predict' ? undefined : station.budget;
 
   useEffect(() => {
     if (term.current) term.current.scrollTop = term.current.scrollHeight;
   }, [log]);
+  // Keyboard only: the prompt is ready as soon as the station opens.
+  useEffect(() => input.current?.focus({ preventScroll: true }), []);
 
+  if (station.type === 'predict') return null;
+  const pending = repo.pending.map((id) => repo.commits[id].label);
   const suggest = (c: string) => {
     setValue(c);
     input.current?.focus();
@@ -120,15 +39,14 @@ function Terminal({ session, run, keyboardMode, onKeyboardMode }: TerminalProps)
   };
 
   return (
-    <div className="panel">
+    <section className="post panel">
       <h3>
-        <span>{strings.terminal} <span className="small">{strings.moves(session.moves, budget)}</span></span>
-        {station.type !== 'predict' && (
-          <label className="switch-lbl">
-            <input type="checkbox" checked={keyboardMode} disabled={station.keyboardOnly} onChange={(e) => onKeyboardMode(e.target.checked)} />
-            {strings.keyboardMode}
-          </label>
-        )}
+        <span>{strings.terminal} <span className="small">{strings.moves(session.moves, station.budget)}</span></span>
+        <span className="row">
+          <button className="btn quiet sm" type="button" onClick={onUndo}>{strings.undo}</button>
+          <button className="btn quiet sm" type="button" onClick={onRestart}>{strings.restart}</button>
+          <button className="btn quiet sm" type="button" aria-expanded={hintShown} onClick={onHint}>{strings.hint}</button>
+        </span>
       </h3>
       <div className="term" ref={term} aria-live="polite">
         <div className="o">{strings.logTitle(station.line, station.title)}</div>
@@ -187,6 +105,12 @@ function Terminal({ session, run, keyboardMode, onKeyboardMode }: TerminalProps)
           </code>
         ))}
       </p>
-    </div>
+      {pending.length > 0 && (
+        <p className="quai">
+          {strings.platform}<b>{pending.join(', ')}</b>{strings.platformAfter[0]}<code>{strings.platformAfter[1]}</code>{strings.platformAfter[2]}
+        </p>
+      )}
+      {hintShown && <p className="hint">{fr(station.hint)}</p>}
+    </section>
   );
 }

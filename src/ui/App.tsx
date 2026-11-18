@@ -1,7 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import {
-  defaultTool, newSession, reduce, shuffled, stars as starsOf, stations,
-  type Action, type BoardTool, type CarRef, type Session, type Station, type Step, type Toast,
+  newSession, reduce, shuffled, stars as starsOf, stations,
+  type Action, type Session, type Station, type Step, type Toast,
 } from '../game/index.ts';
 import './app.css';
 import { Board } from './Board.tsx';
@@ -15,7 +15,6 @@ import { TrainContext } from './trains.tsx';
 const isOpen = (p: Progress, i: number) => p.unlockAll || i === 0 || (p.stars[stations[i - 1].id] ?? 0) > 0;
 /** Prediction boards are shuffled here, outside the reducer, so it stays pure. */
 const sessionFor = (s: Station) => newSession(s, s.type === 'predict' ? shuffled(3) : undefined);
-const keyboardOnly = (s: Station) => s.type !== 'predict' && !!s.keyboardOnly;
 
 const initialProgress = loadProgress();
 const savedIndex = stations.findIndex((s) => s.id === initialProgress.current);
@@ -28,9 +27,6 @@ export function App() {
   const [progress, setProgress] = useState(initialProgress);
   const [session, dispatch] = useReducer(uiReduce, undefined, () => sessionFor(stations[initialIndex]));
   const { station, status } = session;
-  const [tool, setTool] = useState<BoardTool | null>(() => defaultTool(station));
-  const [selected, setSelected] = useState<CarRef | null>(null);
-  const [keyboardMode, setKeyboardMode] = useState(keyboardOnly(station));
   const [hintShown, setHintShown] = useState(false);
   const [victoryShown, setVictoryShown] = useState(false);
   const [loads, setLoads] = useState(0);
@@ -40,9 +36,6 @@ export function App() {
   const load = (i: number, { hint = false } = {}) => {
     const s = stations[i];
     dispatch({ type: 'load', session: sessionFor(s) });
-    setTool(defaultTool(s));
-    setSelected(null);
-    setKeyboardMode(keyboardOnly(s));
     setHintShown(hint);
     setVictoryShown(false);
     setLoads((n) => n + 1);
@@ -50,15 +43,8 @@ export function App() {
     // Bring the exercise to the top of the screen: map above, nothing to scroll back to while playing.
     requestAnimationFrame(() => stage.current?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }));
   };
-  const run = (step: Step, message: string) => {
-    dispatch({ type: 'step', step, message });
-    setSelected(null);
-  };
-  const toast = (t: Toast) => dispatch({ type: 'toast', toast: t });
-  const undo = () => {
-    dispatch({ type: 'undo', message: strings.toastUndone, nothing: strings.toastNothingToUndo });
-    setSelected(null);
-  };
+  const run = (step: Step, message: string) => dispatch({ type: 'step', step, message });
+  const undo = () => dispatch({ type: 'undo', message: strings.toastUndone, nothing: strings.toastNothingToUndo });
 
   // A win counts as soon as it happens; it is merged into the stored progress on the next load.
   const withWin = (p: Progress): Progress =>
@@ -87,10 +73,9 @@ export function App() {
     return () => clearInterval(t);
   }, [status, timed, station]);
 
-  const gesturesOff = station.type === 'predict' || keyboardMode;
   const shownToast: Toast =
     status === 'won' ? { tone: 'good', text: strings.toastWon }
-    : session.toast ?? { tone: 'info', text: keyboardOnly(station) ? strings.toastKeyboardOnly : strings.toastReady };
+    : session.toast ?? { tone: 'info', text: strings.toastReady };
 
   return (
     <div className="wrap">
@@ -111,12 +96,6 @@ export function App() {
             <Board
               key={`board-${loads}`}
               session={session}
-              tool={tool}
-              gesturesOff={gesturesOff}
-              selected={selected}
-              onSelect={setSelected}
-              run={run}
-              toast={toast}
               message={shownToast}
             />
           </div>
@@ -125,18 +104,6 @@ export function App() {
             <Post
               key={`post-${loads}`}
               session={session}
-              tool={tool}
-              onTool={(t) => {
-                setTool(t);
-                setSelected(null);
-              }}
-              keyboardMode={keyboardMode}
-              onKeyboardMode={(on) => {
-                setKeyboardMode(on);
-                setSelected(null);
-                toast({ tone: 'info', text: on ? strings.toastKeyboardOn : strings.toastKeyboardOff });
-              }}
-              gesturesOff={gesturesOff}
               hintShown={hintShown}
               onHint={() => setHintShown((h) => !h)}
               onUndo={undo}

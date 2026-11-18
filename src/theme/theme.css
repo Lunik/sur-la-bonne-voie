@@ -20,7 +20,6 @@
   /* Track */
   --rail: #8a939b;
   --sleeper: #cdd2d3;
-  --lane-drop: rgba(242, 183, 5, .16);
 
   /* Rolling stock */
   --car: #ffffff;
@@ -70,7 +69,7 @@
 :root[data-theme="dark"] {
   --bg: #12181e; --surface: #1a222a; --sunk: #151c23; --ink: #e6ebef; --ink-2: #c3ccd3; --muted: #93a0ab;
   --line: #2a343e; --line-2: #3a4652; --on-ink: #12181e; --focus: #f2b705;
-  --rail: #7d8891; --sleeper: #34404b; --lane-drop: rgba(242, 183, 5, .14);
+  --rail: #7d8891; --sleeper: #34404b;
   --car: #e9edf0; --car-edge: #9aa5ae; --roof: #b9c2c9; --glass: #24313d; --bogie: #57636e; --rev-car: #3b4957;
   --t-trim: #44525f; --t-door: #9aa5ae; --t-steel: #c4cad0; --t-silver: #d6dbdf; --t-pearl: #ebe9e4;
   --n1: #6a8ff0; --n2: #f08a3c; --n3: #3cc29e; --n4: #9d84f2; --n5: #ef6a5f; --on-line: #12181e;

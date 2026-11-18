@@ -7,7 +7,7 @@ Statut : **proposé au jalon 0, en attente de validation par le propriétaire.**
 | Dossier | Rôle | Peut importer |
 | --- | --- | --- |
 | `src/engine/` | Moteur Git pur : état, commandes, signatures, voie de garage | rien |
-| `src/levels/` | Stations (données), lignes, outils autorisés, règles de victoire | `engine` |
+| `src/levels/` | Stations (données), lignes, commandes autorisées, règles de victoire | `engine` |
 | `src/game/` | Session de jeu : coups, étoiles, budget, chrono, annulation | `engine`, `levels` |
 | `src/ui/` | Composants React : plateau, terminal, plan du réseau, fenêtres | `game` uniquement (qui ré-exporte ce dont l’interface a besoin du moteur et des stations), `theme` |
 | `src/theme/` | Jetons CSS, typographie, mode sombre | rien |
@@ -19,8 +19,8 @@ Les dépendances interdites sont vérifiées par `oxlint` (`no-restricted-import
 ## Modèle d’état
 
 - **Moteur** : `exec(state, line)` renvoie `{ ok: true, state, output, move }` ou `{ ok: false, error }`. Il travaille sur un clone (`structuredClone`) et ne modifie jamais `state` : une commande ratée laisse l’état intact, sans restauration. `move` vaut `null` pour une commande sans effet (`switch`, `log`, push à jour…), qui ne compte pas comme manœuvre. Seules les `EngineError` deviennent `{ ok: false }` ; toute autre exception est un bogue et remonte.
-- **Étape** : `levels.runStep(state, step)` exécute une commande ou un geste (liste de commandes) de façon atomique ; un geste compte pour une manœuvre au plus. Le test de contenu (`play`) et la session l’utilisent tous deux : par et budget comptent pareil partout.
-- **Session** : `game/` expose un réducteur pur `reduce(session, action)` (étape, annuler, chrono, pronostic). Les gestes (`game/gestures.ts`) et le terminal produisent tous deux des commandes Git, jamais des mutations directes. Le hasard (ordre des pronostics) est tiré par l’appelant, pas par le réducteur.
+- **Étape** : `levels.runStep(state, step)` exécute une commande, ou une liste de commandes de façon atomique (comptée pour une manœuvre au plus). Le test de contenu (`play`) et la session l’utilisent tous deux : par et budget comptent pareil partout.
+- **Session** : `game/` expose un réducteur pur `reduce(session, action)` (étape, annuler, chrono, pronostic). Le jeu se joue au clavier seul : le terminal produit des commandes Git, jamais des mutations directes, et le plateau ne fait qu’afficher. Le hasard (ordre des pronostics) est tiré par l’appelant, pas par le réducteur.
 - **React** : `useReducer` dans `ui/App.tsx`, état passé par props. Pas de contexte : l’arbre est peu profond.
 - **Persistance** : `localStorage` en try/catch, clé versionnée `gare3.progress`, étoiles indexées par `id` de station.
 - **Rendu du plateau** : SVG pur (`ui/Yard.tsx`), pancartes en HTML dans une colonne fixe pour qu’elles restent visibles quand les voies défilent. Les voitures forment une liste plate indexée par commit, animée en Web Animations sans jamais quitter les rails : une voiture qui reste sur sa voie roule, une voiture nouvelle ou passée sur une autre voie est attelée sur place. `ui/layout.ts` (pur, testé) place les voitures ; l’échelle vient de la variable CSS `--k`. Le matériel roulant change à chaque station (champ `train`) : silhouettes SVG dans `ui/trains.tsx`, fournies par `TrainContext`.

@@ -31,11 +31,10 @@ interface CarBodyProps {
   coupled?: boolean;
   gone?: boolean;
   flags?: Flag[];
-  selected?: boolean;
 }
 
 /** One commit, drawn side-on in local coordinates (body from x 0 to CAR_W, roof at y -4..-7 to CAR_H; wheels sit on y = CAR_H + 9). */
-export function CarBody({ repo, commit: c, coupled, gone, flags = [], selected }: CarBodyProps) {
+export function CarBody({ repo, commit: c, coupled, gone, flags = [] }: CarBodyProps) {
   const raw = stripPrimes(c.label);
   const recreated = c.label.includes('′');
   const kind = c.kind === 'merge' ? 'merge' : c.kind === 'revert' ? 'revert' : `c${livery(repo, c.origin)}`;
@@ -44,7 +43,6 @@ export function CarBody({ repo, commit: c, coupled, gone, flags = [], selected }
   const train = use(TrainContext);
   return (
     <g className={`car-body t-${train} ${kind}`}>
-      {selected && <rect className="sel" x={-5} y={-12} width={CAR_W + 10} height={CAR_H + 25} rx={8} />}
       {coupled && trains[train].link}
       {trains[train].car}
       {recreated ? (
@@ -126,14 +124,11 @@ interface YardProps extends HTMLAttributes<HTMLDivElement> {
   repo: RepoState;
   /** `live`: the playable board. `mini`: goal and predictions. `deco`: header art. */
   variant: 'live' | 'mini' | 'deco';
-  selected?: string | null;
-  grab?: boolean;
-  dropRow?: string | null;
   leaving?: boolean;
   ref?: Ref<HTMLDivElement>;
 }
 
-export function Yard({ repo: s, variant, selected, grab, dropRow, leaving, className = '', ...rest }: YardProps) {
+export function Yard({ repo: s, variant, leaving, className = '', ...rest }: YardProps) {
   const live = variant === 'live';
   const deco = variant === 'deco';
   const withLoco = live || deco;
@@ -220,25 +215,19 @@ export function Yard({ repo: s, variant, selected, grab, dropRow, leaving, class
   const size = deco ? undefined : ({ width: `calc(${width}px * var(--k))`, height: `calc(${height}px * var(--k))` } as CSSProperties);
 
   return (
-    <div className={['yard', `yard-${variant}`, grab && 'grab', className].filter(Boolean).join(' ')} aria-hidden={deco || undefined} {...rest}>
+    <div className={['yard', `yard-${variant}`, className].filter(Boolean).join(' ')} aria-hidden={deco || undefined} {...rest}>
       {!deco && (
         <div className="signs">
           {rows.map((r) => {
             const isHead = r.kind === 'local' && r.name === s.head;
-            const cls = ['sign', live && isHead && 'head', r.kind === 'remote' && 'remote', dropRow === r.name && 'drop'].filter(Boolean).join(' ');
+            const cls = ['sign', live && isHead && 'head', r.kind === 'remote' && 'remote'].filter(Boolean).join(' ');
+            const note = !live ? null : isHead ? strings.signHeadHere : r.kind === 'remote' ? strings.signRemote : null;
             return (
               <div key={r.name} className="sign-cell">
-                {live && r.kind === 'local' ? (
-                  <button type="button" className={cls} data-sw={r.name} data-lane={r.name}>
-                    <span className="sign-name">{r.name}</span>
-                    <small>{isHead ? strings.signHeadHere : strings.signDriveHere}</small>
-                  </button>
-                ) : (
-                  <span className={cls} data-lane={r.name} data-remote={r.kind === 'remote' || undefined}>
-                    <span className="sign-name">{r.name}</span>
-                    {r.kind === 'remote' && live && <small>{strings.signRemote}</small>}
-                  </span>
-                )}
+                <span className={cls}>
+                  <span className="sign-name">{r.name}</span>
+                  {note && <small>{note}</small>}
+                </span>
               </div>
             );
           })}
@@ -246,18 +235,6 @@ export function Yard({ repo: s, variant, selected, grab, dropRow, leaving, class
       )}
       <div className="tracks" ref={scroller}>
         <svg viewBox={`0 0 ${width} ${height}`} style={size} role={live ? 'img' : undefined} aria-label={live ? strings.yard : undefined}>
-          {rows.map((r, ri) => (
-            <rect
-              key={`lane-${r.name}`}
-              className={`lane${dropRow === r.name ? ' drop' : ''}`}
-              x={0}
-              y={ri * ROW}
-              width={width}
-              height={ROW}
-              data-lane={r.name}
-              data-remote={r.kind === 'remote' || undefined}
-            />
-          ))}
           {rows.map((r, ri) => {
             const start = r.fork >= 0 ? carX(r.fork + 1) - 6 : PAD - 8;
             const y = railY(ri);
@@ -299,13 +276,9 @@ export function Yard({ repo: s, variant, selected, grab, dropRow, leaving, class
                 }}
                 className={['car', isHead && leaving && 'depart', isHead && deco && 'roll-in'].filter(Boolean).join(' ')}
                 style={{ transform: translate(p.x, p.y) }}
-                data-id={p.id}
-                data-from={p.row.name}
-                data-lane={p.row.name}
-                data-remote={p.row.kind === 'remote' || undefined}
               >
                 <title>{strings.carTitle(s.commits[p.id].label, s.commits[p.id].cargo, gone.has(p.id))}</title>
-                <CarBody repo={s} commit={s.commits[p.id]} coupled={p.coupled} gone={gone.has(p.id)} flags={fl} selected={live && selected === p.id} />
+                <CarBody repo={s} commit={s.commits[p.id]} coupled={p.coupled} gone={gone.has(p.id)} flags={fl} />
               </g>
             );
           })}
