@@ -1,12 +1,12 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
-import { lines, stations, type Session } from '../game/index.ts';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { lessonBoards, lines, stations, type RepoState, type Session, type Station } from '../game/index.ts';
 import { strings } from './strings.ts';
 import { fr } from './typography.ts';
 import { Yard } from './Yard.tsx';
 
 /** Native modal dialog. Escape is ignored: each dialog has its own way out, and closing it bare would strand the player.
  *  Chrome may still close it on a repeated Escape, so `onClose` reopens it while it is mounted. */
-function Modal({ children, label }: { children: (titleId: string) => ReactNode; label?: string }) {
+function Modal({ children, label, className }: { children: (titleId: string) => ReactNode; label?: string; className?: string }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
@@ -18,7 +18,7 @@ function Modal({ children, label }: { children: (titleId: string) => ReactNode; 
     return () => d?.close();
   }, []);
   return (
-    <dialog ref={ref} className="win" aria-labelledby={label ? undefined : titleId} aria-label={label} onCancel={(e) => e.preventDefault()}
+    <dialog ref={ref} className={['win', className].filter(Boolean).join(' ')} aria-labelledby={label ? undefined : titleId} aria-label={label} onCancel={(e) => e.preventDefault()}
       onClose={(e) => {
         const d = e.currentTarget;
         if (d.isConnected && !d.open) d.showModal();
@@ -87,6 +87,47 @@ export function Failure({ session, onUndo, onHint, onRetry }: FailureProps) {
             {canUndo && <button className="btn quiet" type="button" onClick={onUndo}>{strings.undoLast}</button>}
             <button className="btn quiet" type="button" onClick={onHint}>{strings.showHint}</button>
             <button className="btn" type="button" data-primary onClick={onRetry}>{strings.restart}</button>
+          </div>
+        </>
+      )}
+    </Modal>
+  );
+}
+
+/** `backticks` in lesson texts mark Git commands. */
+const withCode = (text: string) => fr(text).split('`').map((part, i) => (i % 2 ? <code key={i}>{part}</code> : part));
+
+function Example({ repo, caption }: { repo: RepoState; caption?: ReactNode }) {
+  return (
+    <figure>
+      {caption && <figcaption>{caption}</figcaption>}
+      {/* The live board, to show the locomotive (HEAD), scaled down like the goal panel. */}
+      <Yard repo={repo} variant="live" className="yard-mini" />
+    </figure>
+  );
+}
+
+/** Pages shown before a station: the notions it needs. */
+export function Tutorial({ station, onDone }: { station: Station; onDone: () => void }) {
+  const [page, setPage] = useState(0);
+  const lesson = station.tutorial[page];
+  const [before, after] = lessonBoards(station, lesson);
+  const last = page === station.tutorial.length - 1;
+  return (
+    <Modal className="tuto">
+      {(id) => (
+        <>
+          <p className="small">{strings.tutorialPage(page + 1, station.tutorial.length)}</p>
+          <h2 id={id}>{fr(lesson.title)}</h2>
+          <p>{withCode(lesson.text)}</p>
+          {before && <Example repo={before} caption={after && strings.tutorialBefore} />}
+          {after && <Example repo={after} caption={<>{strings.tutorialAfter}<code>{lesson.run!.map((c) => `git ${c}`).join(', ')}</code></>} />}
+          <div className="row">
+            {page > 0 && <button key="previous" className="btn quiet" type="button" onClick={() => setPage(page - 1)}>{strings.tutorialPrevious}</button>}
+            {!last && <button key="skip" className="btn quiet" type="button" onClick={onDone}>{strings.tutorialSkip}</button>}
+            <button key="next" className="btn" type="button" data-primary onClick={() => (last ? onDone() : setPage(page + 1))}>
+              {last ? fr(strings.tutorialGo) : strings.tutorialNext}
+            </button>
           </div>
         </>
       )}

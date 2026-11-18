@@ -4,7 +4,7 @@ import { build, type RepoState } from '../engine/index.ts';
 import { isWon, predictBoards, runStep, startBoard, type Station, type Step } from '../levels/index.ts';
 
 export { ancestors, build, emptyRepo, firstParentChain, orphans, stripPrimes, type Commit, type RepoState } from '../engine/index.ts';
-export { lines, type Line, type Station, type Step, type Train } from '../levels/index.ts';
+export { lessonBoards, lines, type Lesson, type Line, type Station, type Step, type Train } from '../levels/index.ts';
 export { stations } from '../levels/stations.ts';
 
 export type LogLine =

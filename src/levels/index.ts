@@ -52,6 +52,16 @@ export const same = (branch: string): Check => (s) => !!s.remote[branch] && s.re
 /** A nested array runs atomically and counts as a single move. */
 export type Step = string | string[];
 
+/** One page of the tutorial shown before a station. `backticks` mark Git commands. */
+export interface Lesson {
+  title: string;
+  text: string;
+  /** Example board, built like `start` with the station's cargo. */
+  example?: string[];
+  /** Commands run on the example: the page shows the board before and after them. */
+  run?: string[];
+}
+
 interface Common {
   /** Stable slug: progress is saved under it. */
   id: string;
@@ -62,6 +72,8 @@ interface Common {
   /** Rolling stock of the station: suburban on line 1, regional on 2, Corail on 3, TGV on 4, works train on 5. */
   train: Train;
   brief: string;
+  /** Pages shown before the station: the notions it needs, never its solution. */
+  tutorial: Lesson[];
   /** Shown after the win: the Git commands (or idea) to remember. */
   learn: string;
   /** Commands that build the starting board (ungated). */
@@ -176,12 +188,38 @@ export function play(station: PlayedStation, steps: Step[]): { state: RepoState;
   return { state, moves };
 }
 
+/** Boards of a lesson: before, then after `run` (null without example or run). */
+export function lessonBoards(station: Station, lesson: Lesson): [RepoState | null, RepoState | null] {
+  if (!lesson.example) return [null, null];
+  const before = build(lesson.example, station.cargo);
+  return [before, lesson.run ? build(lesson.run, station.cargo, before) : null];
+}
+
+/** A lesson must not show the board the player is asked to reach or to predict. */
+function tutorialErrors(station: Station): string[] {
+  if (!station.tutorial.length) return ['tutoriel vide'];
+  const predict = station.type === 'predict';
+  const goal = predict ? predictBoards(station)[0] : station.target ? build(station.target, station.cargo) : null;
+  const mode = predict ? undefined : station.match;
+  return station.tutorial.flatMap((lesson) => {
+    if (lesson.run && !lesson.example) return [`tutoriel « ${lesson.title} » : run sans example`];
+    const [before, after] = lessonBoards(station, lesson);
+    const shown = [before, after].filter((b) => b !== null);
+    if (!goal || !shown.length) return [];
+    return shown.some((b) => {
+      const names = [...new Set([...branchNames(b), ...branchNames(goal)])];
+      return sig(b, names, mode) === sig(goal, names, mode);
+    }) ? [`tutoriel « ${lesson.title} » : montre la solution`] : [];
+  });
+}
+
 function validateStation(station: Station): string[] {
   const errors: string[] = [];
   if (!Number.isInteger(station.line) || station.line < 1 || station.line > lines.length) {
     return [`ligne ${station.line} inconnue (1 à ${lines.length})`];
   }
   try {
+    errors.push(...tutorialErrors(station));
     if (station.type === 'predict') {
       if (station.wrong.length !== 2) errors.push(`${station.wrong.length} fausses réponses au lieu de 2`);
       const boards = predictBoards(station);

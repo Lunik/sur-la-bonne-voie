@@ -6,6 +6,8 @@ import { fr } from './typography.ts';
 interface PostProps {
   session: Session;
   hintShown: boolean;
+  /** A dialog (tutorial) is open over the post. */
+  covered: boolean;
   onHint: () => void;
   onUndo: () => void;
   onRestart: () => void;
@@ -13,7 +15,7 @@ interface PostProps {
 }
 
 /** The switch post: a terminal, the only way to move the train. */
-export function Post({ session, hintShown, onHint, onUndo, onRestart, run }: PostProps) {
+export function Post({ session, covered, hintShown, onHint, onUndo, onRestart, run }: PostProps) {
   const { station, repo, log } = session;
   const term = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -24,8 +26,11 @@ export function Post({ session, hintShown, onHint, onUndo, onRestart, run }: Pos
   useEffect(() => {
     if (term.current) term.current.scrollTop = term.current.scrollHeight;
   }, [log]);
-  // Keyboard only: the prompt is ready as soon as the station opens.
-  useEffect(() => input.current?.focus({ preventScroll: true }), []);
+  // Keyboard only: the prompt takes the focus as soon as the player can type, e.g. when the tutorial closes.
+  const typing = !covered && session.status === 'playing';
+  useEffect(() => {
+    if (typing) input.current?.focus({ preventScroll: true });
+  }, [typing]);
 
   if (station.type === 'predict') return null;
   const pending = repo.pending.map((id) => repo.commits[id].label);

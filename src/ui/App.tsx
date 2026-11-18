@@ -5,7 +5,7 @@ import {
 } from '../game/index.ts';
 import './app.css';
 import { Board } from './Board.tsx';
-import { Failure, Prediction, Ready, Victory } from './Dialogs.tsx';
+import { Failure, Prediction, Ready, Tutorial, Victory } from './Dialogs.tsx';
 import { Post } from './Post.tsx';
 import { loadProgress, saveProgress, type Progress } from './progress.ts';
 import { DepartureBoard, Header, NetworkMap } from './Screens.tsx';
@@ -28,15 +28,18 @@ export function App() {
   const [session, dispatch] = useReducer(uiReduce, undefined, () => sessionFor(stations[initialIndex]));
   const { station, status } = session;
   const [hintShown, setHintShown] = useState(false);
+  // The tutorial opens before a station, on arrival only: not on a restart.
+  const [tutorialShown, setTutorialShown] = useState(true);
   const [victoryShown, setVictoryShown] = useState(false);
   const [loads, setLoads] = useState(0);
   const stage = useRef<HTMLDivElement>(null);
   const index = stations.indexOf(station);
 
-  const load = (i: number, { hint = false } = {}) => {
+  const load = (i: number, { hint = false, tutorial = false } = {}) => {
     const s = stations[i];
     dispatch({ type: 'load', session: sessionFor(s) });
     setHintShown(hint);
+    setTutorialShown(tutorial);
     setVictoryShown(false);
     setLoads((n) => n + 1);
     setProgress((p) => ({ ...withWin(p), current: s.id }));
@@ -87,12 +90,12 @@ export function App() {
           isOpen={(i) => isOpen(shown, i)}
           unlockAll={shown.unlockAll}
           onUnlockAll={(on) => setProgress((p) => ({ ...p, unlockAll: on }))}
-          onPick={load}
+          onPick={(i) => load(i, { tutorial: true })}
         />
         {/* The whole exercise, kept within one screen on wide displays: sheet and yard on the left, controls on the right. */}
         <div className="stage" ref={stage}>
           <div className="stage-main">
-            <DepartureBoard session={session} />
+            <DepartureBoard session={session} onTutorial={() => setTutorialShown(true)} />
             <Board
               key={`board-${loads}`}
               session={session}
@@ -104,6 +107,7 @@ export function App() {
             <Post
               key={`post-${loads}`}
               session={session}
+              covered={tutorialShown}
               hintShown={hintShown}
               onHint={() => setHintShown((h) => !h)}
               onUndo={undo}
@@ -112,7 +116,8 @@ export function App() {
             />
           </div>
         </div>
-        {status === 'ready' && station.type !== 'predict' && (
+        {tutorialShown && <Tutorial key={`tutorial-${loads}`} station={station} onDone={() => setTutorialShown(false)} />}
+        {status === 'ready' && station.type !== 'predict' && !tutorialShown && (
           <Ready seconds={station.timeLimit!} brief={station.brief} onGo={() => dispatch({ type: 'start' })} />
         )}
         {status === 'failed' && <Failure session={session} onUndo={undo} onHint={() => load(index, { hint: true })} onRetry={() => load(index)} />}
@@ -121,7 +126,7 @@ export function App() {
             session={session}
             stars={starsOf(session)}
             totalStars={Object.values(shown.stars).reduce((a, b) => a + b, 0)}
-            onNext={() => load(index === stations.length - 1 ? 0 : index + 1)}
+            onNext={() => load(index === stations.length - 1 ? 0 : index + 1, { tutorial: true })}
             onRetry={() => load(index)}
           />
         )}

@@ -82,7 +82,7 @@ Statut au 17/11/2026 : **fait, en attente de relecture.** `src/levels/index.ts` 
 
 Écarts avec la liste ci-dessous :
 
-- `type` vaut `compo`, `rules` ou `predict` ; un pronostic porte `answer` et `wrong` (deux `{ commands, why }`). Champs ajoutés : `id` (identifiant stable, clé de progression), `brief`, `learn`, `cargo`.
+- `type` vaut `compo`, `rules` ou `predict` ; un pronostic porte `answer` et `wrong` (deux `{ commands, why }`). Champs ajoutés : `id` (identifiant stable, clé de progression), `brief`, `learn`, `cargo`, `tutorial` (pages montrées avant la station : notion, plateau d’exemple avant et après `run` ; la validation refuse un tutoriel vide ou qui montre la solution).
 - `noMerge` / `noForce` deviennent `fastForwardOnly` / `forceForbidden`, les noms du moteur : `noMerge` est déjà le nom d’un prédicat de règle.
 - `tools` devient `tool` (outil sélectionné à l’arrivée) ; les outils débloqués viennent de la ligne.
 - Le test exige `solution` = `par` coups exactement (pas ≤), pour repérer aussi un `par` trop généreux. Il vérifie aussi qu’aucune station n’est gagnée dès le départ.

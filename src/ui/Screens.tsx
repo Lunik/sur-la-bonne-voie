@@ -88,7 +88,7 @@ export function NetworkMap({ current, stars, isOpen, unlockAll, onUnlockAll, onP
   );
 }
 
-export function DepartureBoard({ session }: { session: Session }) {
+export function DepartureBoard({ session, onTutorial }: { session: Session; onTutorial: () => void }) {
   const { station: s, repo } = session;
   return (
     <section className="board" aria-label={strings.departures} style={lineColor(s.line)}>
@@ -100,6 +100,7 @@ export function DepartureBoard({ session }: { session: Session }) {
         <h2>{fr(s.title)}</h2>
         <p className="tags">{tags(s).map((t) => <span key={t} className="tag">{strings.tag[t]}</span>)}</p>
         <p className="brief">{fr(s.brief)}</p>
+        <button className="btn quiet sm" type="button" onClick={onTutorial}>{strings.tutorialAgain}</button>
         <dl className="facts">
           <div>
             <dt>{strings.factDifficulty}</dt>

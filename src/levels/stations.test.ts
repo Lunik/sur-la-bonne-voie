@@ -21,7 +21,11 @@ test('validate catches a broken station', () => {
     { ...base, line: 9 },
     { ...base, id: 'x', solution: ['merge main'] },
     { ...played('grue-en-panne'), rules: [{ text: 'typo', check: noMerge('mian') }] },
+    { ...base, id: 'vide', tutorial: [] },
+    { ...base, id: 'spoiler', tutorial: [{ title: 'Trop', text: '', example: ['commit', 'commit'], run: ['commit'] }] },
   ]);
+  assert.ok(errors.includes('vide : tutoriel vide'));
+  assert.ok(errors.includes('spoiler : tutoriel « Trop » : montre la solution'));
   assert.ok(errors.some((e) => e === 'grue-en-panne : la solution ne gagne pas'));
   assert.ok(errors.some((e) => e.includes('budget 1 < par 2')));
   assert.ok(errors.some((e) => e.includes('identifiant en double')));
