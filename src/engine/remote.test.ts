@@ -93,6 +93,7 @@ test('upstream is read-only for the player, unknown remotes are refused', () => 
   const result = exec(start, 'push upstream', { internal: false });
   assert.ok(!result.ok && /pas les droits/.test(result.error));
   assert.match(refused(start, 'push fork'), /n’est pas un quai distant/);
+  assert.equal(ok(start, 'show C').output[0], 'voiture C · née sur un quai distant');
   assert.match(refused(start, 'branch upstream/x'), /nom de voie invalide/);
   assert.match(refused(start, 'switch upstream/main'), /se conduit pas/);
 });

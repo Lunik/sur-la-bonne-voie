@@ -66,7 +66,7 @@ export const messages = {
   pulled: (remote: string, ref: string) => `From ${remote} · ${ref} récupéré`,
   fetch: 'Le quai distant est déjà affiché sur le plateau : rien de nouveau.',
   logEmpty: '(aucune voiture)',
-  showCar: (label: string, origin: string) => `voiture ${label} · née sur ${origin === 'collègue' ? 'origin' : origin}`,
+  showCar: (label: string, origin: string) => `voiture ${label} · née sur ${origin === 'collègue' ? 'un quai distant' : origin}`,
   showAuthor: (colleague: boolean) => `Author: ${colleague ? 'le collègue' : 'vous'}`,
   showParent: (label: string) => `accrochée derrière ${label}`,
   showMerge: (labels: string[]) => `voiture de jonction : relie ${labels.join(' et ')}`,

@@ -13,7 +13,8 @@ import { DepartureBoard, Header, NetworkMap } from './Screens.tsx';
 import { strings } from './strings.ts';
 import { TrainContext } from './trains.tsx';
 
-const isOpen = (p: Progress, i: number) => p.unlockAll || i === 0 || (p.stars[stations[i - 1].id] ?? 0) > 0;
+// A starred station stays open, so a station inserted before it does not lock it again.
+const isOpen = (p: Progress, i: number) => p.unlockAll || i === 0 || [i - 1, i].some((j) => (p.stars[stations[j].id] ?? 0) > 0);
 /** Prediction boards are shuffled here, outside the reducer, so it stays pure. */
 const sessionFor = (s: Station) => newSession(s, isGuess(s) ? shuffled(3) : undefined);
 

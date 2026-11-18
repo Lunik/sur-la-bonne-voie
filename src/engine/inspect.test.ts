@@ -27,7 +27,7 @@ test('log takes a ref and filters merges', () => {
 test('show describes one car: track, author, parent, cargo', () => {
   const state = build(['commit', 'push', '_coll', 'pull', 'commit'], { C: 'debug' });
   assert.deepEqual(ok(state, 'show C').output, ['voiture C · née sur main', 'Author: vous', 'accrochée derrière B', 'chargement : debug']);
-  assert.deepEqual(ok(state, 'show B').output, ['voiture B · née sur origin', 'Author: le collègue', 'accrochée derrière A', 'chargement : rien à signaler']);
+  assert.deepEqual(ok(state, 'show B').output, ['voiture B · née sur un quai distant', 'Author: le collègue', 'accrochée derrière A', 'chargement : rien à signaler']);
   const merged = build([...FORK, 'merge feature']);
   assert.equal(ok(merged, 'show HEAD').output[2], 'voiture de jonction : relie E et D');
 });
