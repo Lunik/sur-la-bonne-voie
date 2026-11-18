@@ -415,7 +415,7 @@ function validateStation(station: Station): string[] {
       if (station.cargo) errors.push('recherche avec chargement : il trahirait la voiture fautive');
       if (bisectCandidates(board).length < 2) errors.push('moins de deux voitures à sonder');
       const id = culpritId(station, board);
-      if (!id || id === firstParentChain(board, board.branches.main).at(-1)) errors.push(`voiture fautive ${station.culprit} absente de main ou de tête`);
+      if (!id || id === firstParentChain(board, board.branches.main).at(-1)) errors.push(`voiture fautive ${station.culprit} absente de main ou première voiture (connue bonne)`);
       if (station.par !== bisectPar(board)) errors.push(`par ${station.par}, la recherche dichotomique en demande ${bisectPar(board)}`);
     } else errors.push(...playedErrors(station));
   } catch (error) {

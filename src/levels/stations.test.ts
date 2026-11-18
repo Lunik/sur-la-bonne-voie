@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { contains, isWon, noMerge, lines, play, startBoard, validate, type PlayedStation } from './index.ts';
+import { contains, isWon, noMerge, lines, play, startBoard, validate, type PlayedStation, type Station } from './index.ts';
 import { stations } from './stations.ts';
 
-test('31 stations over 5 lines', () => {
-  assert.equal(stations.length, 31);
+test('40 stations over 5 lines', () => {
+  assert.equal(stations.length, 40);
   assert.deepEqual([...new Set(stations.map((s) => s.line))], lines.map((_, i) => i + 1));
 });
 
@@ -47,4 +47,21 @@ test('a merge breaks the « grue en panne » rules', () => {
   const station = played('grue-en-panne');
   assert.throws(() => play(station, ['merge feature']), /fast-forward|jonction/i);
   assert.ok(!isWon(station, startBoard(station)));
+});
+
+test('validate catches broken phases, events and searches', () => {
+  const review = played('revue-de-quai');
+  const bisect = stations.find((s) => s.id === 'recherche-de-l-avarie')!;
+  const errors = validate([
+    { ...review, id: 'cascade', phases: [review.type === 'review' ? review.phases[0] : { remark: '' }, { remark: 'x', rules: [{ text: 'E', check: contains('feature', 'E') }] }] } as Station,
+    { ...played('train-supplementaire'), id: 'tard', events: [{ after: 9, run: ['_coll'], say: '' }] },
+    { ...bisect, id: 'par', par: 2 } as Station,
+    { ...bisect, id: 'tete', culprit: 'A' } as Station,
+    { ...played('double-voie'), id: 'flow', solution: ['commit', 'switch -c hotfix/x', 'switch main', 'switch develop', 'merge main'], par: 2 },
+  ]);
+  assert.ok(errors.includes('cascade : étape 2 déjà remplie à son ouverture'));
+  assert.ok(errors.includes('tard : événement après 9 manœuvres jamais déclenché par la solution'));
+  assert.ok(errors.includes('par : par 2, la recherche dichotomique en demande 3'));
+  assert.ok(errors.some((e) => e.startsWith('tete : voiture fautive A')));
+  assert.ok(errors.includes('flow : la solution ne gagne pas'), 'a commit straight on main breaks Gitflow');
 });
