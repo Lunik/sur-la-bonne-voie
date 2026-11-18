@@ -52,10 +52,14 @@ export const reverted = (ref: string, car: string): Check => (s) =>
 /** `branch` and `origin/branch` point to the same car. */
 export const same = (branch: string): Check => (s) => !!s.remote[branch] && s.remote[branch] === s.branches[branch];
 
-/** Every `prefix…` track has reached each of `into`. Fails if one of `into` is unknown. */
-const reached = (prefix: string, ...into: string[]): Check => (s) =>
+/** A colleague's car is on `ref`, whatever letter it got. */
+export const fromColleague = (ref: string): Check => (s) => carsOn(s, ref).some((c) => c.kind === 'normal' && c.origin === 'collègue');
+/** Every track named with one of `prefixes` has reached each of `into`. Fails if one of `into` is unknown. */
+const reached = (prefixes: string[], ...into: string[]): Check => (s) =>
   into.every((b) => !!tipOf(s, b)) &&
-  Object.keys(s.branches).filter((b) => b.startsWith(prefix)).every((b) => into.every((t) => ancestors(s, s.branches[t]).has(s.branches[b])));
+  Object.keys(s.branches)
+    .filter((b) => prefixes.some((p) => b.startsWith(p)))
+    .every((b) => into.every((t) => ancestors(s, s.branches[t]).has(s.branches[b])));
 
 // ---------- Stations ----------
 
@@ -220,8 +224,7 @@ function workflowRules(station: PlayedStation): Rule[] {
       text: 'Gitflow : aucune voiture accrochée directement sur main',
       check: (s) => !!tipOf(s, 'main') && !carsOn(s, 'main').some((c) => c.kind === 'normal' && c.origin === 'main' && !before.has(c.id)),
     },
-    { text: 'Gitflow : chaque voie hotfix/ rejoint main et develop', check: reached('hotfix/', 'main', 'develop') },
-    { text: 'Gitflow : chaque voie release/ rejoint main et develop', check: reached('release/', 'main', 'develop') },
+    { text: 'Gitflow : chaque voie hotfix/ ou release/ rejoint main et develop', check: reached(['hotfix/', 'release/'], 'main', 'develop') },
   ];
 }
 
@@ -320,12 +323,6 @@ export function play(station: PlayedStation, steps: Step[]): { state: RepoState;
 }
 
 // ---------- Inquiry and bisect ----------
-
-/** Read-only refusal of an inquiry: content text, so it lives with the stations. */
-export const INQUIRY_READ_ONLY = 'Enquête : on observe le plateau, on ne manœuvre pas. Essayez log ou show.';
-/** Short feedback on the yard; the full text sits in the goal panel (remark) or the terminal (happening). */
-export const PHASE_DONE = 'Remarque traitée : le contrôleur en a une autre.';
-export const HAPPENED = 'Un événement vient de survenir : voir le terminal.';
 
 export const sameCars = (a: string[], b: string[]) => a.length === b.length && [...a].sort().join() === [...b].sort().join();
 

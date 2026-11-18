@@ -92,14 +92,14 @@ export function Post({ session, covered, hintShown, onHint, onUndo, onRestart, r
           autoComplete="off"
           autoCapitalize="off"
           spellCheck={false}
-          placeholder="commit"
+          placeholder={played ? 'commit' : 'log'}
           aria-label={strings.promptLabel}
         />
         <button type="submit">{strings.enter}</button>
       </form>
       <p className="help">
         {strings.tryThese}
-        {lines[station.line - 1].suggestions.map((c) => (
+        {(played ? lines[station.line - 1].suggestions : strings.inquirySuggestions).map((c) => (
           <code
             key={c}
             role="button"

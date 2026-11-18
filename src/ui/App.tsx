@@ -45,7 +45,7 @@ export function App() {
     // Bring the exercise to the top of the screen: map above, nothing to scroll back to while playing.
     requestAnimationFrame(() => stage.current?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }));
   };
-  const run = (step: Step, message: string) => dispatch({ type: 'step', step, message });
+  const run = (step: Step, message: string) => dispatch({ type: 'step', step, message, notes: strings.stepNotes });
   const undo = () => dispatch({ type: 'undo', message: strings.toastUndone, nothing: strings.toastNothingToUndo });
 
   // A win counts as soon as it happens; it is merged into the stored progress on the next load.

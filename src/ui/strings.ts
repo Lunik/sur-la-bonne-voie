@@ -141,6 +141,13 @@ export const strings = {
   done: {
     typed: 'Manœuvre effectuée.',
   },
+  stepNotes: {
+    readOnly: fr('Enquête : on observe le plateau, on ne manœuvre pas. Essayez log ou show.'),
+    phaseDone: fr('Remarque traitée : le contrôleur en a une autre.'),
+    happened: fr('Un événement vient de survenir : voir le terminal.'),
+  },
+  /** Terminal suggestions of an inquiry: inspection only, never the answer. */
+  inquirySuggestions: ['log', 'log main..feature', 'show HEAD', 'status'],
 
   wonTitle: fr('Tchou tchou !'),
   lineDoneTitle: (line: number) => fr(`Ligne ${line} terminée !`),

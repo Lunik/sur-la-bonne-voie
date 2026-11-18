@@ -4,7 +4,8 @@ import type { Step } from '../levels/index.ts';
 import { isPlayed, newSession, reduce, stars, stations, type Session } from './index.ts';
 
 const station = (id: string) => stations.find((s) => s.id === id)!;
-const step = (s: Session, st: Step) => reduce(s, { type: 'step', step: st, message: 'ok' });
+const notes = { readOnly: 'Enquête : lecture seule', phaseDone: 'Remarque traitée', happened: 'Un événement' };
+const step = (s: Session, st: Step) => reduce(s, { type: 'step', step: st, message: 'ok', notes });
 test('keyboard solutions win every played station through the reducer', () => {
   for (const st of stations) {
     if (!isPlayed(st)) continue;
@@ -70,7 +71,7 @@ test('events fire once the move count is reached, and again after an undo', () =
   let s = step(newSession(station('train-supplementaire')), 'merge feature');
   assert.equal(s.repo.commits[s.repo.remote.main].label, 'E');
   assert.equal(s.log.filter((l) => l.kind === 'event').length, 1);
-  assert.match(s.toast!.text, /événement/);
+  assert.match(s.toast!.text, /Un événement/);
   const event = s.log.find((l) => l.kind === 'event');
   assert.ok(event && 'text' in event && /collègue/.test(event.text));
   assert.match(step(s, 'push').toast!.text, /rejected/);
@@ -137,4 +138,17 @@ test('the sealed track refuses the rebase with a reason', () => {
 
 test('the player cannot type the scripted commands', () => {
   assert.match(step(newSession(station('avant-le-ramassage')), '_gc').toast!.text, /n’est pas une commande/);
+});
+
+test('the colleague rule follows his car whatever its letter; forcing is refused', () => {
+  let s = step(newSession(station('train-supplementaire')), 'commit');
+  const colleague = s.repo.commits[s.repo.remote.main];
+  assert.equal(colleague.label, 'F', 'the player took E');
+  assert.equal(colleague.origin, 'collègue');
+  for (const x of ['switch feature', 'rebase main', 'switch main', 'merge feature']) s = step(s, x);
+  assert.match(step(s, 'push --force').toast!.text, /push forcé est interdit/);
+  const rule = (st: Session) => st.station.type === 'rules' && st.station.rules[1].check(st.repo);
+  assert.ok(rule(s), 'his car F counts, though it is not E');
+  s = step(step(s, 'pull --rebase'), 'push');
+  assert.equal(s.status, 'won');
 });

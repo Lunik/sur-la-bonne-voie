@@ -2,7 +2,7 @@
 // ui/ reaches engine and levels through this module only (see docs/architecture.md).
 import { build, type RepoState } from '../engine/index.ts';
 import {
-  advance, bisectCandidates, cornered, faulty, fire, goals, HAPPENED, INQUIRY_READ_ONLY, PHASE_DONE, isGuess, isPlayed, predictBoards, runStep, sameCars, startBoard,
+  advance, bisectCandidates, cornered, faulty, fire, goals, isGuess, isPlayed, predictBoards, runStep, sameCars, startBoard,
   type Goal, type Station, type Step,
 } from '../levels/index.ts';
 
@@ -64,9 +64,19 @@ export interface Session {
   toast: Toast | null;
 }
 
+/** Feedback texts the reducer shows; they live in the UI's strings. */
+export interface StepNotes {
+  /** An inquiry refused a move. */
+  readOnly: string;
+  /** A review phase was met; the next remark sits in the goal panel. */
+  phaseDone: string;
+  /** A happening fired; its text sits in the terminal. */
+  happened: string;
+}
+
 export type Action =
   /** `message` is shown when the step moves something. */
-  | { type: 'step'; step: Step; message: string }
+  | { type: 'step'; step: Step; message: string; notes: StepNotes }
   | { type: 'undo'; message: string; nothing: string }
   | { type: 'start' }
   | { type: 'tick'; seconds: number }
@@ -128,7 +138,7 @@ function step(session: Session, action: Extract<Action, { type: 'step' }>): Sess
   if (!result.ok) return refuse(result.command, result.error, echoed);
   if (!isPlayed(station)) {
     // An inquiry only inspects: a step that would move something is refused whole.
-    return result.moves ? refuse(result.transcript.at(-1)!.command, INQUIRY_READ_ONLY, []) : { ...session, log: [...session.log, ...echoed] };
+    return result.moves ? refuse(result.transcript.at(-1)!.command, action.notes.readOnly, []) : { ...session, log: [...session.log, ...echoed] };
   }
   const moves = session.moves + result.moves;
   const { state: repo, fired } = fire(station, result.state, session.moves, moves);
@@ -139,10 +149,11 @@ function step(session: Session, action: Extract<Action, { type: 'step' }>): Sess
     repo,
     moves,
     phase,
-    target: phase === session.phase ? session.target : targetOf(station, all[phase]) ?? session.target,
+    // Once won, the last target stays on screen while the train leaves.
+    target: phase === session.phase || phase === all.length ? session.target : targetOf(station, all[phase]),
     history: result.moves ? [...session.history, { repo: session.repo, moves: session.moves, phase: session.phase }] : session.history,
     log: [...session.log, ...echoed, ...fired.flatMap((f): LogLine[] => [{ kind: 'event', text: f.say }, ...f.output.map((text) => ({ kind: 'output' as const, text }))])],
-    toast: fired.length ? { tone: 'info', text: HAPPENED } : phase > session.phase && phase < all.length ? { tone: 'good', text: PHASE_DONE } : result.moves ? { tone: 'info', text: action.message } : session.toast,
+    toast: fired.length ? { tone: 'info', text: action.notes.happened } : phase > session.phase && phase < all.length ? { tone: 'good', text: action.notes.phaseDone } : result.moves ? { tone: 'info', text: action.message } : session.toast,
   };
   if (phase === all.length) return { ...next, status: 'won' };
   if (station.budget !== undefined && moves >= station.budget) return { ...next, status: 'failed', failure: 'budget' };

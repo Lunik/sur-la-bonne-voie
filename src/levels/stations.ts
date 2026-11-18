@@ -1,6 +1,6 @@
 // The 40 stations of the network, in play order, grouped by line. Adding a station only touches this file.
 // Prose uses plain spaces before « : ? ! » : French non-breaking spaces are the UI's job (jalon 3).
-import { contains, noCargo, noMerge, reverted, same, validate, type Station } from './index.ts';
+import { contains, fromColleague, noCargo, noMerge, reverted, same, validate, type Station } from './index.ts';
 
 const A2 = ['commit', 'commit'];
 const FORK = ['commit', 'commit', 'switch -c feature', 'commit', 'commit', 'switch main', 'commit'];
@@ -424,12 +424,12 @@ export const stations: Station[] = [
     solution: ['revert C', 'push'],
   },
   {
-    id: 'train-supplementaire', line: 4, title: 'Train supplémentaire', type: 'rules', difficulty: 3, train: 'tgv-duplex', par: 3,
+    id: 'train-supplementaire', line: 4, title: 'Train supplémentaire', type: 'rules', difficulty: 3, train: 'tgv-duplex', forceForbidden: true, par: 3,
     start: ['commit', 'commit', 'push', 'switch -c feature', 'commit', 'commit', 'switch main'],
-    events: [{ after: 1, run: ['_coll'], say: 'Train supplémentaire : le collègue vient de pousser la voiture E sur origin/main.' }],
+    events: [{ after: 1, run: ['_coll'], say: 'Train supplémentaire : le collègue vient de pousser une voiture sur origin/main.' }],
     rules: [
       { text: 'origin/main contient le panier C et D', check: contains('origin/main', 'C', 'D') },
-      { text: 'origin/main contient la voiture du collègue', check: contains('origin/main', 'E') },
+      { text: 'origin/main contient la voiture du collègue', check: fromColleague('origin/main') },
       { text: 'Aucune voiture de jonction', check: noMerge('origin/main') },
       { text: 'main et origin/main identiques', check: same('main') },
     ],
@@ -438,7 +438,7 @@ export const stations: Station[] = [
       { title: 'L’horaire', text: 'Sur cette ligne, le réseau vit pendant que vous manœuvrez : après un certain nombre de manœuvres, un événement survient. Le tableau des départs annonce le prochain ; le terminal le raconte quand il arrive.' },
       { title: 'Rappel', text: '`git pull --rebase` raccroche vos voitures derrière celles d’origin, en ligne droite.', example: ['commit', 'push', 'commit', '_coll'], run: ['pull --rebase'] },
     ],
-    hint: 'merge feature (fast-forward), puis le collègue pousse : pull --rebase, puis push.',
+    hint: 'merge feature (fast-forward), puis le collègue pousse : pull --rebase, puis push. Forcer le push est interdit.',
     learn: 'git merge feature\n# le collègue pousse E\ngit pull --rebase\ngit push',
     solution: ['merge feature', 'pull --rebase', 'push'],
   },
