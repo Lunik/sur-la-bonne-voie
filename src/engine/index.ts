@@ -63,6 +63,7 @@ const DEFAULT_HELP = ['commit', 'branch', 'merge', 'rebase', 'cherry-pick', 'res
 const ALIASES: Record<string, string> = {
   checkout: 'switch',
   ck: 'switch',
+  sw: 'switch',
   co: 'commit',
   br: 'branch',
   mr: 'merge',

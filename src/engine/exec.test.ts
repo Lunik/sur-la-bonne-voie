@@ -29,7 +29,7 @@ test('aliases run the full command, gate included', () => {
   let state = ok(emptyRepo(), 'git co').state;
   state = ok(state, 'ck -b feature').state;
   state = ok(state, 'co').state;
-  state = ok(state, 'ck main').state;
+  state = ok(state, 'sw main').state;
   assert.equal(ok(state, 'mr feature').move, ok(state, 'merge feature').move);
   assert.deepEqual(ok(state, 'st').output, ok(state, 'status').output);
   assert.deepEqual(ok(state, 'lo').output, ok(state, 'log').output);
