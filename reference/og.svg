@@ -1,0 +1,17 @@
+<!-- Source of static/og.png (social share image). Regenerate: magick -density 96 reference/og.svg static/og.png -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#1c2b3a"/>
+  <g stroke-linecap="round" fill="none" stroke-width="16">
+    <path d="M80 470h1040" stroke="#2f5bd3"/>
+    <path d="M330 470c180 0 200-150 420-150h370" stroke="#e0681d"/>
+  </g>
+  <g stroke="#1c2b3a" stroke-width="6">
+    <rect x="150" y="440" width="110" height="60" rx="10" fill="#f2b705"/>
+    <rect x="280" y="440" width="110" height="60" rx="10" fill="#e6ebef"/>
+    <rect x="800" y="290" width="110" height="60" rx="10" fill="#e6ebef"/>
+    <rect x="930" y="290" width="110" height="60" rx="10" fill="#e6ebef"/>
+  </g>
+  <text x="80" y="160" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="88" fill="#e6ebef">Gare de triage</text>
+  <text x="80" y="235" font-family="Helvetica, Arial, sans-serif" font-size="46" fill="#f2b705">Apprendre Git en composant des trains</text>
+  <text x="80" y="580" font-family="Menlo, Courier, monospace" font-size="32" fill="#93a0ab">commit · merge · rebase · cherry-pick · reflog</text>
+</svg>

@@ -3,14 +3,78 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Gare de triage</title>
+<title>Gare de triage : apprendre Git en jouant, jeu gratuit</title>
+<meta name="description" content="Jeu gratuit pour apprendre Git dans le navigateur : tapez de vraies commandes (commit, merge, rebase, cherry-pick, reflog) pour composer des trains. 5 lignes, 40 stations.">
+<meta name="keywords" content="apprendre Git, jeu Git, tutoriel Git, cours Git, commandes Git, git rebase, git merge, git cherry-pick, git reset, git reflog, branches Git, débutant">
+<meta name="author" content="Lunik">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://lunik.github.io/sur-la-bonne-voie/">
+<meta name="theme-color" content="#f1f3f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12181e" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="Gare de triage">
+<meta property="og:title" content="Gare de triage : apprendre Git en jouant">
+<meta property="og:description" content="Chaque commit est une voiture, chaque branche une voie, HEAD la motrice. Tapez de vraies commandes Git pour composer des trains : 40 stations, de commit à reflog.">
+<meta property="og:url" content="https://lunik.github.io/sur-la-bonne-voie/">
+<meta property="og:image" content="https://lunik.github.io/sur-la-bonne-voie/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Gare de triage, jeu pour apprendre Git : des voies ferrées qui bifurquent comme des branches.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gare de triage : apprendre Git en jouant">
+<meta name="twitter:description" content="Tapez de vraies commandes Git pour composer des trains. Gratuit, dans le navigateur, 40 stations.">
+<meta name="twitter:image" content="https://lunik.github.io/sur-la-bonne-voie/og.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": ["WebApplication", "LearningResource"],
+  "name": "Gare de triage",
+  "alternateName": "Sur la bonne voie",
+  "url": "https://lunik.github.io/sur-la-bonne-voie/",
+  "description": "Jeu gratuit pour apprendre Git en composant des trains. Le joueur tape de vraies commandes Git (commit, branch, switch, merge, rebase, cherry-pick, reset, push, pull, revert, reflog) dans un terminal pour recomposer la rame demandée.",
+  "image": "https://lunik.github.io/sur-la-bonne-voie/og.png",
+  "inLanguage": "fr",
+  "applicationCategory": "EducationalApplication",
+  "applicationSubCategory": "Jeu éducatif",
+  "genre": "Jeu de réflexion",
+  "operatingSystem": "Navigateur web",
+  "browserRequirements": "JavaScript",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "learningResourceType": "Jeu",
+  "educationalLevel": "Débutant à intermédiaire",
+  "teaches": ["Git", "commit", "branches", "merge", "rebase", "rebase interactif", "cherry-pick", "reset", "revert", "push et pull", "reflog", "bisect", "gitflow"],
+  "audience": { "@type": "Audience", "audienceType": "Développeurs, étudiants en informatique" },
+  "author": { "@type": "Person", "name": "Lunik", "url": "https://github.com/Lunik" },
+  "codeRepository": "https://github.com/Lunik/sur-la-bonne-voie"
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 </head>
 <body>
 <div id="root"></div>
+<noscript>
+  <h1>Gare de triage : apprendre Git en composant des trains</h1>
+  <p>Jeu gratuit pour apprendre Git. Chaque commit est une voiture, chaque branche une voie, HEAD la motrice au nez jaune. Vous tapez de vraies commandes Git dans un terminal pour recomposer la rame demandée.</p>
+  <h2>5 lignes, 40 stations</h2>
+  <ol>
+    <li>Le dépôt : <code>commit</code>, <code>branch</code>, <code>switch</code></li>
+    <li>Les jonctions : <code>merge</code>, <code>rebase</code></li>
+    <li>Le tri : <code>cherry-pick</code>, <code>reset</code></li>
+    <li>Les grandes lignes : <code>push</code>, <code>pull</code>, <code>revert</code></li>
+    <li>Les accidents : <code>reflog</code> et réparations</li>
+  </ol>
+  <p>Stations de composition, pronostic, enquête (<code>log</code>, <code>show</code>), recherche de l’avarie (<code>bisect</code>), <code>rebase -i</code>, gitflow. Étoiles selon le nombre de manœuvres.</p>
+  <p><strong>Activez JavaScript pour jouer.</strong> Code source : <a href="https://github.com/Lunik/sur-la-bonne-voie">github.com/Lunik/sur-la-bonne-voie</a>.</p>
+</noscript>
 <script type="module" src="./main.tsx"></script>
 </body>
 </html>

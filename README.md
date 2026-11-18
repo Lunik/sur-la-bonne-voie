@@ -35,7 +35,7 @@ React 19 + TypeScript + Vite. Aucune autre dépendance d’exécution : plateau 
 - `src/game/` : session de jeu (coups, étoiles, budget, chrono, annulation).
 - `src/ui/`, `src/theme/` : composants React, jetons CSS.
 - `static/` : fichiers copiés tels quels dans `dist/` (favicon…).
-- `reference/` : prototype initial (`artifact.html`) et sa description (`handoff.md`), gardés comme référence. Non construits.
+- `reference/` : prototype initial (`artifact.html`), sa description (`handoff.md`) et la source de l’image de partage (`og.svg`, rendue en `static/og.png`). Non construits.
 
 Détails : `docs/architecture.md`. Avancement : `ROADMAP.md`.
 
