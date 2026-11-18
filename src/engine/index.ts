@@ -28,7 +28,7 @@ export interface RepoState {
   /** Display order of local branches. */
   order: string[];
   head: string;
-  /** `origin` branch → tip commit id. */
+  /** Remote-tracking ref (`origin/main`, `upstream/main`) → tip commit id. */
   remote: Record<string, string>;
   /** Branch → tip ids, most recent first. Unbounded; `reflogLimit` only caps the `reflog` output. */
   reflog: Record<string, string[]>;
@@ -58,6 +58,9 @@ export class EngineError extends Error {}
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const PRIME = '′';
+/** Remotes of the yard: `origin` (the team's, or your fork), `upstream` (a forked project's original, read-only for the player). */
+const REMOTES = ['origin', 'upstream'];
+const isRemoteRef = (name: string) => REMOTES.some((r) => name.startsWith(`${r}/`));
 const DEFAULT_HELP = ['commit', 'branch', 'merge', 'rebase', 'cherry-pick', 'reset', 'revert', 'push', 'pull'];
 /** Short names typed in the terminal, resolved before gating. Mirrors the owner's git aliases that map to a command this engine knows. */
 const ALIASES: Record<string, string> = {
@@ -125,9 +128,9 @@ export function orphans(s: RepoState): string[] {
   return Object.keys(s.commits).filter((id) => !r.has(id) && !pending.has(id));
 }
 
-/** Tip of a local branch or of `origin/<branch>`. */
+/** Tip of a local branch or of a remote-tracking ref (`origin/main`). */
 export function tipOf(s: RepoState, name: string): string | undefined {
-  return name.startsWith('origin/') ? own(s.remote, name.slice(7)) : own(s.branches, name);
+  return isRemoteRef(name) ? own(s.remote, name) : own(s.branches, name);
 }
 
 const normalizeLabel = (label: string) => label.toUpperCase().replace(/['’`]/g, PRIME);
@@ -145,7 +148,7 @@ function branchTip(s: RepoState, name: string | undefined): string {
   return tipOf(s, name) ?? fail(m.unknownBranch(name));
 }
 
-/** `HEAD`, branch, `origin/x`, label, `X~n`, `X^`, `branch@{n}`. */
+/** `HEAD`, branch, `origin/x`, `upstream/x`, label, `X~n`, `X^`, `branch@{n}`. */
 function resolve(s: RepoState, ref: string): string | undefined {
   let match;
   if ((match = ref.match(/^(.+)~(\d+)$/))) {
@@ -315,6 +318,13 @@ function rebaseInteractive(s: RepoState, baseRef: string | undefined, ops: strin
   return 'rebase';
 }
 
+/** `push`/`pull [options] [remote] [branch]`: origin and the HEAD track by default. */
+function remoteArgs(args: string[], head: string): { remote: string; branch: string } {
+  const [remote = 'origin', branch] = args.slice(1).filter((a) => !a.startsWith('-'));
+  if (!REMOTES.includes(remote)) fail(m.unknownRemote(remote));
+  return { remote, branch: branch ?? head };
+}
+
 function gate(s: RepoState, cmd: string) {
   if (s.allowed && !s.allowed.includes(cmd)) fail(m.notYetTaught(cmd));
 }
@@ -356,7 +366,7 @@ function run(s: RepoState, line: string, internal: boolean): { output: string[];
       if (!arg) fail(m.branchNameMissing);
       if (Object.hasOwn(s.branches, arg)) fail(m.branchExists(arg));
       // `hotfix/tva` is fine; `origin/…` would be read as the remote.
-      if (!/^[a-z0-9](?:[a-z0-9_-]|\/(?=[a-z0-9])){0,14}$/i.test(arg) || arg.startsWith('origin/')) fail(m.branchNameInvalid);
+      if (!/^[a-z0-9](?:[a-z0-9_-]|\/(?=[a-z0-9])){0,14}$/i.test(arg) || isRemoteRef(arg)) fail(m.branchNameInvalid);
       if (s.order.length >= s.maxBranches) fail(m.tooManyBranches(s.maxBranches));
       const tip = headTip(s);
       s.branches[arg] = tip;
@@ -373,7 +383,7 @@ function run(s: RepoState, line: string, internal: boolean): { output: string[];
         out.push(m.switchedNew(name));
         return { output: out, move: 'branch' };
       }
-      if (arg?.startsWith('origin/')) fail(m.remoteNotDrivable);
+      if (arg && isRemoteRef(arg)) fail(m.remoteNotDrivable);
       if (!arg || !Object.hasOwn(s.branches, arg)) fail(m.unknownBranchSwitch(arg ?? ''));
       if (arg === head) out.push(m.alreadyOn(head));
       else {
@@ -456,28 +466,35 @@ function run(s: RepoState, line: string, internal: boolean): { output: string[];
     case 'push': {
       gate(s, 'push');
       const force = args.includes('--force') || args.includes('-f');
-      const tip = headTip(s);
-      const remoteTip = own(s.remote, head);
+      const { remote, branch } = remoteArgs(args, head);
+      // Content may seed `upstream` (start boards); the player has no rights on it.
+      if (remote === 'upstream' && !internal) fail(m.pushUpstream);
+      if (branch !== head && !Object.hasOwn(s.branches, branch)) fail(m.unknownBranch(branch));
+      const tip = branch === head ? headTip(s) : s.branches[branch];
+      const ref = `${remote}/${branch}`;
+      const remoteTip = own(s.remote, ref);
       if (remoteTip === tip) {
         out.push(m.pushUpToDate);
         return { output: out, move: null };
       }
       if (remoteTip && !ancestors(s, tip).has(remoteTip)) {
-        if (!force) fail(m.pushRejected(head));
+        if (!force) fail(m.pushRejected(branch, ref));
         if (s.forceForbidden) fail(m.forceForbidden);
         checkSealed(s, [...ancestors(s, remoteTip)].filter((id) => !ancestors(s, tip).has(id)));
         out.push(m.pushForced);
       }
-      s.remote[head] = tip;
-      out.push(m.pushed(head));
+      s.remote[ref] = tip;
+      out.push(m.pushed(remote, branch));
       return { output: out, move: 'push' };
     }
     case 'pull': {
       gate(s, 'pull');
-      const remoteTip = own(s.remote, head) ?? fail(m.noRemote(head));
+      const { remote, branch } = remoteArgs(args, head);
+      const ref = `${remote}/${branch}`;
+      const remoteTip = own(s.remote, ref) ?? fail(m.noRemote(ref));
       headTip(s);
-      out.push(m.pulled(head));
-      const integrated = args.includes('--rebase') ? rebase(s, remoteTip, `origin/${head}`, out) : merge(s, remoteTip, out);
+      out.push(m.pulled(remote, ref));
+      const integrated = args.includes('--rebase') ? rebase(s, remoteTip, ref, out) : merge(s, remoteTip, out);
       return { output: out, move: integrated ? 'pull' : null };
     }
     case 'fetch':
@@ -507,7 +524,7 @@ function run(s: RepoState, line: string, internal: boolean): { output: string[];
       for (const id of ids) {
         const names = [
           ...Object.keys(s.branches).filter((b) => s.branches[b] === id).map((b) => (b === head ? `HEAD -> ${b}` : b)),
-          ...Object.keys(s.remote).filter((b) => s.remote[b] === id).map((b) => `origin/${b}`),
+          ...Object.keys(s.remote).filter((r) => s.remote[r] === id),
         ];
         out.push(`${labelOf(s, id)}${names.length ? `  (${names.join(', ')})` : ''}`);
       }
@@ -527,7 +544,7 @@ function run(s: RepoState, line: string, internal: boolean): { output: string[];
     case 'status': {
       out.push(m.statusBranch(head));
       if (s.pending.length) out.push(m.statusPending(s.pending.map((id) => labelOf(s, id))));
-      const remoteTip = own(s.remote, head);
+      const remoteTip = own(s.remote, `origin/${head}`);
       if (remoteTip) {
         const mine = ancestors(s, s.branches[head]);
         const theirs = ancestors(s, remoteTip);
@@ -541,10 +558,11 @@ function run(s: RepoState, line: string, internal: boolean): { output: string[];
       out.push(m.help(s.allowed ?? DEFAULT_HELP));
       return { output: out, move: null };
     case '_coll': {
-      // Internal: a colleague pushes a new commit to origin/main.
-      const remoteTip = own(s.remote, 'main') ?? fail(m.noRemote('main'));
+      // Internal: a colleague pushes a new commit to `<remote>/main` (origin by default).
+      const ref = `${arg ?? 'origin'}/main`;
+      const remoteTip = own(s.remote, ref) ?? fail(m.noRemote(ref));
       const label = LETTERS[s.nextLabel++] ?? fail(m.outOfLetters);
-      s.remote.main = makeCommit(s, [remoteTip], label, 'collègue', 'normal', s.cargo[label] ?? null);
+      s.remote[ref] = makeCommit(s, [remoteTip], label, 'collègue', 'normal', s.cargo[label] ?? null);
       return { output: out, move: null };
     }
     case '_gc': {

@@ -70,7 +70,7 @@ export const strings = {
   signHead: 'HEAD',
   signRemote: 'quai distant',
   carTitle: (label: string, cargo: string | null, gone: boolean) =>
-    `Voiture ${label}${cargo ? ` · chargement ${cargo}` : ''}${gone ? ' · partie sur origin' : ''}`,
+    `Voiture ${label}${cargo ? ` · chargement ${cargo}` : ''}${gone ? ' · partie sur un quai distant' : ''}`,
   siding: 'Voie de garage',
   sidingCar: (label: string) => `Voiture ${label} sur la voie de garage`,
   legend: {
@@ -78,7 +78,7 @@ export const strings = {
     fresh: fr('double filet : commit recréé'),
     merge: fr('M : voiture de jonction'),
     cargo: fr('losange rouge : chargement suspect'),
-    gone: fr('pastille : partie sur origin'),
+    gone: fr('pastille : partie sur un quai distant'),
     colleague: fr('livrée rose : collègue'),
     revert: fr('caisse sombre : voiture inverse'),
   },

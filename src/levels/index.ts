@@ -49,8 +49,8 @@ export const noCargo = (ref: string, cargo: string): Check => (s) => !!tipOf(s, 
 export const noMerge = (ref: string): Check => (s) => !!tipOf(s, ref) && !carsOn(s, ref).some((c) => c.kind === 'merge');
 export const reverted = (ref: string, car: string): Check => (s) =>
   carsOn(s, ref).some((c) => c.kind === 'revert' && stripPrimes(c.label) === `↩${car}`);
-/** `branch` and `origin/branch` point to the same car. */
-export const same = (branch: string): Check => (s) => !!s.remote[branch] && s.remote[branch] === s.branches[branch];
+/** `ref` and `other` (`origin/<ref>` by default) point to the same car. */
+export const same = (ref: string, other = `origin/${ref}`): Check => (s) => !!tipOf(s, other) && tipOf(s, other) === tipOf(s, ref);
 
 /** A colleague's car is on `ref`, whatever letter it got. */
 export const fromColleague = (ref: string): Check => (s) => carsOn(s, ref).some((c) => c.kind === 'normal' && c.origin === 'collègue');
@@ -193,7 +193,7 @@ export type Station = PlayedStation | PredictStation | InquiryStation | BisectSt
 export const isPlayed = (s: Station): s is PlayedStation => s.type === 'compo' || s.type === 'rules' || s.type === 'review';
 export const isGuess = (s: Station): s is PredictStation => s.type === 'predict' || s.type === 'retro';
 
-const branchNames = (s: RepoState) => [...Object.keys(s.branches), ...Object.keys(s.remote).map((b) => `origin/${b}`)];
+const branchNames = (s: RepoState) => [...Object.keys(s.branches), ...Object.keys(s.remote)];
 
 type Flags = Partial<Pick<Played, 'fastForwardOnly' | 'forceForbidden' | 'publicLocked'>>;
 

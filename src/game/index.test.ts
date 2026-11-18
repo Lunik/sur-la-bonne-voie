@@ -69,14 +69,14 @@ test('predictions: wrong guesses cost a star, the right one wins and shows the b
 
 test('events fire once the move count is reached, and again after an undo', () => {
   let s = step(newSession(station('train-supplementaire')), 'merge feature');
-  assert.equal(s.repo.commits[s.repo.remote.main].label, 'E');
+  assert.equal(s.repo.commits[s.repo.remote['origin/main']].label, 'E');
   assert.equal(s.log.filter((l) => l.kind === 'event').length, 1);
   assert.match(s.toast!.text, /Un événement/);
   const event = s.log.find((l) => l.kind === 'event');
   assert.ok(event && 'text' in event && /collègue/.test(event.text));
   assert.match(step(s, 'push').toast!.text, /rejected/);
   s = reduce(s, { type: 'undo', message: 'u', nothing: 'n' });
-  assert.equal(s.repo.remote.main, newSession(station('train-supplementaire')).repo.remote.main, 'undo takes the event back');
+  assert.equal(s.repo.remote['origin/main'], newSession(station('train-supplementaire')).repo.remote['origin/main'], 'undo takes the event back');
   s = step(s, 'merge feature');
   assert.equal(s.log.filter((l) => l.kind === 'event').length, 2);
 });
@@ -142,7 +142,7 @@ test('the player cannot type the scripted commands', () => {
 
 test('the colleague rule follows his car whatever its letter; forcing is refused', () => {
   let s = step(newSession(station('train-supplementaire')), 'commit');
-  const colleague = s.repo.commits[s.repo.remote.main];
+  const colleague = s.repo.commits[s.repo.remote['origin/main']];
   assert.equal(colleague.label, 'F', 'the player took E');
   assert.equal(colleague.origin, 'collègue');
   for (const x of ['switch feature', 'rebase main', 'switch main', 'merge feature']) s = step(s, x);

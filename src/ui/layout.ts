@@ -7,7 +7,7 @@ export interface Cell {
 }
 
 export interface Row {
-  /** `main`, `feature`… or `origin/main`. */
+  /** `main`, `feature`… or `origin/main`, `upstream/main`. */
   name: string;
   kind: 'local' | 'remote';
   /** Column of the car this row branches from; -1 for a row starting at the buffer. */
@@ -37,7 +37,7 @@ export function layout(s: RepoState): Row[] {
   };
   if (s.branches.main) add('main', 'local', s.branches.main);
   for (const b of s.order) if (b !== 'main' && s.branches[b]) add(b, 'local', s.branches[b]);
-  for (const [b, tip] of Object.entries(s.remote)) if (!placed.has(tip)) add(`origin/${b}`, 'remote', tip);
+  for (const [ref, tip] of Object.entries(s.remote)) if (!placed.has(tip)) add(ref, 'remote', tip);
   return rows;
 }
 

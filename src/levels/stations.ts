@@ -1,4 +1,4 @@
-// The 40 stations of the network, in play order, grouped by line. Adding a station only touches this file.
+// The 41 stations of the network, in play order, grouped by line. Adding a station only touches this file.
 // Prose uses plain spaces before « : ? ! » : French non-breaking spaces are the UI's job (jalon 3).
 import { contains, fromColleague, noCargo, noMerge, reverted, same, validate, type Station } from './index.ts';
 
@@ -458,6 +458,26 @@ export const stations: Station[] = [
     hint: 'rebase est refusé : merge main depuis feature, puis push.',
     learn: 'git switch feature\ngit merge main   # pas de rebase sur une voie publique\ngit push',
     solution: ['merge main', 'push'],
+  },
+  {
+    id: 'le-fork', line: 4, title: 'Le fork', type: 'rules', difficulty: 4, train: 'tgv-duplex', forceForbidden: true, par: 4,
+    start: ['commit', 'commit', 'push upstream', 'push', 'switch -c feature', 'commit', 'switch main', '_coll upstream', '_coll upstream'],
+    rules: [
+      { text: 'origin/main à jour avec upstream/main', check: same('origin/main', 'upstream/main') },
+      { text: 'origin/feature contient votre voiture C', check: contains('origin/feature', 'C') },
+      { text: 'origin/feature contient D et E, les voitures du projet d’origine', check: contains('origin/feature', 'D', 'E') },
+      { text: 'Ligne droite : aucune voiture de jonction', check: noMerge('origin/feature') },
+      { text: 'feature et origin/feature identiques', check: same('feature') },
+    ],
+    brief: 'Vous contribuez à un projet qui n’est pas le vôtre, depuis votre fork. Les mainteneurs ont poussé D et E sur upstream. Remettez votre fork à jour, raccrochez feature derrière leur travail et publiez-la sur votre fork pour la pull request.',
+    tutorial: [
+      { title: 'Deux quais distants', text: 'Un fork est votre copie d’un projet. Votre dépôt a alors deux quais distants : origin, votre fork, où vous poussez, et upstream, le projet d’origine, que vous ne faites que lire. Les voitures des mainteneurs arrivent sur upstream/main.', example: ['commit', 'push upstream', 'push', '_coll upstream'] },
+      { title: 'Nommer le quai', text: '`git pull upstream main` récupère upstream/main et le fait entrer dans votre voie. `git push origin feature` envoie la voie feature sur votre fork ; sans nom, push et pull visent origin et la voie de la motrice.', example: ['commit', 'push upstream', 'push', '_coll upstream'], run: ['pull upstream main'] },
+      { title: 'Lecture seule', text: 'Vous n’avez pas les droits sur upstream : push upstream est refusé. Votre travail y entre par une pull request, depuis votre fork. Le push forcé est interdit ici.' },
+    ],
+    hint: 'Sur main : pull upstream main, puis push. Ensuite switch feature, rebase main et push.',
+    learn: 'git pull upstream main\ngit push origin main\ngit switch feature\ngit rebase main\ngit push origin feature',
+    solution: ['pull upstream main', 'push', 'switch feature', 'rebase main', 'push origin feature'],
   },
   {
     id: 'depart-imminent', line: 4, title: 'Départ imminent', type: 'rules', difficulty: 4, train: 'tgv-m', timeLimit: 80, par: 4,

@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { contains, isWon, noMerge, lines, play, startBoard, validate, type PlayedStation, type Station } from './index.ts';
 import { stations } from './stations.ts';
 
-test('40 stations over 5 lines', () => {
-  assert.equal(stations.length, 40);
+test('41 stations over 5 lines', () => {
+  assert.equal(stations.length, 41);
   assert.deepEqual([...new Set(stations.map((s) => s.line))], lines.map((_, i) => i + 1));
 });
 

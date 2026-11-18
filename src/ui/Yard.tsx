@@ -156,7 +156,7 @@ export function Yard({ repo: s, variant, leaving, className = '', ...rest }: Yar
   const flags = new Map<string, Flag[]>();
   const flag = (id: string, name: string, remote: boolean) => flags.set(id, [...(flags.get(id) ?? []), { name, remote }]);
   for (const [b, id] of Object.entries(s.branches)) flag(id, b, false);
-  for (const [b, id] of Object.entries(s.remote)) flag(id, `origin/${b}`, true);
+  for (const [ref, id] of Object.entries(s.remote)) flag(id, ref, true);
   const gone = new Set<string>();
   for (const tip of Object.values(s.remote)) for (const id of ancestors(s, tip)) gone.add(id);
 

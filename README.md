@@ -6,11 +6,11 @@ Jeu pour apprendre Git en composant des trains. Chaque commit est une voiture, c
 
 ## Le jeu
 
-- **5 lignes, 40 stations**, de `commit` à `reflog` :
+- **5 lignes, 41 stations**, de `commit` à `reflog` :
   1. Le dépôt : `commit`, `branch`, `switch`
   2. Les jonctions : `merge`, `rebase`
   3. Le tri : `cherry-pick`, `reset`
-  4. Les grandes lignes : `push`, `pull`, `revert`
+  4. Les grandes lignes : `push`, `pull`, `revert`, fork (`origin` et `upstream`)
   5. Les accidents : `reflog` et réparations
 - **Plusieurs types de stations** : composition (atteindre un plateau cible), règlement (respecter des règles), pronostic (deviner le résultat d’une commande), enquête (`log A..B`, `show`), recherche de l’avarie (bisect), revue de quai, `rebase -i`, gitflow…
 - **Étoiles** selon le nombre de manœuvres ; certaines stations ajoutent un budget, un chrono ou le clavier seul.

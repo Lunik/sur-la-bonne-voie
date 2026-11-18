@@ -26,10 +26,12 @@ export const messages = {
   cannotCopyMerge: 'Copier une voiture de jonction : pas sur ce réseau.',
   cannotRevert: 'Cette voiture ne s’inverse pas sur ce réseau.',
   refNotFound: (ref: string) => `fatal: référence « ${ref} » introuvable.`,
-  pushRejected: (branch: string) =>
-    `! [rejected] ${branch} -> ${branch} (fetch first) · origin/${branch} a des voitures que vous n’avez pas. Intégrez-les (pull) avant de pousser.`,
+  pushRejected: (branch: string, ref: string) =>
+    `! [rejected] ${branch} -> ${branch} (fetch first) · ${ref} a des voitures que vous n’avez pas. Intégrez-les (pull) avant de pousser.`,
+  pushUpstream: 'Refusé : upstream est le dépôt du projet d’origine, vous n’y avez pas les droits. Poussez sur votre fork (origin), puis proposez vos voitures en pull request.',
+  unknownRemote: (name: string) => `fatal: « ${name} » n’est pas un quai distant (origin, upstream).`,
   forceForbidden: 'Refusé : des voyageurs sont à bord de ce train. Le push forcé est interdit sur ce réseau.',
-  noRemote: (branch: string) => `Aucun quai distant pour la voie ${branch}.`,
+  noRemote: (ref: string) => `Aucun quai distant ${ref}.`,
   outOfLetters: 'Le dépôt est plein : plus de lettre disponible pour une nouvelle voiture.',
   sealed: (labels: string[]) =>
     `Refusé : ${labels.join(', ')} ${labels.length > 1 ? 'sont déjà parties' : 'est déjà partie'} sur origin, voiture plombée. Ne réécrivez pas l’histoire publiée : merge ou revert.`,
@@ -60,8 +62,8 @@ export const messages = {
   reverted: (branch: string, label: string, original: string) => `[${branch} ${label}] voiture inverse : annule l’effet de ${original}`,
   pushUpToDate: 'Everything up-to-date',
   pushForced: '+ forced update · des voyageurs ont perdu leurs voitures !',
-  pushed: (branch: string) => `To origin · ${branch} -> ${branch} · le train part !`,
-  pulled: (branch: string) => `From origin · origin/${branch} récupéré`,
+  pushed: (remote: string, branch: string) => `To ${remote} · ${branch} -> ${branch} · le train part !`,
+  pulled: (remote: string, ref: string) => `From ${remote} · ${ref} récupéré`,
   fetch: 'Le quai distant est déjà affiché sur le plateau : rien de nouveau.',
   logEmpty: '(aucune voiture)',
   showCar: (label: string, origin: string) => `voiture ${label} · née sur ${origin === 'collègue' ? 'origin' : origin}`,
