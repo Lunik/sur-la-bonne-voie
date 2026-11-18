@@ -22,28 +22,33 @@ export function Board({ session, message }: BoardProps) {
     yard.current?.animate([{ transform: 'none' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'none' }], 350);
   }, [last]);
 
-  const siding = orphans(repo);
-
   return (
     <>
       <div className="yard-box">
         <Yard ref={yard} repo={repo} variant="live" leaving={session.status === 'won' && station.type !== 'predict'} />
         {station.type !== 'predict' && <p className={`toast ${message.tone}`} aria-live="polite">{fr(message.text)}</p>}
       </div>
-      {siding.length > 0 && (
-        <div className="casse">
-          <p>{strings.siding}</p>
-          {siding.map((id) => (
-            <span key={id} className="gw" title={strings.sidingCar(repo.commits[id].label)}>
-              <CarToken repo={repo} commit={repo.commits[id]} />
-            </span>
-          ))}
-        </div>
-      )}
+      <Siding repo={repo} />
       <Legend line={station.line} />
     </>
   );
 }
+/** Cars no track leads to any more (reset --hard, rebase): recoverable through reflog. */
+export function Siding({ repo }: { repo: RepoState }) {
+  const siding = orphans(repo);
+  if (!siding.length) return null;
+  return (
+    <div className="casse">
+      <p>{strings.siding}</p>
+      {siding.map((id) => (
+        <span key={id} className="gw" title={strings.sidingCar(repo.commits[id].label)}>
+          <CarToken repo={repo} commit={repo.commits[id]} />
+        </span>
+      ))}
+    </div>
+  );
+}
+
 const sample = (patch: Partial<Commit> & { label: string }): Commit => ({ id: 'x', parents: [], origin: 'main', kind: 'normal', cargo: null, ...patch });
 const legendRepo: RepoState = { ...emptyRepo(), commits: { m: sample({ label: 'D' }) } };
 

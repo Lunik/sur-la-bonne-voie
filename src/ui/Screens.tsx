@@ -100,7 +100,10 @@ export function DepartureBoard({ session, onTutorial }: { session: Session; onTu
         <h2>{fr(s.title)}</h2>
         <p className="tags">{tags(s).map((t) => <span key={t} className="tag">{strings.tag[t]}</span>)}</p>
         <p className="brief">{fr(s.brief)}</p>
-        <button className="btn quiet sm" type="button" onClick={onTutorial}>{strings.tutorialAgain}</button>
+        {/* Not while a clock runs or the train leaves: the failure or victory dialog would stack on it. */}
+        {session.timeLeft === null && session.status !== 'won' && (
+          <button className="btn quiet sm replay" type="button" onClick={onTutorial}>{strings.tutorialAgain}</button>
+        )}
         <dl className="facts">
           <div>
             <dt>{strings.factDifficulty}</dt>

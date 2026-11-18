@@ -79,7 +79,7 @@ export const stations: Station[] = [
     brief: 'Raccrochez toute la rame feature derrière E, comme si elle était partie de là. Les voitures déplacées reçoivent un double filet : ce sont de nouveaux commits.',
     tutorial: [
       { title: 'Raccrocher une rame', text: '`git rebase main` décroche les voitures propres à la voie de la motrice et les raccroche au bout de main, comme si le travail était parti de là. main ne bouge pas.', example: ['commit', 'switch -c fix', 'commit', 'switch main', 'commit', 'switch fix'], run: ['rebase main'] },
-      { title: 'Le double filet', text: 'Les voitures raccrochées sont des copies : B devient B′, un nouveau commit. Les originales ne sont plus sur aucune voie.' },
+      { title: 'Le double filet', text: 'Les voitures raccrochées sont des copies : B devient B′, un nouveau commit. Les originales ne sont plus sur aucune voie : elles attendent sur la voie de garage.' },
       { title: 'Merge ou rebase ?', text: 'merge garde l’histoire telle qu’elle s’est passée, avec une jonction. rebase la réécrit en ligne droite : réservez-le à votre propre voie.' },
     ],
     hint: 'switch feature, puis rebase main.',
@@ -206,7 +206,7 @@ export const stations: Station[] = [
     start: ['commit', 'commit', 'push', 'commit'], target: ['commit', 'commit', 'push', 'commit', 'push'], par: 1,
     brief: 'En face, le quai distant origin : ce qui y est poussé est parti chez tous les voyageurs (pastille fléchée). Faites partir la voiture C.',
     tutorial: [
-      { title: 'Le quai distant', text: 'En face de vos voies se trouve le quai distant origin : le dépôt partagé avec l’équipe. La pancarte origin/main montre où en était main au dernier échange.', example: ['commit', 'push', 'commit'] },
+      { title: 'Le quai distant', text: 'Le quai distant origin est le dépôt partagé avec l’équipe. L’étiquette origin/main, posée sur une voiture, montre où en était main au dernier échange avec lui.', example: ['commit', 'push', 'commit'] },
       { title: 'Faire partir', text: '`git push` envoie les nouvelles voitures de votre voie vers origin. Une pastille fléchée marque chaque voiture partie : toute l’équipe la voit désormais.', example: ['commit', 'push', 'commit'], run: ['push'] },
     ],
     hint: 'Tapez push.',

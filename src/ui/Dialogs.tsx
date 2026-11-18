@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { lessonBoards, lines, stations, type RepoState, type Session, type Station } from '../game/index.ts';
+import { Siding } from './Board.tsx';
 import { strings } from './strings.ts';
 import { fr } from './typography.ts';
 import { Yard } from './Yard.tsx';
@@ -103,6 +104,7 @@ function Example({ repo, caption }: { repo: RepoState; caption?: ReactNode }) {
       {caption && <figcaption>{caption}</figcaption>}
       {/* The live board, to show the locomotive (HEAD), scaled down like the goal panel. */}
       <Yard repo={repo} variant="live" className="yard-mini" />
+      <Siding repo={repo} />
     </figure>
   );
 }

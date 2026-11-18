@@ -259,6 +259,7 @@
 .win .stars { font-size: 2rem; letter-spacing: .12em; color: var(--brand); line-height: 1.1; }
 .win .learn { background: var(--sunk); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; font: 13.5px/1.65 var(--f-mono); text-align: left; white-space: pre-wrap; color: var(--ink); }
 .win .row { justify-content: center; }
+.replay { width: fit-content; }
 .win.tuto { max-width: min(600px, calc(100vw - 32px)); text-align: left; }
 .win.tuto h2 { font-size: 1.6rem; }
 .win.tuto .row { justify-content: flex-end; }
