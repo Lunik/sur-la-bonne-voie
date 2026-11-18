@@ -33,7 +33,7 @@ test('reflog output is capped by reflogLimit, storage is not', () => {
 
 test('help lists the commands allowed so far', () => {
   assert.match(ok(emptyRepo(), 'help').output[0], /^Commandes : commit · branch · merge/);
-  assert.deepEqual(ok({ ...emptyRepo(), allowed: ['commit'] }, 'help').output, ['Commandes : commit · switch · log · status · reflog']);
+  assert.deepEqual(ok({ ...emptyRepo(), allowed: ['commit'] }, 'help').output, ['Commandes : commit · switch · log · show · status · reflog']);
 });
 
 test('gate refuses commands not yet taught', () => {

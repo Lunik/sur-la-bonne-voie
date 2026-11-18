@@ -10,7 +10,9 @@ export const clock = (seconds: number) => {
 };
 const starRow = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 
-export type Tag = 'compo' | 'rules' | 'predict' | 'budget' | 'timed' | 'breakdown';
+export type Tag =
+  | 'compo' | 'rules' | 'predict' | 'retro' | 'enquete' | 'review' | 'bisect'
+  | 'budget' | 'timed' | 'breakdown' | 'events' | 'locked' | 'gc' | 'gitflow' | 'todo';
 
 export const strings = {
   appTitle: 'Gare de triage',
@@ -26,8 +28,15 @@ export const strings = {
   stars: starRow,
   clock,
   closed: 'fermée',
-  tagShort: { compo: 'compo', rules: 'règles', predict: 'prono', budget: 'budget', timed: 'chrono', breakdown: 'panne' } satisfies Record<Tag, string>,
-  tag: { compo: 'Composition', rules: 'Règlement', predict: 'Pronostic', budget: 'Budget serré', timed: 'Contre la montre', breakdown: 'Panne' } satisfies Record<Tag, string>,
+  tagShort: {
+    compo: 'compo', rules: 'règles', predict: 'prono', retro: 'rétro', enquete: 'enquête', review: 'revue', bisect: 'avarie',
+    budget: 'budget', timed: 'chrono', breakdown: 'panne', events: 'horaire', locked: 'public', gc: 'gc', gitflow: 'gitflow', todo: 'feuille',
+  } satisfies Record<Tag, string>,
+  tag: {
+    compo: 'Composition', rules: 'Règlement', predict: 'Pronostic', retro: 'Pronostic inversé', enquete: 'Enquête', review: 'Revue de quai',
+    bisect: 'Recherche de l’avarie', budget: 'Budget serré', timed: 'Contre la montre', breakdown: 'Panne', events: 'Horaire à événements',
+    locked: 'Voie publique', gc: 'Ramassage', gitflow: 'Plan de circulation', todo: 'Feuille de route',
+  } satisfies Record<Tag, string>,
 
   departures: 'Tableau des départs',
   lineBadge: (line: number) => `Ligne ${line}`,
@@ -40,6 +49,17 @@ export const strings = {
   factBudget: 'Budget',
   factBudgetValue: (moves: number, budget: number) => `${moves} sur ${budget}`,
   factClock: 'Départ dans',
+  factProbes: (par: number) => `en ${plural(par, 'sondage')}`,
+  factPhase: 'Étape',
+  factPhaseValue: (phase: number, phases: number) => `${Math.min(phase + 1, phases)} sur ${phases}`,
+  factEvent: 'Prochain événement',
+  factEventValue: (moves: number) => `dans ${plural(moves, 'manœuvre')}`,
+  factGc: 'Ramassage',
+  goalAfter: 'Plateau après la manœuvre',
+  goalInquiry: 'Question du contrôleur',
+  goalBisect: 'Avarie à localiser',
+  goalBisectText: fr('Une voiture de main fait dérailler le train, et toutes celles qui la suivent aussi. La première voiture roule, la dernière déraille : trouvez la fautive en sondant le moins de voitures possible.'),
+  goalReview: 'Remarque du contrôleur',
   goalOrders: 'Ordre de manœuvre',
   goalRules: 'Règlement à respecter',
   goalTarget: 'Train attendu',
@@ -67,6 +87,36 @@ export const strings = {
   predictBoard: (i: number) => `Plateau ${'ABC'[i]}`,
   predictRight: fr('Exact ! Regardez le plateau.'),
   predictWrong: (wrongs: number) => `Raté. Il reste ${plural(Math.max(1, 3 - wrongs), 'étoile')} à gagner.`,
+  retroTitle: fr('Votre pronostic : quels ordres ont produit ce plateau ?'),
+  retroOrders: (i: number) => `Ordres ${'ABC'[i]}`,
+  retroNothing: 'aucun ordre',
+
+  inquiryTitle: 'Votre réponse',
+  inquiryText: fr('Touchez les voitures de votre réponse, puis validez. Le terminal sert à enquêter : log, show, status.'),
+  inquiryPick: (label: string, on: boolean) => `Voiture ${label}${on ? ', choisie' : ''}`,
+  inquirySubmit: 'Valider la réponse',
+  inquiryWrong: (wrongs: number, expected: number) =>
+    fr(`Pas tout à fait : la réponse compte ${plural(expected, 'voiture')}. Il reste ${plural(Math.max(1, 3 - wrongs), 'étoile')} à gagner.`),
+  inquiryRight: fr('Exact ! Affaire classée.'),
+
+  bisectTitle: 'Sondages',
+  bisectText: fr('Touchez une voiture pour la sonder : elle roule ou elle déraille. La fautive est trouvée quand une voiture qui déraille suit une voiture qui roule.'),
+  bisectCount: (n: number) => plural(n, 'sondage'),
+  bisectGood: 'roule',
+  bisectBad: 'déraille',
+  bisectUnknown: 'sonder',
+  bisectCar: (label: string, state: string) => `Voiture ${label} : ${state}`,
+  bisectFound: (label: string) => fr(`Trouvée : la voiture ${label} est la première à dérailler.`),
+
+  todoTitle: 'Feuille de route',
+  todoText: (base: string) => fr(`git rebase -i ${base} ouvre cette liste : une ligne par voiture, de la plus ancienne à la plus récente. Réordonnez, soudez (squash) ou jetez (drop), puis lancez.`),
+  todoAction: { pick: 'pick', squash: 'squash', drop: 'drop' } as const,
+  todoActionLabel: (label: string) => `Action pour la voiture ${label}`,
+  todoUp: (label: string) => `Monter la voiture ${label}`,
+  todoDown: (label: string) => `Descendre la voiture ${label}`,
+  todoRun: 'Lancer le rebase',
+  todoEmpty: 'Aucune voiture à réorganiser pour le moment.',
+  todoDone: 'Feuille de route appliquée.',
 
   undo: 'Annuler',
   restart: 'Recommencer',
@@ -91,6 +141,13 @@ export const strings = {
   done: {
     typed: 'Manœuvre effectuée.',
   },
+  stepNotes: {
+    readOnly: fr('Enquête : on observe le plateau, on ne manœuvre pas. Essayez log ou show.'),
+    phaseDone: fr('Remarque traitée : le contrôleur en a une autre.'),
+    happened: fr('Un événement vient de survenir : voir le terminal.'),
+  },
+  /** Terminal suggestions of an inquiry: inspection only, never the answer. */
+  inquirySuggestions: ['log', 'log main..feature', 'show HEAD', 'status'],
 
   wonTitle: fr('Tchou tchou !'),
   lineDoneTitle: (line: number) => fr(`Ligne ${line} terminée !`),
@@ -98,6 +155,7 @@ export const strings = {
   starsLabel: (n: number) => `${n} étoiles sur 3`,
   wonPredict: (wrongs: number) => (wrongs ? `Trouvé après ${plural(wrongs, 'erreur')}.` : 'Du premier coup.'),
   wonPlayed: (moves: number, par: number) => `${plural(moves, 'manœuvre')}, objectif ${par}.`,
+  wonProbes: (probes: number, par: number) => `${plural(probes, 'sondage')}, objectif ${par}.`,
   wonTimeLeft: (seconds: number) => ` Il restait ${clock(seconds)}.`,
   nextLine: fr('Prochaine ligne : '),
   nextLineAfter: ', avec de nouvelles commandes.',

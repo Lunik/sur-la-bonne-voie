@@ -1,13 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Step } from '../levels/index.ts';
-import { newSession, reduce, stars, stations, type Session } from './index.ts';
+import { isPlayed, newSession, reduce, stars, stations, type Session } from './index.ts';
 
 const station = (id: string) => stations.find((s) => s.id === id)!;
-const step = (s: Session, st: Step) => reduce(s, { type: 'step', step: st, message: 'ok' });
+const notes = { readOnly: 'Enquête : lecture seule', phaseDone: 'Remarque traitée', happened: 'Un événement' };
+const step = (s: Session, st: Step) => reduce(s, { type: 'step', step: st, message: 'ok', notes });
 test('keyboard solutions win every played station through the reducer', () => {
   for (const st of stations) {
-    if (st.type === 'predict') continue;
+    if (!isPlayed(st)) continue;
     let s = reduce(newSession(st), { type: 'start' });
     for (const x of st.solution) s = step(s, x);
     assert.equal(s.status, 'won', st.id);
@@ -66,3 +67,88 @@ test('predictions: wrong guesses cost a star, the right one wins and shows the b
   assert.equal(s.repo, s0.options[1].board, 'the board shows the right answer');
 });
 
+test('events fire once the move count is reached, and again after an undo', () => {
+  let s = step(newSession(station('train-supplementaire')), 'merge feature');
+  assert.equal(s.repo.commits[s.repo.remote.main].label, 'E');
+  assert.equal(s.log.filter((l) => l.kind === 'event').length, 1);
+  assert.match(s.toast!.text, /Un événement/);
+  const event = s.log.find((l) => l.kind === 'event');
+  assert.ok(event && 'text' in event && /collègue/.test(event.text));
+  assert.match(step(s, 'push').toast!.text, /rejected/);
+  s = reduce(s, { type: 'undo', message: 'u', nothing: 'n' });
+  assert.equal(s.repo.remote.main, newSession(station('train-supplementaire')).repo.remote.main, 'undo takes the event back');
+  s = step(s, 'merge feature');
+  assert.equal(s.log.filter((l) => l.kind === 'event').length, 2);
+});
+
+test('the sweep destroys the siding when the rescue comes too late', () => {
+  const s = step(newSession(station('avant-le-ramassage')), 'merge feature');
+  assert.match(step(s, 'cherry-pick D').toast!.text, /introuvable/);
+});
+
+test('a review moves to the next phase, shows its remark and target, and undo goes back', () => {
+  let s = step(newSession(station('revue-de-quai')), 'rebase main');
+  assert.equal(s.phase, 1);
+  assert.equal(s.toast?.tone, 'good');
+  assert.match(s.toast!.text, /Remarque traitée/);
+  assert.ok(s.target);
+  s = reduce(s, { type: 'undo', message: 'u', nothing: 'n' });
+  assert.equal(s.phase, 0);
+  assert.equal(s.target, null);
+});
+
+test('an inquiry inspects but refuses moves, and counts wrong answers', () => {
+  let s = newSession(station('controle-des-billets'));
+  s = step(s, 'log main..hotfix');
+  assert.deepEqual(s.log.slice(1).map((l) => 'text' in l && l.text), ['E  (hotfix)', 'D  (feature)', 'C']);
+  const moved = step(s, 'commit');
+  assert.equal(moved.repo, s.repo);
+  assert.match(moved.toast!.text, /Enquête/);
+  s = reduce(s, { type: 'answer', labels: ['E'] });
+  assert.equal(s.wrongs, 1);
+  s = reduce(s, { type: 'answer', labels: ['E', 'C', 'D'] });
+  assert.equal(s.status, 'won');
+  assert.equal(stars(s), 2);
+});
+
+test('bisect: probes corner the culprit; stars follow the probe count', () => {
+  let s = newSession(station('recherche-de-l-avarie'));
+  const id = (label: string) => Object.values(s.repo.commits).find((c) => c.label === label)!.id;
+  s = reduce(s, { type: 'probe', id: id('D') });
+  assert.equal(s.probes[id('D')], false);
+  s = reduce(s, { type: 'probe', id: id('F') });
+  assert.equal(s.probes[id('F')], true);
+  assert.equal(reduce(s, { type: 'probe', id: id('A') }), s, 'the first car is known');
+  s = reduce(s, { type: 'probe', id: id('E') });
+  assert.equal(s.status, 'won');
+  assert.equal(stars(s), 3);
+});
+
+test('retro: options carry their orders; the right one wins', () => {
+  const s = newSession(station('qui-a-decroche'), [1, 2, 0]);
+  assert.deepEqual(s.options[2].commands, ['branch sauvegarde', 'reset --hard B']);
+  assert.ok(s.target, 'the board after is the goal');
+  assert.equal(reduce(s, { type: 'guess', option: 2 }).status, 'won');
+});
+
+test('the sealed track refuses the rebase with a reason', () => {
+  const s = step(newSession(station('regle-d-or')), 'rebase main');
+  assert.match(s.toast!.text, /plombée/);
+});
+
+test('the player cannot type the scripted commands', () => {
+  assert.match(step(newSession(station('avant-le-ramassage')), '_gc').toast!.text, /n’est pas une commande/);
+});
+
+test('the colleague rule follows his car whatever its letter; forcing is refused', () => {
+  let s = step(newSession(station('train-supplementaire')), 'commit');
+  const colleague = s.repo.commits[s.repo.remote.main];
+  assert.equal(colleague.label, 'F', 'the player took E');
+  assert.equal(colleague.origin, 'collègue');
+  for (const x of ['switch feature', 'rebase main', 'switch main', 'merge feature']) s = step(s, x);
+  assert.match(step(s, 'push --force').toast!.text, /push forcé est interdit/);
+  const rule = (st: Session) => st.station.type === 'rules' && st.station.rules[1].check(st.repo);
+  assert.ok(rule(s), 'his car F counts, though it is not E');
+  s = step(step(s, 'pull --rebase'), 'push');
+  assert.equal(s.status, 'won');
+});

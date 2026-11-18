@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { lessonBoards, lines, stations, type RepoState, type Session, type Station } from '../game/index.ts';
+import { isGuess, isPlayed, lessonBoards, lines, stations, type RepoState, type Session, type Station } from '../game/index.ts';
 import { Platform, Siding } from './Board.tsx';
 import { strings } from './strings.ts';
 import { fr } from './typography.ts';
@@ -51,7 +51,9 @@ export function Victory({ session, stars, totalStars, onNext, onRetry }: Victory
           <h2 id={id}>{last ? strings.networkDoneTitle : lineDone ? strings.lineDoneTitle(s.line) : strings.wonTitle}</h2>
           <div className="stars" role="img" aria-label={strings.starsLabel(stars)}>{strings.stars(stars)}</div>
           <p>
-            {s.type === 'predict' ? strings.wonPredict(session.wrongs) : strings.wonPlayed(session.moves, s.par)}
+            {isPlayed(s) ? strings.wonPlayed(session.moves, s.par)
+              : s.type === 'bisect' ? strings.wonProbes(Object.keys(session.probes).length, s.par)
+              : strings.wonPredict(session.wrongs)}
             {session.timeLeft !== null && strings.wonTimeLeft(session.timeLeft)}
           </p>
           {lineDone && <p className="small">{strings.nextLine}<b>{lines[next.line - 1].title}</b>{strings.nextLineAfter}</p>}
@@ -153,12 +155,15 @@ export function Ready({ seconds, brief, onGo }: { seconds: number; brief: string
   );
 }
 
+/** Predictions: pick the board the orders produce. Retros: pick the orders that produced the board. */
 export function Prediction({ session, onGuess }: { session: Session; onGuess: (i: number) => void }) {
   const won = session.status === 'won';
+  const retro = session.station.type === 'retro';
+  if (!isGuess(session.station)) return null;
   const [tone, text] = won ? ['good', strings.predictRight] : session.wrongs ? ['bad', strings.predictWrong(session.wrongs)] : ['', ''];
   return (
     <section className="prono">
-      <h3>{strings.predictTitle}</h3>
+      <h3>{retro ? strings.retroTitle : strings.predictTitle}</h3>
       <div className="opts">
         {session.options.map((o, i) => (
           <button
@@ -168,8 +173,12 @@ export function Prediction({ session, onGuess }: { session: Session; onGuess: (i
             disabled={o.ruledOut || won}
             onClick={() => onGuess(i)}
           >
-            <span className="ol">{strings.predictBoard(i)}</span>
-            <Yard repo={o.board} variant="mini" />
+            <span className="ol">{retro ? strings.retroOrders(i) : strings.predictBoard(i)}</span>
+            {retro ? (
+              <ol className="orders">{o.commands.length ? o.commands.map((c, j) => <li key={j}>git {c}</li>) : <li>{strings.retroNothing}</li>}</ol>
+            ) : (
+              <Yard repo={o.board} variant="mini" />
+            )}
             <span className="why">{o.ruledOut && o.why ? fr(o.why) : ''}</span>
           </button>
         ))}

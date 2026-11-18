@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { build, lines, stations, type Session, type Station } from '../game/index.ts';
+import { build, goals, happenings, isPlayed, lines, rulesOf, stations, type Session, type Station } from '../game/index.ts';
 import { indexInLine, mainTag, tags } from './station-info.ts';
 import { strings } from './strings.ts';
 import { fr } from './typography.ts';
@@ -7,6 +7,8 @@ import { Yard } from './Yard.tsx';
 
 const heroBoard = build(['commit', 'commit', 'switch -c feature', 'commit', 'commit', 'switch main', 'commit', 'switch feature', 'rebase main']);
 const lineColor = (line: number) => ({ '--lc': `var(--n${line})` }) as CSSProperties;
+// Widest line, so a column fits a whole line before the map wraps or scrolls.
+const maxStops = { '--stops': Math.max(...lines.map((_, li) => stations.filter((s) => s.line === li + 1).length)) } as CSSProperties;
 
 export function Header() {
   return (
@@ -52,7 +54,7 @@ export function NetworkMap({ current, stars, isOpen, unlockAll, onUnlockAll, onP
           <input type="checkbox" checked={unlockAll} onChange={(e) => onUnlockAll(e.target.checked)} /> {strings.unlockAll}
         </label>
       </div>
-      <ol className="lines">
+      <ol className="lines" style={maxStops}>
         {lines.map((line, li) => (
           <li key={line.title} className="line" style={lineColor(li + 1)}>
             <span className="lname"><b aria-label={strings.lineBadge(li + 1)}>{li + 1}</b>{line.title}</span>
@@ -89,7 +91,8 @@ export function NetworkMap({ current, stars, isOpen, unlockAll, onUnlockAll, onP
 }
 
 export function DepartureBoard({ session, onTutorial }: { session: Session; onTutorial: () => void }) {
-  const { station: s, repo } = session;
+  const { station: s } = session;
+  const next = isPlayed(s) ? happenings(s).find((h) => h.after > session.moves) : undefined;
   return (
     <section className="board" aria-label={strings.departures} style={lineColor(s.line)}>
       <div className="board-main">
@@ -115,12 +118,24 @@ export function DepartureBoard({ session, onTutorial }: { session: Session; onTu
           </div>
           <div>
             <dt>{strings.factStars}</dt>
-            <dd>{s.type === 'predict' ? strings.factFirstTry : strings.factPar(s.par)}</dd>
+            <dd>{isPlayed(s) ? strings.factPar(s.par) : s.type === 'bisect' ? strings.factProbes(s.par) : strings.factFirstTry}</dd>
           </div>
-          {s.type !== 'predict' && s.budget !== undefined && (
+          {isPlayed(s) && s.budget !== undefined && (
             <div className={session.moves >= s.budget - 1 ? 'hot' : undefined}>
               <dt>{strings.factBudget}</dt>
               <dd>{strings.factBudgetValue(session.moves, s.budget)}</dd>
+            </div>
+          )}
+          {s.type === 'review' && (
+            <div>
+              <dt>{strings.factPhase}</dt>
+              <dd>{strings.factPhaseValue(session.phase, s.phases.length)}</dd>
+            </div>
+          )}
+          {next && session.status !== 'won' && (
+            <div className={next.after - session.moves <= 1 ? 'hot' : undefined}>
+              <dt>{next.run.includes('_gc') ? strings.factGc : strings.factEvent}</dt>
+              <dd>{strings.factEventValue(next.after - session.moves)}</dd>
             </div>
           )}
           {session.timeLeft !== null && (
@@ -132,33 +147,82 @@ export function DepartureBoard({ session, onTutorial }: { session: Session; onTu
         </dl>
       </div>
       <div className="goal">
-        {s.type === 'predict' ? (
-          <>
-            <h3>{strings.goalOrders}</h3>
-            <ol className="orders">{s.answer.map((c, i) => <li key={i}>git {c}</li>)}</ol>
-          </>
-        ) : s.rules ? (
-          <>
-            <h3>{strings.goalRules}</h3>
-            <ul className="rules">
-              {s.rules.map((r) => {
-                const ok = r.check(repo);
-                return (
-                  <li key={r.text} className={ok ? 'ok' : ''}>
-                    <span className="ck" role="img" aria-label={ok ? strings.ruleOk : strings.ruleTodo} />
-                    {fr(r.text)}
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        ) : session.target && (
-          <>
-            <h3>{strings.goalTarget}</h3>
-            <Yard repo={session.target} variant="mini" />
-          </>
-        )}
+        <Goal session={session} />
       </div>
     </section>
+  );
+}
+
+/** What the station asks for, by type. */
+function Goal({ session }: { session: Session }) {
+  const { station: s, repo } = session;
+  if (s.type === 'predict') {
+    return (
+      <>
+        <h3>{strings.goalOrders}</h3>
+        <ol className="orders">{s.answer.map((c, i) => <li key={i}>git {c}</li>)}</ol>
+      </>
+    );
+  }
+  if (s.type === 'retro') {
+    return (
+      <>
+        <h3>{strings.goalAfter}</h3>
+        {session.target && <Yard repo={session.target} variant="mini" />}
+      </>
+    );
+  }
+  if (s.type === 'enquete') {
+    return (
+      <>
+        <h3>{strings.goalInquiry}</h3>
+        <p className="question">{fr(s.question)}</p>
+      </>
+    );
+  }
+  if (s.type === 'bisect') {
+    return (
+      <>
+        <h3>{strings.goalBisect}</h3>
+        <p className="small">{strings.goalBisectText}</p>
+      </>
+    );
+  }
+  if (!isPlayed(s)) return null;
+  const all = goals(s);
+  const goal = all[Math.min(session.phase, all.length - 1)];
+  const rules = rulesOf(s, goal);
+  const remark = s.type === 'review' ? fr(s.phases[Math.min(session.phase, s.phases.length - 1)].remark) : null;
+  return (
+    <>
+      {remark && (
+        <>
+          <h3>{strings.goalReview}</h3>
+          <p className="remark">{remark}</p>
+        </>
+      )}
+      {rules.length > 0 && (
+        <>
+          <h3>{strings.goalRules}</h3>
+          <ul className="rules">
+            {rules.map((r) => {
+              const ok = r.check(repo);
+              return (
+                <li key={r.text} className={ok ? 'ok' : ''}>
+                  <span className="ck" role="img" aria-label={ok ? strings.ruleOk : strings.ruleTodo} />
+                  {fr(r.text)}
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+      {session.target && (
+        <>
+          <h3>{strings.goalTarget}</h3>
+          <Yard repo={session.target} variant="mini" />
+        </>
+      )}
+    </>
   );
 }

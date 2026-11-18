@@ -43,6 +43,8 @@ export interface RepoState {
   /** Merge commits forbidden: only fast-forwards pass. */
   fastForwardOnly: boolean;
   forceForbidden: boolean;
+  /** Cars already on origin are sealed: reset, rebase and force push may not take them off a track. */
+  publicLocked: boolean;
   maxBranches: number;
   reflogLimit: number;
 }
@@ -81,7 +83,7 @@ const own = <T>(record: Record<string, T>, key: string): T | undefined => (Objec
 export function emptyRepo(options: Partial<Pick<RepoState, 'maxBranches' | 'reflogLimit'>> = {}): RepoState {
   return {
     commits: {}, branches: {}, order: [], head: 'main', remote: {}, reflog: {}, pending: [], cargo: {},
-    nextLabel: 0, nextId: 0, allowed: null, fastForwardOnly: false, forceForbidden: false,
+    nextLabel: 0, nextId: 0, allowed: null, fastForwardOnly: false, forceForbidden: false, publicLocked: false,
     maxBranches: 3, reflogLimit: 8, ...options,
   };
 }
@@ -181,6 +183,32 @@ function headTip(s: RepoState): string {
 
 const labelOf = (s: RepoState, id: string) => s.commits[id].label;
 
+/** Cars reachable from origin: what the team already has. */
+function published(s: RepoState): Set<string> {
+  const r = new Set<string>();
+  for (const tip of Object.values(s.remote)) for (const x of ancestors(s, tip)) r.add(x);
+  return r;
+}
+
+/** Refuses to take sealed cars off a track (`publicLocked`). */
+function checkSealed(s: RepoState, ids: Iterable<string>) {
+  if (!s.publicLocked) return;
+  const pub = published(s);
+  const sealed = [...ids].filter((id) => pub.has(id));
+  if (sealed.length) fail(m.sealed(sealed.map((id) => labelOf(s, id))));
+}
+
+/** Cars a rebase of `tip` onto `target` replays, oldest first: first-parent cars not on `target`, merges dropped. */
+function replaySet(s: RepoState, tip: string, target: string): string[] {
+  const onTarget = ancestors(s, target);
+  return firstParentChain(s, tip)
+    .filter((id) => !onTarget.has(id))
+    .reverse()
+    .filter((id) => s.commits[id].kind !== 'merge');
+}
+
+const byNewest = (a: string, b: string) => Number(b.slice(1)) - Number(a.slice(1));
+
 function merge(s: RepoState, target: string, out: string[]): MoveKind | null {
   const head = s.head;
   const tip = headTip(s);
@@ -206,11 +234,8 @@ function rebase(s: RepoState, target: string, targetName: string, out: string[])
     out.push(m.rebaseUpToDate(head));
     return null;
   }
-  const onTarget = ancestors(s, target);
-  const toReplay = firstParentChain(s, tip)
-    .filter((id) => !onTarget.has(id))
-    .reverse()
-    .filter((id) => s.commits[id].kind !== 'merge');
+  const toReplay = replaySet(s, tip, target);
+  checkSealed(s, toReplay);
   if (!toReplay.length) {
     setTip(s, head, target);
     out.push(m.rebaseFastForward(head, targetName));
@@ -229,15 +254,77 @@ function rebase(s: RepoState, target: string, targetName: string, out: string[])
   return 'rebase';
 }
 
+const TODO_ACTIONS: Record<string, 'pick' | 'squash' | 'drop'> = { pick: 'pick', p: 'pick', squash: 'squash', s: 'squash', fixup: 'squash', f: 'squash', drop: 'drop', d: 'drop' };
+
+/** `rebase -i <base> pick:C squash:D drop:E…`: the todo list on one line, each car of the replay set exactly once. */
+function rebaseInteractive(s: RepoState, baseRef: string | undefined, ops: string[], out: string[]): MoveKind | null {
+  const head = s.head;
+  const tip = headTip(s);
+  if (!baseRef) fail(m.missingBranch);
+  const base = resolve(s, baseRef) ?? fail(m.refNotFound(baseRef));
+  const set = replaySet(s, tip, base);
+  if (!set.length) fail(m.todoEmpty(head, baseRef));
+  if (!ops.length) fail(m.todoMissing(set.map((id) => labelOf(s, id))));
+  const todo = ops.map((op) => {
+    const match = op.match(/^([a-z]+):(.+)$/i);
+    const action = match && own(TODO_ACTIONS, match[1].toLowerCase());
+    const id = match && set.find((x) => labelOf(s, x) === normalizeLabel(match[2]));
+    if (!action || !id) return fail(m.todoBadLine(op));
+    return { action, id };
+  });
+  const listed = todo.map((t) => t.id);
+  if (listed.length !== set.length || new Set(listed).size !== set.length) fail(m.todoMismatch(set.map((id) => labelOf(s, id))));
+  if (todo.find((t) => t.action !== 'drop')?.action === 'squash') fail(m.todoSquashFirst);
+  out.push(...todo.map((t) => `${t.action} ${labelOf(s, t.id)}`));
+  const untouched = s.commits[set[0]].parents[0] === base && todo.every((t, i) => t.action === 'pick' && t.id === set[i]);
+  if (untouched) {
+    out.push(m.rebaseUpToDate(head));
+    return null;
+  }
+  checkSealed(s, set);
+  let cur = base;
+  // Leading picks that stay in place keep their car, as git keeps their commit.
+  let inPlace = true;
+  for (const { action, id } of todo) {
+    const o = s.commits[id];
+    if (action === 'drop') {
+      inPlace = false;
+      continue;
+    }
+    if (action === 'squash') {
+      const prev = s.commits[cur];
+      cur = makeCommit(s, prev.parents, stripPrimes(prev.label) + stripPrimes(o.label), prev.origin, 'normal', prev.cargo ?? o.cargo);
+      inPlace = false;
+      continue;
+    }
+    if (inPlace && o.parents[0] === cur) {
+      cur = id;
+      continue;
+    }
+    inPlace = false;
+    cur = makeCommit(s, [cur], o.label + PRIME, o.origin, o.kind === 'revert' ? 'revert' : 'normal', o.cargo);
+  }
+  setTip(s, head, cur);
+  const kept = ancestors(s, cur);
+  const onBase = ancestors(s, base);
+  const fresh = firstParentChain(s, cur).filter((id) => !onBase.has(id) && !set.includes(id)).reverse();
+  out.push(m.rebased(head, fresh.map((id) => labelOf(s, id))));
+  const left = set.filter((id) => !kept.has(id));
+  if (left.length) out.push(m.rebasedLeftBehind(left.map((id) => labelOf(s, id))));
+  return 'rebase';
+}
+
 function gate(s: RepoState, cmd: string) {
   if (s.allowed && !s.allowed.includes(cmd)) fail(m.notYetTaught(cmd));
 }
 
-function run(s: RepoState, line: string): { output: string[]; move: MoveKind | null } {
+function run(s: RepoState, line: string, internal: boolean): { output: string[]; move: MoveKind | null } {
   const args = line.trim().replace(/^git\s+/, '').split(/\s+/).filter(Boolean);
   const out: string[] = [];
   if (!args[0]) return { output: out, move: null };
   const cmd = own(ALIASES, args[0]) ?? args[0];
+  // `_coll`, `_gc`: scripted by the content (start boards, events), never typed by the player.
+  if (cmd.startsWith('_') && !internal) fail(m.unknownCommand(cmd));
   const head = s.head;
   const arg = args[1];
 
@@ -267,7 +354,8 @@ function run(s: RepoState, line: string): { output: string[]; move: MoveKind | n
       gate(s, 'branch');
       if (!arg) fail(m.branchNameMissing);
       if (Object.hasOwn(s.branches, arg)) fail(m.branchExists(arg));
-      if (!/^[a-z0-9][a-z0-9_-]{0,14}$/i.test(arg)) fail(m.branchNameInvalid);
+      // `hotfix/tva` is fine; `origin/…` would be read as the remote.
+      if (!/^[a-z0-9](?:[a-z0-9_-]|\/(?=[a-z0-9])){0,14}$/i.test(arg) || arg.startsWith('origin/')) fail(m.branchNameInvalid);
       if (s.order.length >= s.maxBranches) fail(m.tooManyBranches(s.maxBranches));
       const tip = headTip(s);
       s.branches[arg] = tip;
@@ -279,7 +367,7 @@ function run(s: RepoState, line: string): { output: string[]; move: MoveKind | n
     case 'switch': {
       if (arg === '-c' || arg === '-b') {
         const name = args[2] ?? '';
-        out.push(...run(s, `branch ${name}`).output);
+        out.push(...run(s, `branch ${name}`, internal).output);
         s.head = name;
         out.push(m.switchedNew(name));
         return { output: out, move: 'branch' };
@@ -301,6 +389,7 @@ function run(s: RepoState, line: string): { output: string[]; move: MoveKind | n
     }
     case 'rebase': {
       gate(s, 'rebase');
+      if (arg === '-i' || arg === '--interactive') return { output: out, move: rebaseInteractive(s, args[2], args.slice(3), out) };
       const target = branchTip(s, arg);
       if (arg === head) fail(m.rebaseSelf);
       return { output: out, move: rebase(s, target, arg, out) };
@@ -332,6 +421,8 @@ function run(s: RepoState, line: string): { output: string[]; move: MoveKind | n
         out.push(m.headAt(labelOf(s, tip)));
         return { output: out, move: null };
       }
+      const kept = ancestors(s, target);
+      checkSealed(s, [...ancestors(s, tip)].filter((id) => !kept.has(id)));
       const before = reachable(s);
       if (mode === 'hard') s.pending = [];
       else {
@@ -373,6 +464,7 @@ function run(s: RepoState, line: string): { output: string[]; move: MoveKind | n
       if (remoteTip && !ancestors(s, tip).has(remoteTip)) {
         if (!force) fail(m.pushRejected(head));
         if (s.forceForbidden) fail(m.forceForbidden);
+        checkSealed(s, [...ancestors(s, remoteTip)].filter((id) => !ancestors(s, tip).has(id)));
         out.push(m.pushForced);
       }
       s.remote[head] = tip;
@@ -396,13 +488,39 @@ function run(s: RepoState, line: string): { output: string[]; move: MoveKind | n
       return { output: out, move: null };
     }
     case 'log': {
-      for (const id of firstParentChain(s, s.branches[head])) {
+      const options = args.slice(1).filter((a) => a.startsWith('-'));
+      const ref = args.slice(1).find((a) => !a.startsWith('-'));
+      const at = (r: string) => resolve(s, r || 'HEAD') ?? fail(m.refNotFound(r));
+      // `A..B`: on B, not on A. `A...B`: on one side only. Otherwise the first-parent chain of the ref.
+      const range = ref?.match(/^(.*?)(\.\.\.?)(.*)$/);
+      let ids: string[];
+      if (range) {
+        const a = ancestors(s, at(range[1]));
+        const b = ancestors(s, at(range[3]));
+        ids = range[2] === '..' ? [...b].filter((x) => !a.has(x)) : [...a, ...b].filter((x) => !(a.has(x) && b.has(x)));
+        ids.sort(byNewest);
+      } else ids = firstParentChain(s, ref ? at(ref) : s.branches[head]);
+      if (options.includes('--no-merges')) ids = ids.filter((id) => s.commits[id].kind !== 'merge');
+      if (options.includes('--merges')) ids = ids.filter((id) => s.commits[id].kind === 'merge');
+      if (!ids.length) out.push(m.logEmpty);
+      for (const id of ids) {
         const names = [
           ...Object.keys(s.branches).filter((b) => s.branches[b] === id).map((b) => (b === head ? `HEAD -> ${b}` : b)),
           ...Object.keys(s.remote).filter((b) => s.remote[b] === id).map((b) => `origin/${b}`),
         ];
         out.push(`${labelOf(s, id)}${names.length ? `  (${names.join(', ')})` : ''}`);
       }
+      return { output: out, move: null };
+    }
+    case 'show': {
+      const id = resolve(s, arg ?? 'HEAD') ?? fail(m.refNotFound(arg ?? 'HEAD'));
+      const c = s.commits[id];
+      out.push(m.showCar(c.label, c.origin));
+      out.push(m.showAuthor(c.origin === 'collègue'));
+      if (c.kind === 'merge') out.push(m.showMerge(c.parents.map((p) => labelOf(s, p))));
+      else if (c.kind === 'revert') out.push(m.showRevert(stripPrimes(c.label).slice(1)));
+      else if (c.parents[0]) out.push(m.showParent(labelOf(s, c.parents[0])));
+      out.push(c.cargo ? m.showCargo(c.cargo) : m.showNoCargo);
       return { output: out, move: null };
     }
     case 'status': {
@@ -428,6 +546,15 @@ function run(s: RepoState, line: string): { output: string[]; move: MoveKind | n
       s.remote.main = makeCommit(s, [remoteTip], label, 'collègue', 'normal', s.cargo[label] ?? null);
       return { output: out, move: null };
     }
+    case '_gc': {
+      // Internal: `git reflog expire --expire-unreachable=now --all && git gc --prune=now`. The siding is swept for good.
+      const swept = orphans(s);
+      const gone = new Set(swept);
+      out.push(swept.length ? m.gcSwept(swept.map((id) => labelOf(s, id))) : m.gcNothing);
+      for (const id of swept) delete s.commits[id];
+      for (const b of Object.keys(s.reflog)) s.reflog[b] = s.reflog[b].filter((id) => !gone.has(id));
+      return { output: out, move: null };
+    }
     default:
       return fail(m.unknownCommand(cmd));
   }
@@ -435,11 +562,12 @@ function run(s: RepoState, line: string): { output: string[]; move: MoveKind | n
 
 // ---------- Public API ----------
 
-/** Runs one command line. Never mutates `state`: works on a clone, so a refused command leaves nothing behind. */
-export function exec(state: RepoState, line: string): ExecResult {
+/** Runs one command line. Never mutates `state`: works on a clone, so a refused command leaves nothing behind.
+ *  `internal: false` (the player's terminal) refuses the scripted `_` commands. */
+export function exec(state: RepoState, line: string, { internal = true } = {}): ExecResult {
   const draft = structuredClone(state);
   try {
-    return { ok: true, state: draft, ...run(draft, line) };
+    return { ok: true, state: draft, ...run(draft, line, internal) };
   } catch (error) {
     if (error instanceof EngineError) return { ok: false, error: error.message };
     throw error;
@@ -455,6 +583,13 @@ export function build(commands: string[], cargo: Record<string, string> = {}, ba
     state = result.state;
   }
   return state;
+}
+
+/** Cars `rebase -i <ref>` lists for the HEAD track, oldest first; empty if the ref is unknown or nothing to replay. */
+export function todoList(s: RepoState, ref: string): Commit[] {
+  const tip = s.branches[s.head];
+  const base = resolve(s, ref);
+  return tip && base ? replaySet(s, tip, base).map((id) => s.commits[id]) : [];
 }
 
 function chainSignature(s: RepoState, tip: string, mode: MatchMode): string {

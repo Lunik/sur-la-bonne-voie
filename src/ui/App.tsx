@@ -1,11 +1,12 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import {
-  newSession, reduce, shuffled, stars as starsOf, stations,
+  isGuess, isPlayed, newSession, reduce, shuffled, stars as starsOf, stations,
   type Action, type Session, type Station, type Step, type Toast,
 } from '../game/index.ts';
 import './app.css';
 import { Board } from './Board.tsx';
 import { Failure, Prediction, Ready, Tutorial, Victory } from './Dialogs.tsx';
+import { Bisect, Inquiry, TodoEditor } from './Panels.tsx';
 import { Post } from './Post.tsx';
 import { loadProgress, saveProgress, type Progress } from './progress.ts';
 import { DepartureBoard, Header, NetworkMap } from './Screens.tsx';
@@ -14,7 +15,7 @@ import { TrainContext } from './trains.tsx';
 
 const isOpen = (p: Progress, i: number) => p.unlockAll || i === 0 || (p.stars[stations[i - 1].id] ?? 0) > 0;
 /** Prediction boards are shuffled here, outside the reducer, so it stays pure. */
-const sessionFor = (s: Station) => newSession(s, s.type === 'predict' ? shuffled(3) : undefined);
+const sessionFor = (s: Station) => newSession(s, isGuess(s) ? shuffled(3) : undefined);
 
 type UiAction = Action | { type: 'load'; session: Session };
 const uiReduce = (s: Session | null, a: UiAction) => (a.type === 'load' ? a.session : s && reduce(s, a));
@@ -44,7 +45,7 @@ export function App() {
     // Bring the exercise to the top of the screen: map above, nothing to scroll back to while playing.
     requestAnimationFrame(() => stage.current?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }));
   };
-  const run = (step: Step, message: string) => dispatch({ type: 'step', step, message });
+  const run = (step: Step, message: string) => dispatch({ type: 'step', step, message, notes: strings.stepNotes });
   const undo = () => dispatch({ type: 'undo', message: strings.toastUndone, nothing: strings.toastNothingToUndo });
 
   // A win counts as soon as it happens; it is merged into the stored progress on the next load.
@@ -57,7 +58,7 @@ export function App() {
   // Open the victory dialog once the train has left.
   useEffect(() => {
     if (status !== 'won' || !station) return;
-    const fast = station.type === 'predict' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fast = !isPlayed(station) || matchMedia('(prefers-reduced-motion: reduce)').matches;
     const t = setTimeout(() => setVictoryShown(true), fast ? 1100 : 1900);
     return () => clearTimeout(t);
   }, [status, station]);
@@ -102,7 +103,11 @@ export function App() {
               />
             </div>
             <div className="stage-side">
-              {station.type === 'predict' && <Prediction session={session} onGuess={(i) => dispatch({ type: 'guess', option: i })} />}
+              {isGuess(station) && <Prediction session={session} onGuess={(i) => dispatch({ type: 'guess', option: i })} />}
+              <Inquiry key={`inquiry-${loads}`} session={session} onAnswer={(labels) => dispatch({ type: 'answer', labels })} />
+              <Bisect session={session} onProbe={(id) => dispatch({ type: 'probe', id })} />
+              {/* Reloaded after every move or undo: the list follows the board. */}
+              <TodoEditor key={`todo-${loads}-${session.history.length}`} session={session} run={run} />
               <Post
                 key={`post-${loads}`}
                 session={session}
@@ -116,7 +121,7 @@ export function App() {
             </div>
           </div>
           {tutorialShown && <Tutorial key={`tutorial-${loads}`} station={station} onDone={() => setTutorialShown(false)} />}
-          {status === 'ready' && station.type !== 'predict' && !tutorialShown && (
+          {status === 'ready' && isPlayed(station) && !tutorialShown && (
             <Ready seconds={station.timeLimit!} brief={station.brief} onGo={() => dispatch({ type: 'start' })} />
           )}
           {status === 'failed' && <Failure session={session} onUndo={undo} onHint={() => load(index, { hint: true })} onRetry={() => load(index)} />}

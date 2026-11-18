@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { lines, type Session, type Step } from '../game/index.ts';
+import { isPlayed, lines, type Session, type Step } from '../game/index.ts';
 import { strings } from './strings.ts';
 import { fr } from './typography.ts';
 
@@ -32,7 +32,9 @@ export function Post({ session, covered, hintShown, onHint, onUndo, onRestart, r
     if (typing) input.current?.focus({ preventScroll: true });
   }, [typing]);
 
-  if (station.type === 'predict') return null;
+  // Played stations and inquiries use the terminal; an inquiry only inspects.
+  if (!isPlayed(station) && station.type !== 'enquete') return null;
+  const played = isPlayed(station);
   const suggest = (c: string) => {
     setValue(c);
     input.current?.focus();
@@ -45,18 +47,18 @@ export function Post({ session, covered, hintShown, onHint, onUndo, onRestart, r
   return (
     <section className="post panel">
       <h3>
-        <span>{strings.terminal} <span className="small">{strings.moves(session.moves, station.budget)}</span></span>
+        <span>{strings.terminal} {played && <span className="small">{strings.moves(session.moves, station.budget)}</span>}</span>
         <span className="row">
-          <button className="btn quiet sm" type="button" onClick={onUndo}>{strings.undo}</button>
-          <button className="btn quiet sm" type="button" onClick={onRestart}>{strings.restart}</button>
+          {played && <button className="btn quiet sm" type="button" onClick={onUndo}>{strings.undo}</button>}
+          {played && <button className="btn quiet sm" type="button" onClick={onRestart}>{strings.restart}</button>}
           <button className="btn quiet sm" type="button" aria-expanded={hintShown} onClick={onHint}>{strings.hint}</button>
         </span>
       </h3>
       <div className="term" ref={term} aria-live="polite">
         <div className="o">{strings.logTitle(station.line, station.title)}</div>
         {log.map((l, i) => (
-          <div key={i} className={l.kind === 'command' ? 'p' : l.kind === 'error' ? 'e' : l.kind === 'undo' ? 'o' : undefined}>
-            {l.kind === 'undo' ? strings.logUndo : l.kind === 'command' ? `$ git ${l.text}` : l.text}
+          <div key={i} className={l.kind === 'command' ? 'p' : l.kind === 'error' ? 'e' : l.kind === 'undo' ? 'o' : l.kind === 'event' ? 'ev' : undefined}>
+            {l.kind === 'undo' ? strings.logUndo : l.kind === 'command' ? `$ git ${l.text}` : l.kind === 'event' ? `# ${l.text}` : l.text}
           </div>
         ))}
       </div>
@@ -90,14 +92,14 @@ export function Post({ session, covered, hintShown, onHint, onUndo, onRestart, r
           autoComplete="off"
           autoCapitalize="off"
           spellCheck={false}
-          placeholder="commit"
+          placeholder={played ? 'commit' : 'log'}
           aria-label={strings.promptLabel}
         />
         <button type="submit">{strings.enter}</button>
       </form>
       <p className="help">
         {strings.tryThese}
-        {lines[station.line - 1].suggestions.map((c) => (
+        {(played ? lines[station.line - 1].suggestions : strings.inquirySuggestions).map((c) => (
           <code
             key={c}
             role="button"
