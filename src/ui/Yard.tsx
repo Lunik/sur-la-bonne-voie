@@ -1,6 +1,6 @@
 import { use, useId, useLayoutEffect, useRef, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
 import { ancestors, stripPrimes, type Commit, type RepoState } from '../game/index.ts';
-import { lastColumn, layout, livery, type Row } from './layout.ts';
+import { lastColumn, layout, livery, switchPath, type Row } from './layout.ts';
 import { strings } from './strings.ts';
 import { TrainContext, trains } from './trains.tsx';
 
@@ -139,6 +139,20 @@ export function Yard({ repo: s, variant, leaving, className = '', ...rest }: Yar
   const height = rows.length * ROW;
   const railY = (ri: number) => ri * ROW + RAIL_Y;
 
+  const tracks = rows.map((r, ri) => {
+    const start = r.fork >= 0 ? carX(r.fork + 1) - 6 : PAD - 8;
+    const y = railY(ri);
+    return {
+      name: r.name,
+      remote: r.kind === 'remote',
+      y,
+      curve: r.fork >= 0 ? switchPath(carX(r.fork) + CAR_W * 0.35, railY(r.forkRow), start, y) : null,
+      // Open line on the right, toward origin, so a departing train never crosses a buffer.
+      line: `M${start} ${y} H${withLoco ? trackEnd + 2000 : trackEnd}`,
+      buffer: !deco && r.fork < 0 ? start - 5 : null,
+    };
+  });
+
   const flags = new Map<string, Flag[]>();
   const flag = (id: string, name: string, remote: boolean) => flags.set(id, [...(flags.get(id) ?? []), { name, remote }]);
   for (const [b, id] of Object.entries(s.branches)) flag(id, b, false);
@@ -235,35 +249,23 @@ export function Yard({ repo: s, variant, leaving, className = '', ...rest }: Yar
       )}
       <div className="tracks" ref={scroller}>
         <svg viewBox={`0 0 ${width} ${height}`} style={size} role={live ? 'img' : undefined} aria-label={live ? strings.yard : undefined}>
-          {rows.map((r, ri) => {
-            const start = r.fork >= 0 ? carX(r.fork + 1) - 6 : PAD - 8;
-            const y = railY(ri);
-            const curve = r.fork >= 0
-              ? (() => {
-                  const x0 = carX(r.fork) + CAR_W * 0.35;
-                  const y0 = railY(r.forkRow);
-                  const x1 = start;
-                  const w = x1 - x0;
-                  return `M${x0} ${y0} C${x0 + w * 0.55} ${y0} ${x1 - w * 0.45} ${y} ${x1} ${y}`;
-                })()
-              : null;
-            // Open line on the right, toward origin, so a departing train never crosses a buffer.
-            const track = `M${start} ${y} H${live || deco ? trackEnd + 2000 : trackEnd}`;
-            return (
-              <g key={`track-${r.name}`} className={`track${r.kind === 'remote' ? ' remote' : ''}`}>
-                {curve && <path className="sleepers" d={curve} />}
-                <path className="sleepers" d={track} transform="translate(0 3)" />
-                {curve && <path className="rail" d={curve} />}
-                <path className="rail" d={track} />
-                {!deco && r.fork < 0 && (
-                  <g className="buffer" transform={`translate(${start - 5} ${y})`}>
-                    <rect x={0} y={-15} width={5} height={15} rx={1} />
-                    <circle cx={2.5} cy={-11} r={1.8} />
-                  </g>
-                )}
-              </g>
-            );
-          })}
+          {/* Two passes, sleepers under every rail: tracks leaving the same car share a trunk. */}
+          {(['sleepers', 'rail'] as const).map((layer) => (
+            <g key={layer}>
+              {tracks.map((t) => (
+                <g key={t.name} className={`track${t.remote ? ' remote' : ''}`}>
+                  {t.curve && <path className={layer} d={t.curve} />}
+                  <path className={layer} d={t.line} transform={layer === 'sleepers' ? 'translate(0 3)' : undefined} />
+                  {layer === 'rail' && t.buffer !== null && (
+                    <g className="buffer" transform={`translate(${t.buffer} ${t.y})`}>
+                      <rect x={0} y={-15} width={5} height={15} rx={1} />
+                      <circle cx={2.5} cy={-11} r={1.8} />
+                    </g>
+                  )}
+                </g>
+              ))}
+            </g>
+          ))}
           {placed.map((p) => {
             const isHead = withLoco && p.row.name === s.head;
             const fl = deco ? [] : (flags.get(p.id) ?? []).filter((f) => live || !rows.some((rr) => rr.name === f.name && rr.cells.length));

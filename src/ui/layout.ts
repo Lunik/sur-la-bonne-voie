@@ -57,3 +57,14 @@ export function lastColumn(s: RepoState, rows: Row[], withLoco: boolean): number
   }
   return max;
 }
+
+/**
+ * Switch from (x0, y0) down to a lower track starting at (x1, y): quarter turn down, straight drop, quarter turn
+ * right. The drop sits halfway, so every track leaving the same car shares the first turn and the drop: one trunk.
+ */
+export function switchPath(x0: number, y0: number, x1: number, y: number): string {
+  const r = (x1 - x0) / 2;
+  const xm = x0 + r;
+  const k = r * 0.5523; // cubic approximation of a quarter circle
+  return `M${x0} ${y0} C${x0 + k} ${y0} ${xm} ${y0 + r - k} ${xm} ${y0 + r} V${y - r} C${xm} ${y - r + k} ${x1 - k} ${y} ${x1} ${y}`;
+}

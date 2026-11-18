@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from '../game/index.ts';
-import { lastColumn, layout, livery } from './layout.ts';
+import { lastColumn, layout, livery, switchPath } from './layout.ts';
 
 const labels = (s: ReturnType<typeof build>, cells: { id: string }[]) => cells.map((c) => s.commits[c.id].label);
 
@@ -32,4 +32,11 @@ test('the remote row appears only when its tip is not on a local row', () => {
   assert.deepEqual(labels(colleague, rows[1].cells), ['D']);
   assert.equal(rows[1].fork, 1);
   assert.equal(livery(colleague, 'collègue'), 3);
+});
+
+test('tracks leaving the same car share one trunk', () => {
+  const near = switchPath(10, 0, 50, 88);
+  const far = switchPath(10, 0, 50, 176);
+  const trunk = near.slice(0, near.indexOf('V') + 1);
+  assert.ok(far.startsWith(trunk), `${far} should start with ${trunk}`);
 });
