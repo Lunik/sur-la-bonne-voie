@@ -167,6 +167,22 @@ But : enrichir le jeu au-delà du prototype, par ordre de valeur pédagogique. C
 
 Critère de sortie, par fonctionnalité : tests moteur et contenu verts, station(s) de démonstration jouable(s), publication.
 
+Statut au 18/11/2026 : **neuf typologies de stations ajoutées en avance sur la parité** (branche `typologies`, partie de `jalon-3`), tirées des tutoriels Git d’Atlassian, avec une station de démonstration chacune (40 stations au lieu de 31) :
+
+| Typologie | Forme | Station | Source Atlassian |
+| --- | --- | --- | --- |
+| Pronostic inversé | type `retro` | Qui a décroché ? | `resetting-checking-out-and-reverting` |
+| Enquête | type `enquete`, terminal en lecture seule (`log A..B`, `show`) | Le contrôle des billets | `git-log`, `git-show`, `git-blame` |
+| Revue de quai | type `review`, objectifs en `phases` | Revue de quai | `making-a-pull-request` |
+| Recherche de l’avarie | type `bisect`, sondages | Recherche de l’avarie | `merging-vs-rebasing` (`git bisect`) |
+| Feuille de route | champ `todo`, éditeur de `rebase -i` | Recomposer la rame | `rewriting-history/git-rebase` |
+| Horaire à événements | champ `events` | Train supplémentaire | `feature-branch-workflow` |
+| Voie publique | champ `publicLocked` | La règle d’or | `merging-vs-rebasing` (règle d’or) |
+| Ramassage | champ `gcAfter` | Avant le ramassage | `git-gc`, `git-prune` |
+| Plan de circulation | champ `workflow: 'gitflow'` | Correctif en double voie | `gitflow-workflow` |
+
+`rebase -i` et `bisect` (ligne 6) sont donc couverts dans leur format de jeu ; restent `stash` et `tag`. Les nouvelles stations sont insérées avant la station finale de leur ligne : pour un joueur qui avait déjà débloqué cette finale, elle redevient verrouillée jusqu’à la nouvelle station précédente (sans effet avant la 1.0).
+
 ## Jalon 7 — Lancement
 
 But : donner au jeu un nom définitif et le faire connaître. Le choix du nom peut se faire tôt ; la diffusion attend les jalons 4 et 5.
