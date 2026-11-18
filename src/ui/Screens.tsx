@@ -33,7 +33,7 @@ export function Header() {
 }
 
 interface MapProps {
-  current: Station;
+  current?: Station;
   stars: Record<string, number>;
   isOpen: (i: number) => boolean;
   unlockAll: boolean;

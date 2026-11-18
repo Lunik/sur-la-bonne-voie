@@ -16,24 +16,22 @@ const isOpen = (p: Progress, i: number) => p.unlockAll || i === 0 || (p.stars[st
 /** Prediction boards are shuffled here, outside the reducer, so it stays pure. */
 const sessionFor = (s: Station) => newSession(s, s.type === 'predict' ? shuffled(3) : undefined);
 
-const initialProgress = loadProgress();
-const savedIndex = stations.findIndex((s) => s.id === initialProgress.current);
-const initialIndex = savedIndex > 0 && isOpen(initialProgress, savedIndex) ? savedIndex : 0;
-
 type UiAction = Action | { type: 'load'; session: Session };
-const uiReduce = (s: Session, a: UiAction) => (a.type === 'load' ? a.session : reduce(s, a));
+const uiReduce = (s: Session | null, a: UiAction) => (a.type === 'load' ? a.session : s && reduce(s, a));
 
 export function App() {
-  const [progress, setProgress] = useState(initialProgress);
-  const [session, dispatch] = useReducer(uiReduce, undefined, () => sessionFor(stations[initialIndex]));
-  const { station, status } = session;
+  const [progress, setProgress] = useState(loadProgress);
+  // No station on arrival or reload: the player picks one on the map, which opens its tutorial.
+  const [session, dispatch] = useReducer(uiReduce, null);
+  const station = session?.station;
+  const status = session?.status;
   const [hintShown, setHintShown] = useState(false);
   // The tutorial opens before a station, on arrival only: not on a restart.
-  const [tutorialShown, setTutorialShown] = useState(true);
+  const [tutorialShown, setTutorialShown] = useState(false);
   const [victoryShown, setVictoryShown] = useState(false);
   const [loads, setLoads] = useState(0);
   const stage = useRef<HTMLDivElement>(null);
-  const index = stations.indexOf(station);
+  const index = station ? stations.indexOf(station) : -1;
 
   const load = (i: number, { hint = false, tutorial = false } = {}) => {
     const s = stations[i];
@@ -42,7 +40,7 @@ export function App() {
     setTutorialShown(tutorial);
     setVictoryShown(false);
     setLoads((n) => n + 1);
-    setProgress((p) => ({ ...withWin(p), current: s.id }));
+    setProgress(withWin);
     // Bring the exercise to the top of the screen: map above, nothing to scroll back to while playing.
     requestAnimationFrame(() => stage.current?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }));
   };
@@ -51,20 +49,20 @@ export function App() {
 
   // A win counts as soon as it happens; it is merged into the stored progress on the next load.
   const withWin = (p: Progress): Progress =>
-    status === 'won' ? { ...p, stars: { ...p.stars, [station.id]: Math.max(p.stars[station.id] ?? 0, starsOf(session)) } } : p;
+    session?.status === 'won' ? { ...p, stars: { ...p.stars, [session.station.id]: Math.max(p.stars[session.station.id] ?? 0, starsOf(session)) } } : p;
   const shown = withWin(progress);
   const savedJson = JSON.stringify(shown);
   useEffect(() => saveProgress(JSON.parse(savedJson)), [savedJson]);
 
   // Open the victory dialog once the train has left.
   useEffect(() => {
-    if (status !== 'won') return;
+    if (status !== 'won' || !station) return;
     const fast = station.type === 'predict' || matchMedia('(prefers-reduced-motion: reduce)').matches;
     const t = setTimeout(() => setVictoryShown(true), fast ? 1100 : 1900);
     return () => clearTimeout(t);
   }, [status, station]);
 
-  const timed = session.timeLeft !== null;
+  const timed = typeof session?.timeLeft === 'number';
   useEffect(() => {
     if (status !== 'playing' || !timed) return;
     let last = performance.now();
@@ -78,59 +76,61 @@ export function App() {
 
   const shownToast: Toast =
     status === 'won' ? { tone: 'good', text: strings.toastWon }
-    : session.toast ?? { tone: 'info', text: strings.toastReady };
+    : session?.toast ?? { tone: 'info', text: strings.toastReady };
 
   return (
     <div className="wrap">
       <Header />
-      <TrainContext value={station.train}>
-        <NetworkMap
-          current={station}
-          stars={shown.stars}
-          isOpen={(i) => isOpen(shown, i)}
-          unlockAll={shown.unlockAll}
-          onUnlockAll={(on) => setProgress((p) => ({ ...p, unlockAll: on }))}
-          onPick={(i) => load(i, { tutorial: true })}
-        />
-        {/* The whole exercise, kept within one screen on wide displays: sheet and yard on the left, controls on the right. */}
-        <div className="stage" ref={stage}>
-          <div className="stage-main">
-            <DepartureBoard session={session} onTutorial={() => setTutorialShown(true)} />
-            <Board
-              key={`board-${loads}`}
-              session={session}
-              message={shownToast}
-            />
+      <NetworkMap
+        current={station}
+        stars={shown.stars}
+        isOpen={(i) => isOpen(shown, i)}
+        unlockAll={shown.unlockAll}
+        onUnlockAll={(on) => setProgress((p) => ({ ...p, unlockAll: on }))}
+        onPick={(i) => load(i, { tutorial: true })}
+      />
+      {session && station && (
+        <TrainContext value={station.train}>
+          {/* The whole exercise, kept within one screen on wide displays: sheet and yard on the left, controls on the right. */}
+          <div className="stage" ref={stage}>
+            <div className="stage-main">
+              <DepartureBoard session={session} onTutorial={() => setTutorialShown(true)} />
+              <Board
+                key={`board-${loads}`}
+                session={session}
+                message={shownToast}
+              />
+            </div>
+            <div className="stage-side">
+              {station.type === 'predict' && <Prediction session={session} onGuess={(i) => dispatch({ type: 'guess', option: i })} />}
+              <Post
+                key={`post-${loads}`}
+                session={session}
+                covered={tutorialShown}
+                hintShown={hintShown}
+                onHint={() => setHintShown((h) => !h)}
+                onUndo={undo}
+                onRestart={() => load(index)}
+                run={run}
+              />
+            </div>
           </div>
-          <div className="stage-side">
-            {station.type === 'predict' && <Prediction session={session} onGuess={(i) => dispatch({ type: 'guess', option: i })} />}
-            <Post
-              key={`post-${loads}`}
+          {tutorialShown && <Tutorial key={`tutorial-${loads}`} station={station} onDone={() => setTutorialShown(false)} />}
+          {status === 'ready' && station.type !== 'predict' && !tutorialShown && (
+            <Ready seconds={station.timeLimit!} brief={station.brief} onGo={() => dispatch({ type: 'start' })} />
+          )}
+          {status === 'failed' && <Failure session={session} onUndo={undo} onHint={() => load(index, { hint: true })} onRetry={() => load(index)} />}
+          {status === 'won' && victoryShown && (
+            <Victory
               session={session}
-              covered={tutorialShown}
-              hintShown={hintShown}
-              onHint={() => setHintShown((h) => !h)}
-              onUndo={undo}
-              onRestart={() => load(index)}
-              run={run}
+              stars={starsOf(session)}
+              totalStars={Object.values(shown.stars).reduce((a, b) => a + b, 0)}
+              onNext={() => load(index === stations.length - 1 ? 0 : index + 1, { tutorial: true })}
+              onRetry={() => load(index)}
             />
-          </div>
-        </div>
-        {tutorialShown && <Tutorial key={`tutorial-${loads}`} station={station} onDone={() => setTutorialShown(false)} />}
-        {status === 'ready' && station.type !== 'predict' && !tutorialShown && (
-          <Ready seconds={station.timeLimit!} brief={station.brief} onGo={() => dispatch({ type: 'start' })} />
-        )}
-        {status === 'failed' && <Failure session={session} onUndo={undo} onHint={() => load(index, { hint: true })} onRetry={() => load(index)} />}
-        {status === 'won' && victoryShown && (
-          <Victory
-            session={session}
-            stars={starsOf(session)}
-            totalStars={Object.values(shown.stars).reduce((a, b) => a + b, 0)}
-            onNext={() => load(index === stations.length - 1 ? 0 : index + 1, { tutorial: true })}
-            onRetry={() => load(index)}
-          />
-        )}
-      </TrainContext>
+          )}
+        </TrainContext>
+      )}
     </div>
   );
 }

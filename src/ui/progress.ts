@@ -4,12 +4,11 @@ const KEY = 'gare3.progress';
 export interface Progress {
   /** Station id → best stars. */
   stars: Record<string, number>;
-  current: string | null;
   unlockAll: boolean;
 }
 
 export function loadProgress(): Progress {
-  const empty: Progress = { stars: {}, current: null, unlockAll: false };
+  const empty: Progress = { stars: {}, unlockAll: false };
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null');
     return saved && typeof saved === 'object' ? { ...empty, ...saved } : empty;
