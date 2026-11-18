@@ -233,9 +233,8 @@ export function Yard({ repo: s, variant, leaving, className = '', ...rest }: Yar
       {!deco && (
         <div className="signs">
           {rows.map((r) => {
-            const isHead = r.kind === 'local' && r.name === s.head;
             const cls = ['sign', r.kind === 'remote' && 'remote'].filter(Boolean).join(' ');
-            const note = !live ? null : isHead ? strings.signHeadHere : r.kind === 'remote' ? strings.signRemote : null;
+            const note = live && r.kind === 'remote' ? strings.signRemote : null;
             return (
               <div key={r.name} className="sign-cell">
                 <span className={cls}>

@@ -48,7 +48,6 @@ export const strings = {
 
   yard: 'Plateau des voies',
   signHead: 'HEAD',
-  signHeadHere: 'motrice ici',
   signRemote: 'quai distant',
   carTitle: (label: string, cargo: string | null, gone: boolean) =>
     `Voiture ${label}${cargo ? ` · chargement ${cargo}` : ''}${gone ? ' · partie sur origin' : ''}`,

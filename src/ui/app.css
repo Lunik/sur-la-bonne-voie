@@ -85,7 +85,7 @@
 .rules li.ok .ck::after { content: ""; position: absolute; left: 4.5px; top: 1.5px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
 
 /* ---------- Yard ---------- */
-.yard { --k: 1; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+.yard { --k: 1; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: calc(16px * var(--k)); align-items: start; }
 .yard-live { padding: 14px 0 10px; }
 .yard-mini { --k: .68; }
 .yard-deco { display: block; }
