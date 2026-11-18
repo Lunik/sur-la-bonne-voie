@@ -2,7 +2,12 @@
 import { ancestors, build, exec, sig, stripPrimes, tipOf, type Commit, type MatchMode, type RepoState } from '../engine/index.ts';
 
 /** Rolling stock drawn for a station (ui/trains.tsx). */
-export type Train = 'francilien' | 'regio2n' | 'regiolis' | 'agc' | 'corail' | 'tgv' | 'tgv-m' | 'infra';
+export type Train =
+  | 'francilien' | 'mi09' | 'regio2n'
+  | 'regiolis' | 'agc' | 'x73500'
+  | 'corail' | 'coradia'
+  | 'tgv' | 'tgv-m' | 'tgv-duplex'
+  | 'infra' | 'fret';
 
 export interface Line {
   title: string;
@@ -69,7 +74,7 @@ interface Common {
   line: number;
   title: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
-  /** Rolling stock of the station: suburban on line 1, regional on 2, Corail on 3, TGV on 4, works train on 5. */
+  /** Rolling stock of the station: suburban on line 1, regional on 2, Intercités on 3, TGV on 4, works or freight train on 5. */
   train: Train;
   brief: string;
   /** Pages shown before the station: the notions it needs, never its solution. */

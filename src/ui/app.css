@@ -146,9 +146,14 @@
 .t-agc { --acc: var(--t-agc); }
 .t-corail { --acc: var(--t-sybic); }
 .t-tgv-m { --acc: var(--t-pearl-band); }
+.t-mi09 { --acc: var(--t-rer); }
+.t-x73500 { --acc: var(--t-ater); }
+.t-coradia { --acc: var(--t-ic); }
+.t-tgv-duplex { --acc: var(--t-carmin); }
+.t-fret { --acc: var(--t-fret); }
 .accent { fill: var(--acc); }
 .t-corail .body { fill: var(--t-steel); }
-.loco-body.t-corail .body, .t-tgv .body { fill: var(--t-silver); }
+.loco-body.t-corail .body, .t-tgv .body, .t-tgv-duplex .body { fill: var(--t-silver); }
 .t-tgv-m .body { fill: var(--t-pearl); }
 .car-body .label { font: 600 16px var(--f-display); fill: var(--car-ink); text-anchor: middle; dominant-baseline: central; }
 .car-body .label.long { font-size: 12.5px; }

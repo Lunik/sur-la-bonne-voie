@@ -164,6 +164,46 @@ export const trains: Record<Train, Family> = {
       ),
     },
   },
+  // MI09 (RER A): double deck, near-vertical cab, dark window band, wide doors in the family accent on the cab car.
+  mi09: {
+    car: (
+      <>
+        <rect className="roof" x={3} y={-9} width={64} height={2.5} rx={1.25} />
+        <rect className="roof" x={27} y={-11} width={16} height={3} rx={1} />
+        <rect className="body" x={0.75} y={-6.25} width={68.5} height={H + 5.5} rx={4} />
+        <rect className="trim" x={10} y={-4} width={12} height={23} rx={1} />
+        <rect className="trim" x={48} y={-4} width={12} height={23} rx={1} />
+        {[11, 49].flatMap((x) => [pane(x, -3, 10, 9, 2), pane(x, 8.5, 10, 9, 2)])}
+        {door(2, 1, 7, 30)}
+        {door(61, 1, 7, 30)}
+        {under(26, 44, 3)}
+        {bogie(10, 18)}
+        {bogie(52, 60)}
+      </>
+    ),
+    link: gangway,
+    loco: {
+      outline: 'M0 -3 Q0 -7 4 -7 H86 Q92 -7 94 -2 L97 14 Q98 20 98 28 Q98 34 93 34 H0 Z',
+      nose: 88,
+      roof: <>{panto(30, -7)}<rect className="roof" x={50} y={-10} width={18} height={3.5} rx={1} /></>,
+      paint: <rect className="trim" x={0} y={-4} width={88} height={19} />,
+      front: (
+        <>
+          <path className="pane" d="M86 -4 H90 Q93 -3 94 1 L96 12 H86 Z" />
+          {wiper(89, 11, 4)}
+          {[5, 18].flatMap((x) => [pane(x, -3, 11, 8, 2), pane(x, 6.5, 11, 7, 2)])}
+          {door(33, 1, 9, 28, true)}
+          {door(70, 1, 8, 28, true)}
+          {head(56, 23)}
+          {lamps(95.5, 20, 96.5, 27)}
+          {under(30, 54, 3)}
+          {plough(82)}
+          {bogie(12, 22)}
+          {bogie(66, 76)}
+        </>
+      ),
+    },
+  },
   // Regio 2N: double deck between raised ends, angular nose under a black mask.
   regio2n: {
     car: (
@@ -286,6 +326,56 @@ export const trains: Record<Train, Family> = {
       ),
     },
   },
+  // X 73500 (A TER): single-car diesel railcar, sloping cab, roof radiators, no pantograph.
+  x73500: {
+    car: (
+      <>
+        <rect className="roof" x={14} y={-9} width={42} height={4.5} rx={1} />
+        <path className="louvre" d="M18 -8 V-5 M21 -8 V-5 M24 -8 V-5 M46 -8 V-5 M49 -8 V-5 M52 -8 V-5" />
+        <rect className="body" x={0.75} y={-4.25} width={68.5} height={H + 3.5} rx={3} />
+        {door(2, 0, 6, 31)}
+        {door(62, 0, 6, 31)}
+        {pane(10, 1, 12, 13, 1)}
+        {pane(48, 1, 12, 13, 1)}
+        {under(24, 46)}
+        {bogie(13, 21)}
+        {bogie(49, 57)}
+      </>
+    ),
+    link: gangway,
+    loco: {
+      outline: 'M0 -1 Q0 -5 4 -5 H72 Q79 -5 83 0 L93 13 Q99 20 99 28 Q99 34 93 34 H0 Z',
+      nose: 84,
+      roof: (
+        <>
+          <rect className="roof" x={18} y={-9} width={40} height={4.5} rx={1} />
+          <path className="louvre" d="M22 -8 V-5 M25 -8 V-5 M28 -8 V-5 M31 -8 V-5 M45 -8 V-5 M48 -8 V-5 M51 -8 V-5" />
+          <rect className="trim" x={62} y={-10} width={3} height={5} rx={0.5} />
+        </>
+      ),
+      paint: (
+        <>
+          <rect className="accent" x={0} y={-6} width={100} height={4} />
+          <rect className="accent" x={0} y={28} width={100} height={6} />
+        </>
+      ),
+      front: (
+        <>
+          <path className="pane" d="M75 -1 H80 L89 11 H75 Z" />
+          {wiper(80, 10)}
+          {pane(5, 2, 12, 12, 1)}
+          {pane(19, 2, 12, 12, 1)}
+          {door(34, 0, 7, 27, true)}
+          {head(55, 20)}
+          {lamps(94.5, 19, 97, 26)}
+          {under(30, 56)}
+          {plough(82)}
+          {bogie(12, 22)}
+          {bogie(64, 74)}
+        </>
+      ),
+    },
+  },
   // BB 26000 « Sybic » hauling Corail coaches: boxy twin-cab loco, ribbed steel coaches with an arched roof.
   corail: {
     car: (
@@ -329,6 +419,45 @@ export const trains: Record<Train, Family> = {
           {under(34, 64, 4)}
           {bogie(14, 26, 4.4)}
           {bogie(72, 84, 4.4)}
+        </>
+      ),
+    },
+  },
+  // Coradia Liner (Intercités): single deck, dark window band, tall hooded cab, doors in the family accent.
+  coradia: {
+    car: (
+      <>
+        <rect className="roof" x={3} y={-7.5} width={64} height={3.5} rx={1.75} />
+        <rect className="body" x={0.75} y={-4.25} width={68.5} height={H + 3.5} rx={4} />
+        <rect className="trim" x={9} y={1} width={14} height={13} rx={1} />
+        <rect className="trim" x={47} y={1} width={14} height={13} rx={1} />
+        {[10, 16, 48, 54].map((x) => pane(x, 2, 5.5, 11, 1))}
+        {door(2, 0, 6, 31)}
+        {door(62, 0, 6, 31)}
+        {under(26, 44)}
+        {bogie(13, 21)}
+        {bogie(49, 57)}
+      </>
+    ),
+    link: gangway,
+    loco: {
+      outline: 'M0 -1 Q0 -5 4 -5 H70 L76 -7.5 H82 Q90 -7.5 94 2 L97 14 Q99 22 98 30 Q97 34 93 34 H0 Z',
+      nose: 86,
+      roof: <>{panto(22, -5)}<rect className="roof" x={42} y={-8} width={18} height={3.5} rx={1} /></>,
+      paint: <rect className="trim" x={0} y={1} width={76} height={13} />,
+      front: (
+        <>
+          <path className="pane" d="M80 -4.5 H84 Q90 -4 93 3 L95 12 H80 Z" />
+          {wiper(88, 11, 4)}
+          {[4, 14, 24].map((x) => pane(x, 2, 8.5, 11, 1))}
+          {door(37, 1, 8, 28, true)}
+          {head(57, 23)}
+          {door(70, 1, 6, 28)}
+          {lamps(95, 22, 96.5, 29)}
+          {under(30, 56)}
+          {plough(82)}
+          {bogie(12, 22)}
+          {bogie(64, 74)}
         </>
       ),
     },
@@ -409,6 +538,48 @@ export const trains: Record<Train, Family> = {
       ),
     },
   },
+  // TGV Duplex: silver double-deck trailers, power car with a grille band and a long nose.
+  'tgv-duplex': {
+    car: (
+      <>
+        <rect className="roof" x={3} y={-8.5} width={64} height={2.5} rx={1.25} />
+        <rect className="body" x={0.75} y={-6.25} width={68.5} height={H + 5.5} rx={5} />
+        {[9, 17, 25, 33, 41, 49, 57].map((x) => pane(x, -3, 6, 6, 1))}
+        {[9, 16, 48, 55].map((x) => pane(x, 9, 6, 6, 1))}
+        {door(2, 7, 5, 24)}
+        {door(63, 7, 5, 24)}
+        {under(24, 46, 3)}
+        {bogie(10, 18)}
+        {bogie(52, 60)}
+      </>
+    ),
+    link: gangway,
+    loco: {
+      outline: 'M0 -3 Q0 -7 4 -7 H54 C70 -7 82 4 92 17 Q99 25 99 30 Q99 34 94 34 H0 Z',
+      nose: 88,
+      roof: <>{panto(14, -7)}<rect className="roof" x={32} y={-10} width={16} height={3.5} rx={1} /></>,
+      paint: (
+        <>
+          <rect className="accent" x={0} y={2} width={100} height={2} />
+          <rect className="trim" x={0} y={7} width={100} height={9} />
+        </>
+      ),
+      front: (
+        <>
+          <path className="pane" d="M60 -4 C68 -3 74 1 79 6 H62 Z" />
+          {wiper(68, 5)}
+          {vent(5, 8, 42, 7)}
+          {door(52, 1, 5, 26)}
+          {head(30, 25)}
+          {lamps(93.5, 22, 97, 29)}
+          {under(28, 50)}
+          {plough(80)}
+          {bogie(10, 20)}
+          {bogie(56, 66)}
+        </>
+      ),
+    },
+  },
   // BB 75000 in maintenance yellow, pushing container wagons: the works train of the accidents line.
   infra: {
     car: (
@@ -449,6 +620,52 @@ export const trains: Record<Train, Family> = {
           <rect className="buffer-head" x={98} y={27.5} width={2.2} height={6} rx={0.8} />
           <rect className="tank" x={33} y={H} width={32} height={5} rx={2.5} />
           {bogie(14, 26, 4.4)}
+          {bogie(72, 84, 4.4)}
+        </>
+      ),
+    },
+  },
+  // BB 27000 freight loco with its diagonal livery, pulling covered hopper wagons.
+  fret: {
+    car: (
+      <>
+        <rect className="roof" x={4} y={-6} width={62} height={3} rx={1} />
+        <path className="body" d="M1 -3.25 H69 V20 L60 29 H10 L1 20 Z" />
+        <path className="rib" d="M6 -1 V21 M11 -1 V26 M16 -1 V28 M54 -1 V28 M59 -1 V26 M64 -1 V21" />
+        <rect className="trim" x={0} y={29} width={70} height={3} rx={1} />
+        <rect className="trim" x={30} y={31} width={10} height={3} rx={0.5} />
+        {bogie(10, 18)}
+        {bogie(52, 60)}
+      </>
+    ),
+    link: buffers,
+    loco: {
+      outline: 'M2 34 V12 L4 10 L13 -4 H87 L96 10 L98 12 V34 Z',
+      nose: 90,
+      roof: (
+        <>
+          {panto(16, -4)}
+          {panto(66, -4)}
+          <rect className="roof" x={36} y={-8} width={24} height={4} rx={1} />
+        </>
+      ),
+      paint: <path className="accent" d="M0 -6 H36 L20 40 H0 Z" />,
+      front: (
+        <>
+          <rect className="trim" x={2} y={28} width={96} height={3} />
+          <path className="pane" d="M86 -1 H88 L94 9 H86 Z" />
+          <path className="pane" d="M14 -1 H12 L6 9 H14 Z" />
+          <rect className="door-line" x={16} y={0} width={6} height={25} rx={0.8} />
+          <rect className="door-line" x={78} y={0} width={6} height={25} rx={0.8} />
+          {pane(17.2, 2, 3.6, 7, 0.6)}
+          {pane(79.2, 2, 3.6, 7, 0.6)}
+          {vent(24, 2, 9, 18)}
+          {vent(67, 2, 9, 18)}
+          {head(50, 18)}
+          {lamps(96.5, 15, 96.5, 31)}
+          <rect className="buffer-head" x={98} y={27.5} width={2.2} height={6} rx={0.8} />
+          <rect className="tank" x={36} y={H} width={28} height={5} rx={2.5} />
+          {bogie(16, 28, 4.4)}
           {bogie(72, 84, 4.4)}
         </>
       ),
