@@ -1,4 +1,4 @@
-// The 21 stations of the network, in play order, grouped by line. Adding a station only touches this file.
+// The 31 stations of the network, in play order, grouped by line. Adding a station only touches this file.
 // Prose uses plain spaces before « : ? ! » : French non-breaking spaces are the UI's job (jalon 3).
 import { contains, noCargo, noMerge, reverted, same, validate, type Station } from './index.ts';
 
@@ -34,6 +34,18 @@ export const stations: Station[] = [
     solution: ['switch -c feature', 'commit'],
   },
   {
+    id: 'voie-d-attente', line: 1, title: 'Voie d’attente', type: 'compo', difficulty: 2, train: 'mi09',
+    start: A2, target: [...A2, 'branch release', 'commit', 'commit'], par: 3,
+    brief: 'Posez une voie release sur B pour la mise en service de demain, sans quitter main. Puis accrochez deux voitures sur main.',
+    tutorial: [
+      { title: 'Poser sans partir', text: '`git branch v1` pose une voie v1 à l’endroit de la motrice, mais la motrice reste où elle est. C’est `git switch -c` sans le déplacement.', example: ['commit'], run: ['branch v1'] },
+      { title: 'Une voie immobile', text: 'Une voie n’avance que si la motrice s’y trouve au moment du commit. Une voie posée puis laissée de côté garde sa place.' },
+    ],
+    hint: 'branch release, puis commit deux fois.',
+    learn: 'git branch release\ngit commit\ngit commit',
+    solution: ['branch release', 'commit', 'commit'],
+  },
+  {
     id: 'aller-retour', line: 1, title: 'Aller-retour', type: 'compo', difficulty: 2, train: 'regio2n', match: 'shape',
     start: A2, target: [...A2, 'switch -c feature', 'commit', 'commit', 'switch main', 'commit'], par: 4,
     brief: 'Deux voitures sur une voie feature, puis une voiture sur main. Pour changer de voie : switch suivi de son nom.',
@@ -59,6 +71,18 @@ export const stations: Station[] = [
     ],
     learn: 'C’est la motrice (HEAD) qui décide où s’accroche chaque nouvelle voiture.',
   },
+  {
+    id: 'trois-voies', line: 1, title: 'Trois voies', type: 'compo', difficulty: 3, train: 'mi09', match: 'shape',
+    start: A2, target: [...A2, 'switch -c feature', 'commit', 'switch main', 'switch -c hotfix', 'commit'], par: 4,
+    brief: 'Deux équipes partent de B : posez une voie feature et une voie hotfix, toutes deux au départ de B, avec une voiture chacune. main ne bouge pas.',
+    tutorial: [
+      { title: 'D’où part une voie ?', text: 'Une nouvelle voie part toujours de la voiture où se trouve la motrice. Ici, doc part de B, sur fix, parce que la motrice y était.', example: ['commit', 'switch -c fix', 'commit'], run: ['switch -c doc'] },
+      { title: 'Trois voies au plus', text: 'Le dépôt compte trois voies au maximum, main comprise. Choisissez bien où poser chacune.' },
+    ],
+    hint: 'switch -c feature, commit, switch main, puis switch -c hotfix, commit.',
+    learn: 'git switch -c feature\ngit commit\ngit switch main\ngit switch -c hotfix\ngit commit',
+    solution: ['switch -c feature', 'commit', 'switch main', 'switch -c hotfix', 'commit'],
+  },
 
   // ---- Ligne 2 · Les jonctions ----
   {
@@ -72,6 +96,18 @@ export const stations: Station[] = [
     hint: 'La motrice est déjà sur main : merge feature.',
     learn: 'git switch main\ngit merge feature',
     solution: ['switch main', 'merge feature'],
+  },
+  {
+    id: 'contre-courant', line: 2, title: 'À contre-courant', type: 'compo', difficulty: 2, train: 'x73500',
+    start: FORK, target: [...FORK, 'switch feature', 'merge main'], par: 1,
+    brief: 'feature a besoin de la voiture E, arrivée sur main. Faites entrer main dans feature, sans toucher à main.',
+    tutorial: [
+      { title: 'Dans l’autre sens', text: 'merge fait toujours avancer la voie de la motrice. Pour que fix reçoive le travail de main, la motrice doit être sur fix avant le `git merge main`.', example: ['commit', 'switch -c fix', 'commit', 'switch main', 'commit'] },
+      { title: 'Rester à jour', text: 'Faire entrer main dans sa voie de temps en temps évite les mauvaises surprises au moment de livrer : les deux histoires restent proches.' },
+    ],
+    hint: 'switch feature, puis merge main.',
+    learn: 'git switch feature\ngit merge main',
+    solution: ['switch feature', 'merge main'],
   },
   {
     id: 'remise-a-niveau', line: 2, title: 'Remise à niveau', type: 'compo', difficulty: 2, train: 'regiolis',
@@ -111,6 +147,19 @@ export const stations: Station[] = [
     hint: 'D’abord rebase main depuis feature (feature derrière E), puis merge feature depuis main : main avance simplement. C’est un fast-forward.',
     learn: 'git switch feature\ngit rebase main\ngit switch main\ngit merge feature   # fast-forward',
     solution: ['switch feature', 'rebase main', 'switch main', 'merge feature'],
+  },
+  {
+    id: 'avance-rapide', line: 2, title: 'L’avance rapide', type: 'predict', difficulty: 2, train: 'x73500',
+    start: ['commit', 'commit', 'switch -c feature', 'commit', 'commit', 'switch main'], answer: ['merge feature'],
+    wrong: [
+      { commands: ['cherry-pick C', 'cherry-pick D'], why: 'merge ne recopie rien : pas de double filet, main avance jusqu’à la voiture D elle-même.' },
+      { commands: [], why: 'main bouge bien : merge fait avancer la voie de la motrice jusqu’au bout de feature, sans rien créer.' },
+    ],
+    brief: 'La motrice est sur main, qui n’a aucune voiture à elle. Ordre : merge feature. Quel plateau ?',
+    tutorial: [
+      { title: 'Qui a des voitures à soi ?', text: 'Avant un merge, regardez si la voie de la motrice porte des voitures que l’autre voie n’a pas. Si oui, il faut une voiture de jonction. Sinon, il n’y a rien à joindre.', example: ['commit', 'switch -c fix', 'commit', 'switch main', 'commit'] },
+    ],
+    learn: 'Sans voiture propre à la voie de la motrice, merge avance simplement : c’est un fast-forward.',
   },
   {
     id: 'grue-en-panne', line: 2, title: 'La grue en panne', type: 'rules', difficulty: 4, train: 'regiolis', fastForwardOnly: true, par: 4,
@@ -158,6 +207,19 @@ export const stations: Station[] = [
     solution: ['switch feature', 'reset --soft HEAD~3', 'commit', 'rebase main'],
   },
   {
+    id: 'erreur-d-aiguillage', line: 3, title: 'Erreur d’aiguillage', type: 'compo', difficulty: 3, train: 'coradia',
+    start: ['commit', 'commit', 'commit', 'commit'],
+    target: ['commit', 'commit', 'switch -c feature', 'commit', 'commit', 'switch main'], par: 2,
+    brief: 'C et D devaient partir sur une voie feature, mais elles ont été accrochées sur main. Rangez-les sur feature et ramenez main à B.',
+    tutorial: [
+      { title: 'Reculer pour de bon', text: '`git reset --hard A` recule la voie de la motrice jusqu’à A. Les voitures retirées partent sur la voie de garage, sauf si une autre voie les porte encore : elles restent alors sur cette voie.', example: ['commit', 'commit', 'commit'], run: ['reset --hard A'] },
+      { title: 'Rappel', text: '`git branch` pose une voie à l’endroit de la motrice, sans la déplacer.' },
+    ],
+    hint: 'branch feature garde C et D, puis reset --hard B ramène main.',
+    learn: 'git branch feature\ngit reset --hard B',
+    solution: ['branch feature', 'reset --hard B'],
+  },
+  {
     id: 'voiture-suspecte', line: 3, title: 'La voiture suspecte', type: 'rules', difficulty: 3, train: 'corail', cargo: { D: 'debug' },
     start: TRI, par: 2,
     rules: [
@@ -199,6 +261,22 @@ export const stations: Station[] = [
     learn: 'git switch -c release\ngit cherry-pick D',
     solution: ['switch -c release', 'cherry-pick D'],
   },
+  {
+    id: 'voiture-du-milieu', line: 3, title: 'La voiture du milieu', type: 'rules', difficulty: 4, train: 'coradia', cargo: { D: 'debug' },
+    start: TRI, par: 2,
+    rules: [
+      { text: 'feature contient C et E', check: contains('feature', 'C', 'E') },
+      { text: 'Aucune voiture chargée de debug sur feature', check: noCargo('feature', 'debug') },
+    ],
+    brief: 'Sur feature, la voiture D (losange rouge) contient du débogage, coincée entre C et E. Retirez-la de feature en gardant C et E.',
+    tutorial: [
+      { title: 'Repêcher une voiture', text: 'cherry-pick copie aussi une voiture de la voie de garage : il suffit de la nommer par sa lettre.', example: ['commit', 'commit', 'commit', 'reset --hard A'], run: ['cherry-pick C'] },
+      { title: 'Seule feature compte', text: 'Le règlement ne regarde que la voie feature : main peut rester où elle est.' },
+    ],
+    hint: 'switch feature, reset --hard C (D et E partent sur la voie de garage), puis cherry-pick E.',
+    learn: 'git switch feature\ngit reset --hard C\ngit cherry-pick E',
+    solution: ['switch feature', 'reset --hard C', 'cherry-pick E'],
+  },
 
   // ---- Ligne 4 · Les grandes lignes ----
   {
@@ -212,6 +290,33 @@ export const stations: Station[] = [
     hint: 'Tapez push.',
     learn: 'git push',
     solution: ['push'],
+  },
+  {
+    id: 'a-la-traine', line: 4, title: 'À la traîne', type: 'compo', difficulty: 2, train: 'tgv-duplex',
+    start: ['commit', 'commit', 'push', '_coll', '_coll'], target: ['commit', 'commit', 'push', '_coll', '_coll', 'pull', 'commit', 'push'], par: 3,
+    brief: 'Pendant votre pause, le collègue a poussé C et D. Rattrapez origin, accrochez votre voiture E derrière les siennes et faites-la partir.',
+    tutorial: [
+      { title: 'Le collègue', text: 'Un collègue pousse lui aussi ses voitures sur origin, en livrée rose. Votre main ne les voit pas tant que vous ne les avez pas récupérées.', example: ['commit', 'push', '_coll'] },
+      { title: 'Rattraper origin', text: 'Si votre main n’a rien de nouveau, `git pull` la fait simplement avancer jusqu’à origin/main.', example: ['commit', 'push', '_coll'], run: ['pull'] },
+      { title: 'Dans l’ordre', text: 'Récupérez d’abord, travaillez ensuite : une voiture accrochée avant le pull ferait diverger main et origin/main.' },
+    ],
+    hint: 'pull, commit, push.',
+    learn: 'git pull\ngit commit\ngit push',
+    solution: ['pull', 'commit', 'push'],
+  },
+  {
+    id: 'pull-par-defaut', line: 4, title: 'Le pull par défaut', type: 'predict', difficulty: 3, train: 'tgv-duplex',
+    start: ['commit', 'commit', 'push', 'commit', '_coll'], answer: ['pull'],
+    wrong: [
+      { commands: ['pull --rebase'], why: 'Ça, c’est pull --rebase : C est recréée derrière D, en ligne droite. Sans option, pull joint les deux histoires.' },
+      { commands: ['push --force'], why: 'pull ne pousse rien. Ce plateau-là vient d’un push forcé, qui a jeté la voiture D du collègue.' },
+    ],
+    brief: 'Votre main porte C, origin/main la voiture D du collègue. Ordre : pull, sans option. Quel plateau ?',
+    tutorial: [
+      { title: 'Récupérer, puis joindre', text: '`git pull` fait deux choses : il rapatrie les voitures d’origin, puis les fait entrer dans votre voie, exactement comme un merge.', example: ['commit', 'push', 'commit', '_coll'] },
+      { title: 'Rappel du merge', text: 'Quand deux voies ont chacune des voitures à elles, `git merge` attelle une voiture de jonction M.', example: ['commit', 'switch -c fix', 'commit', 'switch main', 'commit'], run: ['merge fix'] },
+    ],
+    learn: 'git pull = récupérer puis merge : une voiture de jonction si les deux histoires ont divergé.',
   },
   {
     id: 'push-rejete', line: 4, title: 'Push rejeté', type: 'rules', difficulty: 3, train: 'tgv',
@@ -282,6 +387,20 @@ export const stations: Station[] = [
     solution: ['reflog', 'reset --hard feature@{1}'],
   },
   {
+    id: 'le-registre', line: 5, title: 'Le registre', type: 'predict', difficulty: 3, train: 'fret',
+    start: ['commit', 'commit', 'commit', 'reset --hard A'], answer: ['reset --hard main@{1}'],
+    wrong: [
+      { commands: ['reset --hard main@{2}'], why: 'main@{2} remonte deux mouvements : main était alors sur B. La position juste avant le reset, c’est main@{1}.' },
+      { commands: ['reset --hard main@{3}'], why: 'main@{3} remonte trois mouvements, quand main n’avait que A : rien ne bouge.' },
+    ],
+    brief: 'main a été reculée jusqu’à A ; B et C attendent sur la voie de garage. Ordre : reset --hard main@{1}. Quel plateau ?',
+    tutorial: [
+      { title: 'Lire le registre', text: 'Le registre numérote les positions passées d’une voie, de la plus récente à la plus ancienne : main@{0} est la position actuelle, main@{1} celle d’avant le dernier mouvement, et ainsi de suite.' },
+      { title: 'Chaque mouvement compte', text: 'Un commit, un reset, un merge : tout ce qui déplace la voie ajoute une ligne au registre. `git reflog` les affiche.', example: ['commit'], run: ['commit'] },
+    ],
+    learn: 'voie@{n} désigne la position de la voie n mouvements plus tôt : git reflog les liste.',
+  },
+  {
     id: 'soft-ou-hard', line: 5, title: 'Soft ou hard ?', type: 'predict', difficulty: 3, train: 'infra',
     start: ['commit', 'commit', 'commit', 'commit'], answer: ['reset --soft HEAD~2', 'commit'],
     wrong: [
@@ -293,6 +412,24 @@ export const stations: Station[] = [
       { title: 'Deux façons de reculer', text: '--hard recule la voie et envoie les voitures retirées sur la voie de garage. --soft recule la voie mais laisse les voitures dételées sur le quai, prêtes à être soudées.', example: ['commit', 'commit', 'commit'], run: ['reset --hard HEAD~2'] },
     ],
     learn: 'reset --soft recule la voie mais garde les changements : le commit suivant les soude.',
+  },
+  {
+    id: 'push-force', line: 5, title: 'Le push forcé', type: 'rules', difficulty: 4, train: 'fret', forceForbidden: true,
+    start: ['commit', 'commit', 'push', 'commit', '_coll', 'push --force'], par: 2,
+    rules: [
+      { text: 'origin/main contient de nouveau la voiture D du collègue', check: contains('origin/main', 'D') },
+      { text: 'origin/main contient toujours votre voiture C', check: contains('origin/main', 'C') },
+      { text: 'Aucune voiture de jonction', check: noMerge('origin/main') },
+      { text: 'main et origin/main identiques', check: same('main') },
+    ],
+    brief: 'Vous avez forcé le push : la voiture D du collègue a quitté origin et attend sur la voie de garage. Rendez-la-lui, sans forcer cette fois.',
+    tutorial: [
+      { title: 'Ce que le push forcé efface', text: '`git push --force` remplace origin/main par votre main, même si des voitures du collègue s’y trouvaient : elles partent sur la voie de garage. Ici, forcer est désormais interdit.', example: ['commit', 'push', 'commit', '_coll'], run: ['push --force'] },
+      { title: 'Rien n’est perdu', text: 'Une voiture de la voie de garage peut toujours être recopiée sur une voie : il suffit de la nommer par sa lettre.' },
+    ],
+    hint: 'cherry-pick D recopie la voiture du collègue derrière C, puis push.',
+    learn: 'git cherry-pick D\ngit push',
+    solution: ['cherry-pick D', 'push'],
   },
   {
     id: 'livraison-du-vendredi', line: 5, title: 'La livraison du vendredi', type: 'rules', difficulty: 5, train: 'infra',
