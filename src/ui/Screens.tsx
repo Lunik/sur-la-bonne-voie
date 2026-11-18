@@ -7,6 +7,8 @@ import { Yard } from './Yard.tsx';
 
 const heroBoard = build(['commit', 'commit', 'switch -c feature', 'commit', 'commit', 'switch main', 'commit', 'switch feature', 'rebase main']);
 const lineColor = (line: number) => ({ '--lc': `var(--n${line})` }) as CSSProperties;
+// Widest line, so a column fits a whole line before the map wraps or scrolls.
+const maxStops = { '--stops': Math.max(...lines.map((_, li) => stations.filter((s) => s.line === li + 1).length)) } as CSSProperties;
 
 export function Header() {
   return (
@@ -52,7 +54,7 @@ export function NetworkMap({ current, stars, isOpen, unlockAll, onUnlockAll, onP
           <input type="checkbox" checked={unlockAll} onChange={(e) => onUnlockAll(e.target.checked)} /> {strings.unlockAll}
         </label>
       </div>
-      <ol className="lines">
+      <ol className="lines" style={maxStops}>
         {lines.map((line, li) => (
           <li key={line.title} className="line" style={lineColor(li + 1)}>
             <span className="lname"><b aria-label={strings.lineBadge(li + 1)}>{li + 1}</b>{line.title}</span>

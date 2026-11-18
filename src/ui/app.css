@@ -33,8 +33,8 @@
 .tot { font-size: 14px; color: var(--muted); }
 .unlock { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); cursor: pointer; }
 .unlock input { width: 17px; height: 17px; accent-color: var(--ink); }
-.lines { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 18px 36px; }
-.line { display: grid; gap: 8px; min-width: 0; }
+.lines { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--stops) * 56px)), 1fr)); gap: 18px 36px; }
+.line { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
 .lname { display: flex; align-items: center; gap: 9px; font: 600 16px var(--f-display); }
 .lname b, .line-badge {
   display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 4px;
