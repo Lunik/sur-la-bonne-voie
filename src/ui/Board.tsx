@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { emptyRepo, orphans, type Commit, type RepoState, type Session, type Toast } from '../game/index.ts';
+import { emptyRepo, isPlayed, orphans, type Commit, type RepoState, type Session, type Toast } from '../game/index.ts';
 import { strings } from './strings.ts';
 import { fr } from './typography.ts';
 import { CarToken, LocoToken, Yard } from './Yard.tsx';
@@ -25,8 +25,8 @@ export function Board({ session, message }: BoardProps) {
   return (
     <>
       <div className="yard-box">
-        <Yard ref={yard} repo={repo} variant="live" leaving={session.status === 'won' && station.type !== 'predict'} />
-        {station.type !== 'predict' && <p className={`toast ${message.tone}`} aria-live="polite">{fr(message.text)}</p>}
+        <Yard ref={yard} repo={repo} variant="live" leaving={session.status === 'won' && isPlayed(station)} />
+        {(isPlayed(station) || station.type === 'enquete') && <p className={`toast ${message.tone}`} aria-live="polite">{fr(message.text)}</p>}
       </div>
       <Platform repo={repo} />
       <Siding repo={repo} />

@@ -1,13 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Step } from '../levels/index.ts';
-import { newSession, reduce, stars, stations, type Session } from './index.ts';
+import { isPlayed, newSession, reduce, stars, stations, type Session } from './index.ts';
 
 const station = (id: string) => stations.find((s) => s.id === id)!;
 const step = (s: Session, st: Step) => reduce(s, { type: 'step', step: st, message: 'ok' });
 test('keyboard solutions win every played station through the reducer', () => {
   for (const st of stations) {
-    if (st.type === 'predict') continue;
+    if (!isPlayed(st)) continue;
     let s = reduce(newSession(st), { type: 'start' });
     for (const x of st.solution) s = step(s, x);
     assert.equal(s.status, 'won', st.id);
