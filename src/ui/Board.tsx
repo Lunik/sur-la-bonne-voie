@@ -28,11 +28,28 @@ export function Board({ session, message }: BoardProps) {
         <Yard ref={yard} repo={repo} variant="live" leaving={session.status === 'won' && station.type !== 'predict'} />
         {station.type !== 'predict' && <p className={`toast ${message.tone}`} aria-live="polite">{fr(message.text)}</p>}
       </div>
+      <Platform repo={repo} />
       <Siding repo={repo} />
       <Legend line={station.line} />
     </>
   );
 }
+/** Cars unhooked by `reset --soft`/`--mixed` (the staged changes): the next commit welds them. */
+export function Platform({ repo }: { repo: RepoState }) {
+  if (!repo.pending.length) return null;
+  return (
+    <div className="casse platform">
+      <p>{strings.platform}</p>
+      {repo.pending.map((id) => (
+        <span key={id} title={strings.platformCar(repo.commits[id].label)}>
+          <CarToken repo={repo} commit={repo.commits[id]} />
+        </span>
+      ))}
+      <p>{strings.platformAfter[0]}<code>{strings.platformAfter[1]}</code>{strings.platformAfter[2]}</p>
+    </div>
+  );
+}
+
 /** Cars no track leads to any more (reset --hard, rebase): recoverable through reflog. */
 export function Siding({ repo }: { repo: RepoState }) {
   const siding = orphans(repo);

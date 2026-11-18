@@ -71,8 +71,9 @@ export const strings = {
   undo: 'Annuler',
   restart: 'Recommencer',
   hint: 'Indice',
-  platform: fr('Sur le quai, dételées : '),
-  platformAfter: ['. Un ', 'commit', ' les soude en une seule voiture.'] as const,
+  platform: fr('Quai (staged)'),
+  platformCar: (label: string) => `Voiture ${label} dételée sur le quai`,
+  platformAfter: ['Un ', 'commit', ' les soude en une seule voiture.'] as const,
 
   terminal: 'Terminal',
   moves: (n: number, budget?: number) => `${n} ${n > 1 ? 'manœuvres' : 'manœuvre'}${budget ? ` / ${budget}` : ''}`,

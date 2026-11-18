@@ -16,7 +16,7 @@ interface PostProps {
 
 /** The switch post: a terminal, the only way to move the train. */
 export function Post({ session, covered, hintShown, onHint, onUndo, onRestart, run }: PostProps) {
-  const { station, repo, log } = session;
+  const { station, log } = session;
   const term = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const [history, setHistory] = useState<string[]>([]);
@@ -33,7 +33,6 @@ export function Post({ session, covered, hintShown, onHint, onUndo, onRestart, r
   }, [typing]);
 
   if (station.type === 'predict') return null;
-  const pending = repo.pending.map((id) => repo.commits[id].label);
   const suggest = (c: string) => {
     setValue(c);
     input.current?.focus();
@@ -110,11 +109,6 @@ export function Post({ session, covered, hintShown, onHint, onUndo, onRestart, r
           </code>
         ))}
       </p>
-      {pending.length > 0 && (
-        <p className="quai">
-          {strings.platform}<b>{pending.join(', ')}</b>{strings.platformAfter[0]}<code>{strings.platformAfter[1]}</code>{strings.platformAfter[2]}
-        </p>
-      )}
       {hintShown && <p className="hint">{fr(station.hint)}</p>}
     </section>
   );
