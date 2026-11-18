@@ -31,6 +31,13 @@ export const messages = {
   forceForbidden: 'Refusé : des voyageurs sont à bord de ce train. Le push forcé est interdit sur ce réseau.',
   noRemote: (branch: string) => `Aucun quai distant pour la voie ${branch}.`,
   outOfLetters: 'Le dépôt est plein : plus de lettre disponible pour une nouvelle voiture.',
+  sealed: (labels: string[]) =>
+    `Refusé : ${labels.join(', ')} ${labels.length > 1 ? 'sont déjà parties' : 'est déjà partie'} sur origin, voiture plombée. Ne réécrivez pas l’histoire publiée : merge ou revert.`,
+  todoEmpty: (branch: string, base: string) => `Rien à réorganiser : ${branch} n’a aucune voiture après ${base}.`,
+  todoMissing: (labels: string[]) => `fatal: donnez la feuille de route, une action par voiture : ${labels.map((l) => `pick:${l}`).join(' ')}`,
+  todoBadLine: (op: string) => `fatal: ligne « ${op} » illisible. Actions : pick, squash, drop, suivies de « : » et de la voiture.`,
+  todoMismatch: (labels: string[]) => `fatal: la feuille de route doit citer chaque voiture une seule fois : ${labels.join(', ')}.`,
+  todoSquashFirst: 'fatal: la première voiture gardée ne peut pas être soudée (squash) : il n’y a rien avant elle.',
 
   // Output
   commitNew: (branch: string, label: string) => `[${branch} ${label}] nouvelle voiture accrochée`,
@@ -56,6 +63,16 @@ export const messages = {
   pushed: (branch: string) => `To origin · ${branch} -> ${branch} · le train part !`,
   pulled: (branch: string) => `From origin · origin/${branch} récupéré`,
   fetch: 'Le quai distant est déjà affiché sur le plateau : rien de nouveau.',
+  logEmpty: '(aucune voiture)',
+  showCar: (label: string, origin: string) => `voiture ${label} · née sur ${origin === 'collègue' ? 'origin' : origin}`,
+  showAuthor: (colleague: boolean) => `Author: ${colleague ? 'le collègue' : 'vous'}`,
+  showParent: (label: string) => `accrochée derrière ${label}`,
+  showMerge: (labels: string[]) => `voiture de jonction : relie ${labels.join(' et ')}`,
+  showRevert: (label: string) => `voiture inverse : annule l’effet de ${label}`,
+  showCargo: (cargo: string) => `chargement : ${cargo}`,
+  showNoCargo: 'chargement : rien à signaler',
+  gcSwept: (labels: string[]) => `Ramassage (git gc --prune=now) : ${labels.join(', ')} détruites, la voie de garage est vide.`,
+  gcNothing: 'Ramassage (git gc --prune=now) : voie de garage déjà vide.',
   reflogEntry: (branch: string, index: number, label: string) =>
     `${branch}@{${index}}: ${label}${index === 0 ? '   (position actuelle)' : ''}`,
   statusBranch: (branch: string) => `On branch ${branch}`,
@@ -63,5 +80,5 @@ export const messages = {
   statusDiverged: (ahead: number, behind: number, branch: string) =>
     `Votre voie : ${ahead} voiture(s) d’avance, ${behind} de retard sur origin/${branch}`,
   statusInSync: (branch: string) => `À jour avec origin/${branch}`,
-  help: (commands: string[]) => `Commandes : ${commands.join(' · ')} · switch · log · status · reflog`,
+  help: (commands: string[]) => `Commandes : ${commands.join(' · ')} · switch · log · show · status · reflog`,
 };
