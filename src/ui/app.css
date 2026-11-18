@@ -1,0 +1,326 @@
+/* Component styles. Tokens live in theme/theme.css.
+   Quiet surfaces, hairlines, no shadows: the yard is the one loud thing. */
+
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 32px; }
+.small { font-size: 14px; color: var(--muted); }
+
+/* ---------- Header ---------- */
+.top { display: grid; gap: 28px; padding-top: 24px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.logo { width: 30px; height: 30px; flex: none; }
+.logo-plate { fill: var(--ink); }
+.logo-rail { fill: none; stroke: var(--on-ink); stroke-width: 2.4; stroke-linecap: round; }
+.logo-signal { fill: var(--brand); }
+.brand-name { font: 700 19px/1 var(--f-display); }
+.brand-sub { font-size: 14px; color: var(--muted); }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 32px; align-items: end; }
+.hero-txt { display: grid; gap: 14px; padding-bottom: 12px; }
+.hero h1 { font-size: clamp(2.2rem, 4.8vw, 3.4rem); font-weight: 700; letter-spacing: -.01em; max-width: 13ch; }
+.hero-txt p { font-size: 17.5px; color: var(--ink-2); max-width: 46ch; }
+@media (max-width: 860px) { .hero { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Panels ---------- */
+.net, .goal, .panel, .yard-live, .opt {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+/* ---------- Network map ---------- */
+.net { padding: 18px 20px 14px; display: grid; gap: 16px; }
+.net-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+.net-head h2 { font-size: 20px; }
+.tot { font-size: 14px; color: var(--muted); }
+.unlock { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); cursor: pointer; }
+.unlock input { width: 17px; height: 17px; accent-color: var(--ink); }
+.lines { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 18px 36px; }
+.line { display: grid; gap: 8px; min-width: 0; }
+.lname { display: flex; align-items: center; gap: 9px; font: 600 16px var(--f-display); }
+.lname b, .line-badge {
+  display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 4px;
+  background: var(--lc); color: var(--on-line); font: 700 13px/1 var(--f-display);
+}
+.stations { display: flex; position: relative; overflow-x: auto; width: fit-content; max-width: 100%; padding: 2px 0 4px; }
+.stations::before { content: ""; position: absolute; left: 28px; right: 28px; top: 16px; height: 3px; background: var(--lc); }
+.station { position: relative; flex: none; width: 56px; display: grid; justify-items: center; gap: 1px; padding: 2px 0; background: none; border: 0; min-height: 44px; }
+.station .dot {
+  width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; z-index: 1;
+  background: var(--surface); border: 3px solid var(--lc); font: 600 13px/1 var(--f-display); color: var(--ink);
+  transition: background-color .2s, color .2s;
+}
+.station.done .dot { background: var(--lc); color: var(--on-line); }
+.station.cur .dot { outline: 2px solid var(--ink); outline-offset: 2px; }
+.station .sn { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.station .ss { font-size: 11px; line-height: 1; letter-spacing: .06em; color: var(--ink-2); }
+.station.locked { cursor: not-allowed; }
+.station.locked .dot { border-color: var(--line-2); color: var(--line-2); background: var(--sunk); }
+.station.locked .ss { color: var(--muted); letter-spacing: 0; }
+
+/* ---------- Station sheet ---------- */
+.board { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px 36px; padding-top: 22px; border-top: 3px solid var(--lc); }
+@media (max-width: 800px) { .board { grid-template-columns: minmax(0, 1fr); } }
+.board-main { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.where { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--muted); }
+.board h2 { font-size: clamp(1.9rem, 3.8vw, 2.6rem); font-weight: 700; letter-spacing: -.01em; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 13.5px; font-weight: 500; color: var(--ink-2); border: 1px solid var(--line-2); border-radius: 4px; padding: 1px 8px; }
+.brief { font-size: 17px; color: var(--ink-2); max-width: 60ch; }
+.facts { display: flex; flex-wrap: wrap; gap: 10px 32px; margin: 4px 0 0; }
+.facts dt { font-size: 13px; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 600; font-size: 16px; min-height: 24px; display: flex; align-items: center; }
+.facts .hot dd { color: var(--danger); }
+.lamps { display: inline-flex; gap: 3px; align-items: flex-end; height: 16px; }
+.lamps i { width: 5px; border-radius: 1px; background: var(--line-2); }
+.lamps i:nth-child(1) { height: 5px; } .lamps i:nth-child(2) { height: 8px; } .lamps i:nth-child(3) { height: 11px; }
+.lamps i:nth-child(4) { height: 14px; } .lamps i:nth-child(5) { height: 16px; }
+.lamps i.on { background: var(--ink); }
+.goal { padding: 14px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; overflow-x: auto; }
+.goal h3, .prono h3 { font-size: 16px; }
+.orders { margin: 0; padding-left: 1.5em; font: 14px/1.9 var(--f-mono); color: var(--ink); }
+.rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 15px; }
+.rules li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; color: var(--ink-2); }
+.rules .ck { width: 16px; height: 16px; margin-top: 3px; border-radius: 50%; border: 1.5px solid var(--line-2); position: relative; transition: background-color .25s, border-color .25s; }
+.rules li.ok { color: var(--ink); }
+.rules li.ok .ck { background: var(--good); border-color: var(--good); }
+.rules li.ok .ck::after { content: ""; position: absolute; left: 4.5px; top: 1.5px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+
+/* ---------- Yard ---------- */
+.yard { --k: 1; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: calc(16px * var(--k)); align-items: start; }
+.yard-live { padding: 14px 0 10px; }
+.yard-mini { --k: .68; }
+.yard-deco { display: block; }
+.signs { width: 118px; padding-left: 14px; }
+.yard-mini .signs { width: 70px; padding-left: 0; }
+.sign-cell { height: calc(88px * var(--k)); display: flex; align-items: flex-start; padding-top: calc(24px * var(--k)); }
+.sign {
+  display: grid; gap: 1px; width: 100%; text-align: left; border: 0; border-radius: 4px; padding: 6px 9px;
+  background: var(--ink); color: var(--on-ink);
+  box-shadow: inset 0 0 0 2px var(--ink), inset 0 0 0 3px color-mix(in srgb, var(--on-ink) 45%, transparent);
+  transition: box-shadow .2s;
+}
+.sign-name { font: 600 15px/1.15 var(--f-display); overflow-wrap: anywhere; }
+.sign small { font-size: 11.5px; line-height: 1.2; color: color-mix(in srgb, var(--on-ink) 70%, transparent); }
+.sign.remote { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line-2); }
+.sign.remote small { color: var(--muted); }
+.yard-mini .sign { padding: 3px 6px; }
+.yard-mini .sign-name { font-size: 12px; }
+.tracks { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+.tracks svg { display: block; overflow: visible; }
+.yard-deco .tracks { overflow: hidden; }
+.yard-deco svg { width: 100%; height: auto; }
+
+.rail { fill: none; stroke: var(--rail); stroke-width: 2; stroke-linecap: round; }
+.sleepers { fill: none; stroke: var(--sleeper); stroke-width: 5; stroke-dasharray: 3 6; }
+.track.remote .rail { stroke-dasharray: 9 6; }
+.track.remote .sleepers { opacity: .45; }
+.buffer rect { fill: var(--bogie); }
+.buffer circle { fill: var(--danger); }
+
+.car-body { --liv: var(--l-main); }
+.car-body.c1 { --liv: var(--l-feat); }
+.car-body.c2 { --liv: var(--l-hot); }
+.car-body.c3 { --liv: var(--l-coll); }
+.car-body.merge { --liv: var(--l-merge); }
+.car-body.revert { --liv: var(--l-rev); }
+.car-body .body, .loco-body .body { fill: var(--car); stroke: var(--car-edge); stroke-width: 1.25; }
+.roof { fill: var(--roof); }
+.car-body .pane, .loco-body .pane { fill: var(--glass); }
+.car-body .stripe { fill: var(--liv); }
+/* Train families: body tint and accent, before the revert rules so a revert car stays dark. */
+.trim { fill: var(--t-trim); }
+.vent { fill: var(--t-vent); opacity: .55; }
+.rib { fill: none; stroke: var(--car-edge); stroke-width: 1; }
+.glint { fill: var(--glint); }
+.door { fill: var(--t-door); }
+.door.acc { fill: var(--acc, var(--t-door)); }
+.door-line { fill: none; stroke: var(--t-trim); stroke-width: .8; opacity: .6; }
+.seam, .louvre { fill: none; stroke: var(--t-trim); stroke-width: .6; opacity: .55; }
+.wiper { fill: none; stroke: var(--t-trim); stroke-width: .9; stroke-linecap: round; }
+.gangway { fill: var(--t-trim); }
+.buffer-head, .tank { fill: var(--bogie); }
+.rod { fill: none; stroke: var(--bogie); stroke-width: .9; }
+.hub, .spring, .insul { fill: var(--roof); }
+.pan { fill: var(--bogie); }
+.t-francilien { --acc: var(--t-idf); }
+.t-regiolis { --acc: var(--t-ter); }
+.t-agc { --acc: var(--t-agc); }
+.t-corail { --acc: var(--t-sybic); }
+.t-tgv-m { --acc: var(--t-pearl-band); }
+.t-mi09 { --acc: var(--t-rer); }
+.t-x73500 { --acc: var(--t-ater); }
+.t-coradia { --acc: var(--t-ic); }
+.t-tgv-duplex { --acc: var(--t-carmin); }
+.t-fret { --acc: var(--t-fret); }
+.accent { fill: var(--acc); }
+.t-corail .body { fill: var(--t-steel); }
+.loco-body.t-corail .body, .t-tgv .body, .t-tgv-duplex .body { fill: var(--t-silver); }
+.t-tgv-m .body { fill: var(--t-pearl); }
+.car-body .label { font: 600 16px var(--f-display); fill: var(--car-ink); text-anchor: middle; dominant-baseline: central; }
+.car-body .label.long { font-size: 12.5px; }
+.car-body .sub { font-size: 10px; fill: var(--car-ink); opacity: .65; }
+.car-body.revert .body { fill: var(--rev-car); stroke: var(--rev-car); }
+.car-body.revert .label { fill: var(--rev-label); }
+.car-body.revert .pane { fill: color-mix(in srgb, var(--rev-label) 22%, var(--rev-car)); }
+.coupler { fill: var(--bogie); }
+.frame { fill: var(--t-trim); }
+.wheel { fill: var(--bogie); stroke: var(--surface); stroke-width: 1.5; }
+.cargo { fill: var(--danger); stroke: var(--surface); stroke-width: 1.5; }
+.gone circle { fill: var(--ink); }
+.gone path { fill: none; stroke: var(--on-ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.flag rect { fill: var(--ink); }
+.flag text { font: 500 10.5px var(--f-body); fill: var(--on-ink); text-anchor: middle; }
+.flag.remote rect { fill: var(--surface); stroke: var(--ink); stroke-dasharray: 3 2; }
+.flag.remote text { fill: var(--ink); }
+.loco-body .nose { fill: var(--brand); }
+.loco-body .panto { fill: none; stroke: var(--bogie); stroke-width: 1.2; stroke-linejoin: round; stroke-linecap: round; }
+.loco-body .head { font: 600 9px var(--f-display); letter-spacing: .1em; fill: var(--car-ink); text-anchor: middle; }
+.loco-body .lamp { fill: var(--lamp); }
+
+/* Motion: rolling and coupling run in Yard.tsx (Web Animations); the train leaves with an accelerating pull. */
+/* The pull waits for the last car to couple. A keyframe, not a transition, so a car that
+   joined the train in the winning move leaves with it instead of jumping off screen. */
+.yard-live .depart { animation: depart 1.6s cubic-bezier(.55, 0, .9, .35) var(--move) both; }
+@keyframes depart { to { translate: 1800px 0; } }
+.roll-in { animation: roll-in 1.7s cubic-bezier(.2, .75, .25, 1) .2s both; }
+/* The header train backs in from the open end of its own track. */
+@keyframes roll-in { from { translate: 640px 0; } to { translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .yard-live .depart, .roll-in { animation: none; }
+}
+
+.car-token { display: block; width: 82px; overflow: visible; }
+
+/* ---------- Siding, legend ---------- */
+.casse { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; border: 1px dashed var(--line-2); background: var(--sunk); border-radius: 8px; padding: 8px 14px; }
+.casse p { font-size: 14px; color: var(--muted); margin-right: 6px; }
+.platform { border-style: solid; border-color: var(--ink); background: var(--surface); }
+.platform .car-token { width: 66px; }
+.platform code { font: 0.92em var(--f-mono); background: var(--sunk); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
+.gw { padding: 4px; opacity: .6; filter: grayscale(.6); }
+.gw .car-token { width: 58px; }
+.legend { list-style: none; margin: -14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 14px; color: var(--muted); }
+.legend li { display: inline-flex; align-items: center; gap: 8px; }
+.legend .car-token { width: 40px; }
+.loco-token { display: block; width: 46px; overflow: visible; }
+
+/* ---------- Prediction ---------- */
+.prono { display: grid; gap: 14px; }
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.opt { padding: 12px 14px 14px; text-align: left; display: grid; gap: 8px; min-width: 0; overflow: hidden; transition: border-color .15s; }
+.opt:hover:not(:disabled) { border-color: var(--ink); }
+.opt .ol { font: 600 15px var(--f-display); }
+.opt.no { border-color: var(--danger); opacity: .6; cursor: not-allowed; }
+.opt.yes { border-color: var(--good); box-shadow: inset 0 0 0 1px var(--good); }
+.opt .why { font-size: 14px; color: var(--danger); }
+.opt .yard-mini { --k: .55; }
+.opt .yard-mini .tracks { overflow-x: auto; }
+
+/* ---------- Switch post and terminal ---------- */
+.panel { padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; min-width: 0; }
+.panel h3 { font-size: 18px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn {
+  position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 8px 14px;
+  border: 1px solid var(--ink); border-radius: 6px; background: var(--ink); color: var(--on-ink); font: 600 15px var(--f-display);
+  transition: background-color .15s, border-color .15s;
+}
+.btn:active { translate: 0 1px; }
+.btn small { font: 12px var(--f-mono); opacity: .7; }
+.btn.quiet { background: var(--surface); color: var(--ink); border-color: var(--line-2); }
+.btn.quiet:hover { border-color: var(--ink); }
+.btn.sm, .stage .btn.sm { min-height: 30px; padding: 3px 10px; font-size: 14px; }
+.panel h3 .row { gap: 6px; }
+.yard-box { position: relative; display: grid; gap: 6px; }
+.yard-box .toast { padding: 0 4px; }
+.hint { border-left: 3px solid var(--ink); padding: 2px 0 2px 12px; color: var(--ink-2); }
+.toast { min-height: 1.5em; font-weight: 500; }
+.toast.good { color: var(--good); } .toast.bad { color: var(--danger); } .toast.info { color: var(--muted); }
+.term {
+  background: var(--sunk); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px;
+  font: 13px/1.7 var(--f-mono); color: var(--ink-2); min-height: 10em; max-height: 15em; overflow: auto; white-space: pre-wrap; word-break: break-word;
+}
+.term .o { color: var(--muted); }
+.term .p { color: var(--ink); font-weight: 600; }
+.term .e { color: var(--danger); }
+.cli { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--surface); padding: 4px 4px 4px 12px; }
+.cli:focus-within { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.cli span { font: 600 14px var(--f-mono); color: var(--ink); white-space: nowrap; }
+.cli input { flex: 1; min-width: 0; min-height: 36px; background: transparent; border: 0; outline: none; color: var(--ink); font: 14px var(--f-mono); }
+.cli input::placeholder { color: var(--muted); }
+.cli button { border: 0; border-radius: 4px; background: var(--ink); color: var(--on-ink); font: 600 14px var(--f-display); padding: 6px 12px; min-height: 36px; }
+.help { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.help code { background: var(--surface); border: 1px solid var(--line-2); border-radius: 4px; padding: 2px 7px; cursor: pointer; color: var(--ink); }
+.help code:hover { border-color: var(--ink); }
+
+/* ---------- Dialogs: native <dialog>, the card is the dialog itself ---------- */
+.win {
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 28px;
+  max-width: min(440px, calc(100vw - 32px)); width: 100%; display: grid; gap: 12px; text-align: center;
+  box-shadow: 0 24px 60px rgba(28, 43, 58, .18);
+}
+.win:not([open]) { display: none; }
+.win::backdrop { background: rgba(28, 43, 58, .32); }
+.win h2 { font-size: 2rem; font-weight: 700; }
+.win h2.ko { color: var(--danger); }
+.win .stars { font-size: 2rem; letter-spacing: .12em; color: var(--brand); line-height: 1.1; }
+.win .learn { background: var(--sunk); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; font: 13.5px/1.65 var(--f-mono); text-align: left; white-space: pre-wrap; color: var(--ink); }
+.win .row { justify-content: center; }
+.replay { width: fit-content; }
+.win.tuto { max-width: min(600px, calc(100vw - 32px)); text-align: left; }
+.win.tuto h2 { font-size: 1.6rem; }
+.win.tuto .row { justify-content: flex-end; }
+.tuto figure { margin: 0; display: grid; gap: 6px; }
+.tuto .yard-live { padding-left: 10px; }
+.tuto figcaption { font-size: 13px; color: var(--muted); }
+.tuto code { font: 0.92em var(--f-mono); background: var(--sunk); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
+@media (prefers-reduced-motion: no-preference) {
+  .win[open] { animation: rise .24s var(--ease-move); }
+  .win[open]::backdrop { animation: fade .24s ease-out; }
+}
+@keyframes rise { from { opacity: 0; translate: 0 10px; } }
+@keyframes fade { from { opacity: 0; } }
+
+/* ---------- Stage: the exercise, in one screen on wide displays ---------- */
+.stage { display: grid; gap: 32px; scroll-margin-top: 12px; }
+.stage-main, .stage-side { display: grid; gap: 32px; align-content: start; min-width: 0; }
+@media (min-width: 1100px) {
+  .wrap { max-width: 1280px; }
+  .stage { grid-template-columns: minmax(0, 1fr) 390px; gap: 20px; align-items: start; }
+  .stage-main, .stage-side { gap: 14px; }
+  .stage .legend { margin: 0; font-size: 12.5px; gap: 2px 14px; }
+  .stage .legend .car-token { width: 34px; }
+  /* Four tracks or more: a smaller yard keeps the exercise within the screen. */
+  .stage .yard-live:has(.sign-cell:nth-child(4)) { --k: .88; }
+  .stage .board { gap: 12px 24px; padding-top: 14px; }
+  .stage .board h2 { font-size: 2rem; }
+  .stage .brief { font-size: 16px; }
+  .stage .panel { padding: 12px 14px; gap: 8px; }
+  .stage .panel h3 { font-size: 16px; }
+  .stage .row { gap: 6px; }
+  .stage .btn { min-height: 32px; padding: 4px 8px; gap: 6px; font-size: 13.5px; }
+  .stage .btn small { font-size: 11px; }
+  .stage .term { min-height: 14em; max-height: 22em; padding: 8px 12px; }
+  .stage .opts { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .stage .opt { padding: 8px 12px 10px; gap: 4px; }
+  /* Feedback floats in the empty bottom-right corner of the yard. */
+  .stage .yard-box .toast {
+    position: absolute; right: 12px; bottom: 8px; max-width: 46%; padding: 4px 10px; border-radius: 6px; text-align: right;
+    font-size: 14px; background: color-mix(in srgb, var(--surface) 92%, transparent); pointer-events: none;
+  }
+  .stage .goal { padding: 10px 14px; gap: 6px; }
+  .stage .rules { gap: 4px; font-size: 14px; }
+  .stage .help { gap: 4px; font-size: 12px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; white-space: nowrap; }
+  .stage .help code { padding: 1px 5px; }
+}
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 640px) {
+  .wrap { gap: 26px; }
+  .yard-live { --k: .78; }
+  .signs { width: 90px; padding-left: 10px; }
+  .sign { padding: 5px 7px; }
+  .sign-name { font-size: 13.5px; }
+  .sign small { font-size: 10.5px; }
+  .station { width: 52px; }
+  .stations::before { left: 26px; right: 26px; }
+}

@@ -57,6 +57,19 @@ export class EngineError extends Error {}
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const PRIME = '′';
 const DEFAULT_HELP = ['commit', 'branch', 'merge', 'rebase', 'cherry-pick', 'reset', 'revert', 'push', 'pull'];
+/** Short names typed in the terminal, resolved before gating. Mirrors the owner's git aliases that map to a command this engine knows. */
+const ALIASES: Record<string, string> = {
+  checkout: 'switch',
+  ck: 'switch',
+  co: 'commit',
+  br: 'branch',
+  mr: 'merge',
+  cp: 'cherry-pick',
+  ph: 'push',
+  pl: 'pull',
+  lo: 'log',
+  st: 'status',
+};
 
 function fail(message: string): never {
   throw new EngineError(message);
@@ -223,9 +236,8 @@ function gate(s: RepoState, cmd: string) {
 function run(s: RepoState, line: string): { output: string[]; move: MoveKind | null } {
   const args = line.trim().replace(/^git\s+/, '').split(/\s+/).filter(Boolean);
   const out: string[] = [];
-  let cmd = args[0];
-  if (!cmd) return { output: out, move: null };
-  if (cmd === 'checkout') cmd = 'switch';
+  if (!args[0]) return { output: out, move: null };
+  const cmd = own(ALIASES, args[0]) ?? args[0];
   const head = s.head;
   const arg = args[1];
 

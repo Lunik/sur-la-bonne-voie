@@ -82,7 +82,7 @@ Statut au 17/11/2026 : **fait, en attente de relecture.** `src/levels/index.ts` 
 
 Écarts avec la liste ci-dessous :
 
-- `type` vaut `compo`, `rules` ou `predict` ; un pronostic porte `answer` et `wrong` (deux `{ commands, why }`). Champs ajoutés : `id` (identifiant stable, clé de progression), `brief`, `learn`, `cargo`.
+- `type` vaut `compo`, `rules` ou `predict` ; un pronostic porte `answer` et `wrong` (deux `{ commands, why }`). Champs ajoutés : `id` (identifiant stable, clé de progression), `brief`, `learn`, `cargo`, `tutorial` (pages montrées avant la station : notion, plateau d’exemple avant et après `run` ; la validation refuse un tutoriel vide ou qui montre la solution).
 - `noMerge` / `noForce` deviennent `fastForwardOnly` / `forceForbidden`, les noms du moteur : `noMerge` est déjà le nom d’un prédicat de règle.
 - `tools` devient `tool` (outil sélectionné à l’arrivée) ; les outils débloqués viennent de la ligne.
 - Le test exige `solution` = `par` coups exactement (pas ≤), pour repérer aussi un `par` trop généreux. Il vérifie aussi qu’aucune station n’est gagnée dès le départ.
@@ -100,6 +100,21 @@ Critère de sortie : 21 stations portées, test de contenu vert ; ajouter une st
 ## Jalon 3 — Interface
 
 But : reconstruire l’interface du prototype en composants React qui lisent l’état de la session. Livrable : une station jouable de bout en bout, puis toutes.
+
+Statut au 17/11/2026 : **fait, en attente de relecture** (branche `jalon-3`, partie de `jalon-2`). `src/game/` (session, gestes), `src/ui/` (composants, `layout.ts`, `typography.ts`, `progress.ts`, `strings.ts`, `app.css`), `src/theme/theme.css` (tous les jetons du prototype).
+
+Vérifications : tests `node:test` (chaque station gagnée en `par` au clavier par le réducteur, 15 stations gagnées par leurs gestes, échec de budget, chrono, pronostic, atomicité d’un geste) ; dans Chrome, stations gagnées pour six types sur sept (composition, règlement, pronostic, panne, clavier seul, contre la montre), le budget serré vérifié par son échec (fenêtre, annulation) ; gestes glisser, toucher puis toucher, soudure, voiture inverse, voie de garage ; Échap répété sans effet sur les fenêtres ; clair et sombre, pas de défilement horizontal à 390 et 400 px, console sans erreur.
+
+Écarts avec la liste ci-dessous :
+
+- Identité visuelle refaite après le portage (demande du propriétaire, interface jugée trop « générée ») : thème clair épuré, Barlow (signalétique ferroviaire) et IBM Plex Mono pour le terminal, pancartes en plaques émaillées, jaune signal réservé à HEAD (nez de la motrice). Le critère « fidèle au prototype » ne vaut donc plus pour le visuel, seulement pour le comportement.
+- Plateau en SVG pur (voies avec traverses, aiguillages, voitures, motrice redessinées) ; `layout(state)` reste pur et testé (`src/ui/layout.test.ts`).
+- Déplacements animés, sans jamais quitter les rails : une voiture ou la motrice ne roule que le long de sa voie ; une voiture nouvelle ou recréée (rebase, cherry-pick, soudure) est attelée sur place ; la motrice qui change de voie avance, s’efface et réapparaît sur la nouvelle voie. Butoir à gauche, voie ouverte à droite : le train part vers origin en accélérant. Dans l’en-tête, le train recule sur sa voie depuis la sortie. Le plateau suit la motrice sur un écran étroit. Tout est coupé avec `prefers-reduced-motion`.
+- Les gestes sont traduits par `game/gestures.ts` (pur, testé) ; un geste refusé à mi-chemin est annulé en entier (`levels.runStep`, partagé avec le test de contenu).
+- Pas de contexte React : l’état descend par props depuis `App.tsx`.
+- Fenêtres en `<dialog>` natif ; Échap ignoré pour ne pas laisser le joueur sans issue.
+- Progression sous `gare3.progress`, étoiles par `id` de station ; « Tout débloquer » gardé pour la parité (retrait au jalon 4).
+- Le « doigt » n’a été vérifié qu’en simulation (événements pointeur) ; essai sur appareil réel au jalon 5. Les voitures ne sont toujours pas focalisables : au clavier, on joue par le terminal (dette connue, jalon 5).
 
 1. **Thème** : reprendre tels quels les jetons `:root` du prototype (couleurs, livrées, mode sombre), les trois polices et la gouttière mobile.
 2. **Plateau** (`<Yard>`) : calcul de disposition pur (`layout(state)` → positions), rendu SVG des voies, aiguillages, butoirs ; voitures et motrice en composants. Le même composant sert au plateau, à l’objectif miniature, aux pronostics et à l’illustration d’en-tête.
@@ -169,7 +184,7 @@ Critère de sortie : nom et domaine arrêtés, page d’accueil en ligne, premi�
 Décisions à prendre par le propriétaire, avant ou pendant le jalon 0 :
 
 - [ ] **JavaScript + JSDoc ou TypeScript ?** Recommandation : TypeScript pour le moteur et le schéma de station, où les types attrapent le plus d’erreurs.
-- [ ] **Rendu du plateau : SVG pur ou HTML + SVG comme le prototype ?** Recommandation : SVG pur, plus simple à mettre à l’échelle et à tester.
+- [x] **Rendu du plateau : SVG pur ou HTML + SVG comme le prototype ?** SVG pur, retenu à la refonte visuelle du jalon 3.
 - [ ] **Langue de l’interface** : français seul pour la 1.0, anglais plus tard ?
 - [ ] **Nom du jeu** : nécessaire au plus tard au jalon 7, utile dès maintenant pour le dépôt et le domaine.
 

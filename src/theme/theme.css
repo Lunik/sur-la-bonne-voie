@@ -1,27 +1,106 @@
-/* Design tokens, same names and values as reference/artifact.html.
-   Jalon 3 ports the full :root set (liveries, board, cars). */
+/* Design tokens. Railway signage: cool ballast grey, white surfaces, enamel-plate ink,
+   steel rails, and one signal yellow kept for HEAD (the locomotive's yellow nose). */
 :root {
-  --bg: #f3f4f6;
-  --ink: #0f1b2a;
-  --brand: #ffc21a;
-  --f-display: "Inter Tight", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --bg: #f1f3f2;
+  --surface: #ffffff;
+  --sunk: #e8ebea;
+  --ink: #1c2b3a;
+  --ink-2: #3d4b59;
+  --muted: #66727e;
+  --line: #dde1e0;
+  --line-2: #c5cbcc;
+  --on-ink: #ffffff;
+
+  --brand: #f2b705;
+  --on-brand: #1c2b3a;
+  --danger: #d23a2e;
+  --good: #1d7f4e;
+  --focus: #1c2b3a;
+
+  /* Track */
+  --rail: #8a939b;
+  --sleeper: #cdd2d3;
+
+  /* Rolling stock */
+  --car: #ffffff;
+  --car-ink: #1c2b3a;
+  --car-edge: #9aa3ab;
+  --roof: #c9cfd3;
+  --glass: #2b3a49;
+  --bogie: #3d4b59;
+  --lamp: #fff3c4;
+  --rev-car: #2b3a49;
+  --rev-label: #ffffff;
+  --l-main: #2f5bd3;
+  --l-feat: #e0681d;
+  --l-hot: #139a78;
+  --l-coll: #c4407e;
+  --l-merge: #6d4fd8;
+  --l-rev: #8a939b;
+  /* Train families (ui/trains.tsx): bodies stay pale so the branch stripe stays the loud colour;
+     the locomotive carries the family accent. */
+  --t-trim: #2a333b;
+  --t-door: #aeb6bd;
+  --glint: rgba(255, 255, 255, .28);
+  --t-vent: #8a939b;
+  --t-idf: #3c9ad6;
+  --t-ter: #24539f;
+  --t-agc: #b8263a;
+  --t-steel: #d3d8dc;
+  --t-sybic: #3d5f8f;
+  --t-silver: #e2e5e8;
+  --t-pearl: #f6f4ef;
+  --t-pearl-band: #9aa2a9;
+  --t-rer: #4aa8de;
+  --t-ater: #1d63b8;
+  --t-ic: #b5246b;
+  --t-carmin: #a8324f;
+  --t-fret: #13895a;
+
+  /* Network lines */
+  --n1: #2f5bd3; --n2: #d4610f; --n3: #128a6c; --n4: #6d4fd8; --n5: #c9372c;
+  --on-line: #ffffff;
+
+  --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-display: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --move: .55s;
+  color-scheme: light;
+  --ease-move: cubic-bezier(.25, .8, .25, 1);
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg: #0a0f16; --ink: #e8edf3; color-scheme: dark; }
+
+/* Light is the default; dark is opt-in through data-theme="dark". */
+:root[data-theme="dark"] {
+  --bg: #12181e; --surface: #1a222a; --sunk: #151c23; --ink: #e6ebef; --ink-2: #c3ccd3; --muted: #93a0ab;
+  --line: #2a343e; --line-2: #3a4652; --on-ink: #12181e; --focus: #f2b705;
+  --rail: #7d8891; --sleeper: #34404b;
+  --car: #e9edf0; --car-edge: #9aa5ae; --roof: #b9c2c9; --glass: #24313d; --bogie: #57636e; --rev-car: #3b4957;
+  --t-trim: #44525f; --t-door: #9aa5ae; --t-steel: #c4cad0; --t-silver: #d6dbdf; --t-pearl: #ebe9e4;
+  --n1: #6a8ff0; --n2: #f08a3c; --n3: #3cc29e; --n4: #9d84f2; --n5: #ef6a5f; --on-line: #12181e;
+  --good: #4fc982; --danger: #f06a5e;
+  color-scheme: dark;
 }
-:root[data-theme="dark"] { --bg: #0a0f16; --ink: #e8edf3; color-scheme: dark; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --move: 0s; }
+}
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body {
   margin: 0;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
   background: var(--bg);
   color: var(--ink);
-  font: 15.5px/1.55 var(--f-body);
+  font: 400 16px/1.5 var(--f-body);
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 80px;
 }
-h1 { font-family: var(--f-display); }
-pre, input { font-family: var(--f-mono); }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; line-height: 1.1; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+code { font-family: var(--f-mono); font-size: .88em; }

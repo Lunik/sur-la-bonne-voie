@@ -1,30 +1,32 @@
 // Station schema, network lines, win rules and content validation. The stations themselves are data: see stations.ts.
 import { ancestors, build, exec, sig, stripPrimes, tipOf, type Commit, type MatchMode, type RepoState } from '../engine/index.ts';
 
-/** Gestures and buttons of the board (jalon 3). */
-export type Tool = 'commit' | 'branch' | 'rebase' | 'merge' | 'cherry-pick' | 'squash' | 'revert' | 'push' | 'pull' | 'pull-rebase' | 'recover';
+/** Rolling stock drawn for a station (ui/trains.tsx). */
+export type Train =
+  | 'francilien' | 'mi09' | 'regio2n'
+  | 'regiolis' | 'agc' | 'x73500'
+  | 'corail' | 'coradia'
+  | 'tgv' | 'tgv-m' | 'tgv-duplex'
+  | 'infra' | 'fret';
 
 export interface Line {
   title: string;
   /** Gated engine commands this line teaches; a station allows those of its line and every line before. */
   commands: string[];
-  /** Tools this line unlocks, cumulative like `commands`. */
-  tools: Tool[];
   /** Clickable terminal suggestions. */
   suggestions: string[];
 }
 
 /** Network map, in play order. Line `n` of a station is `lines[n - 1]`. */
 export const lines: Line[] = [
-  { title: 'Le dépôt', commands: ['commit', 'branch'], tools: ['commit', 'branch'], suggestions: ['commit', 'switch -c feature', 'switch main', 'log'] },
-  { title: 'Les jonctions', commands: ['merge', 'rebase'], tools: ['rebase', 'merge'], suggestions: ['merge feature', 'switch feature', 'rebase main', 'log'] },
-  { title: 'Le tri', commands: ['cherry-pick', 'reset'], tools: ['cherry-pick', 'squash'], suggestions: ['cherry-pick D', 'reset --soft HEAD~3', 'commit', 'status'] },
-  { title: 'Les grandes lignes', commands: ['push', 'pull', 'revert'], tools: ['revert', 'push', 'pull', 'pull-rebase'], suggestions: ['push', 'pull --rebase', 'revert C', 'status'] },
-  { title: 'Les accidents', commands: [], tools: ['recover'], suggestions: ['reflog', 'reset --hard feature@{1}', 'cherry-pick F', 'push'] },
+  { title: 'Le dépôt', commands: ['commit', 'branch'], suggestions: ['commit', 'switch -c feature', 'switch main', 'log'] },
+  { title: 'Les jonctions', commands: ['merge', 'rebase'], suggestions: ['merge feature', 'switch feature', 'rebase main', 'log'] },
+  { title: 'Le tri', commands: ['cherry-pick', 'reset'], suggestions: ['cherry-pick D', 'reset --soft HEAD~3', 'commit', 'status'] },
+  { title: 'Les grandes lignes', commands: ['push', 'pull', 'revert'], suggestions: ['push', 'pull --rebase', 'revert C', 'status'] },
+  { title: 'Les accidents', commands: [], suggestions: ['reflog', 'reset --hard feature@{1}', 'cherry-pick F', 'push'] },
 ];
 
 export const allowedCommands = (line: number) => lines.slice(0, line).flatMap((l) => l.commands);
-export const allowedTools = (line: number) => lines.slice(0, line).flatMap((l) => l.tools);
 
 // ---------- Win rules ----------
 
@@ -52,8 +54,18 @@ export const same = (branch: string): Check => (s) => !!s.remote[branch] && s.re
 
 // ---------- Stations ----------
 
-/** A nested array is one gesture: it counts as a single move (e.g. squash = `reset --soft` + `commit`). */
+/** A nested array runs atomically and counts as a single move. */
 export type Step = string | string[];
+
+/** One page of the tutorial shown before a station. `backticks` mark Git commands. */
+export interface Lesson {
+  title: string;
+  text: string;
+  /** Example board, built like `start` with the station's cargo. */
+  example?: string[];
+  /** Commands run on the example: the page shows the board before and after them. */
+  run?: string[];
+}
 
 interface Common {
   /** Stable slug: progress is saved under it. */
@@ -62,15 +74,17 @@ interface Common {
   line: number;
   title: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
+  /** Rolling stock of the station: suburban on line 1, regional on 2, Intercités on 3, TGV on 4, works or freight train on 5. */
+  train: Train;
   brief: string;
+  /** Pages shown before the station: the notions it needs, never its solution. */
+  tutorial: Lesson[];
   /** Shown after the win: the Git commands (or idea) to remember. */
   learn: string;
   /** Commands that build the starting board (ungated). */
   start: string[];
   /** Car label → cargo, e.g. `{ D: 'debug' }`. */
   cargo?: Record<string, string>;
-  /** Tools flagged « NOUVEAU ». */
-  newTools?: Tool[];
 }
 
 interface Played extends Common {
@@ -80,13 +94,9 @@ interface Played extends Common {
   budget?: number;
   /** Seconds. */
   timeLimit?: number;
-  /** Gestures disabled. */
-  keyboardOnly?: boolean;
   /** Merge commits forbidden (« panne »): spread into the engine state. */
   fastForwardOnly?: boolean;
   forceForbidden?: boolean;
-  /** Tool selected on arrival. */
-  tool?: Tool;
   hint: string;
   solution: Step[];
   /** Target board, compared with `sig` on the target's branches. */
@@ -146,21 +156,66 @@ export function isWon(station: PlayedStation, s: RepoState): boolean {
   return (station.rules ?? []).every((rule) => rule.check(s));
 }
 
+/** What the terminal shows for one command of a step. */
+export interface Echo {
+  command: string;
+  output: string[];
+}
+
+export type StepResult =
+  | { ok: true; state: RepoState; moves: number; transcript: Echo[] }
+  | { ok: false; command: string; error: string; transcript: Echo[] };
+
+/** Runs one step atomically: if any command is refused, the whole step is dropped. A nested step counts as one move at most. */
+export function runStep(state: RepoState, step: Step): StepResult {
+  const transcript: Echo[] = [];
+  let count = 0;
+  for (const command of Array.isArray(step) ? step : [step]) {
+    const result = exec(state, command);
+    if (!result.ok) return { ok: false, command, error: result.error, transcript };
+    transcript.push({ command, output: result.output });
+    state = result.state;
+    if (result.move) count++;
+  }
+  return { ok: true, state, moves: Array.isArray(step) ? Math.min(count, 1) : count, transcript };
+}
+
 /** Plays steps from the start board; throws on a refused command. */
 export function play(station: PlayedStation, steps: Step[]): { state: RepoState; moves: number } {
   let state = startBoard(station);
   let moves = 0;
   for (const step of steps) {
-    let count = 0;
-    for (const line of Array.isArray(step) ? step : [step]) {
-      const result = exec(state, line);
-      if (!result.ok) throw new Error(`« ${line} » refusée : ${result.error}`);
-      state = result.state;
-      if (result.move) count++;
-    }
-    moves += Array.isArray(step) ? Math.min(count, 1) : count;
+    const result = runStep(state, step);
+    if (!result.ok) throw new Error(`« ${result.command} » refusée : ${result.error}`);
+    state = result.state;
+    moves += result.moves;
   }
   return { state, moves };
+}
+
+/** Boards of a lesson: before, then after `run` (null without example or run). */
+export function lessonBoards(station: Station, lesson: Lesson): [RepoState | null, RepoState | null] {
+  if (!lesson.example) return [null, null];
+  const before = build(lesson.example, station.cargo);
+  return [before, lesson.run ? build(lesson.run, station.cargo, before) : null];
+}
+
+/** A lesson must not show the board the player is asked to reach or to predict. */
+function tutorialErrors(station: Station): string[] {
+  if (!station.tutorial.length) return ['tutoriel vide'];
+  const predict = station.type === 'predict';
+  const goal = predict ? predictBoards(station)[0] : station.target ? build(station.target, station.cargo) : null;
+  const mode = predict ? undefined : station.match;
+  return station.tutorial.flatMap((lesson) => {
+    if (lesson.run && !lesson.example) return [`tutoriel « ${lesson.title} » : run sans example`];
+    const [before, after] = lessonBoards(station, lesson);
+    const shown = [before, after].filter((b) => b !== null);
+    if (!goal || !shown.length) return [];
+    return shown.some((b) => {
+      const names = [...new Set([...branchNames(b), ...branchNames(goal)])];
+      return sig(b, names, mode) === sig(goal, names, mode);
+    }) ? [`tutoriel « ${lesson.title} » : montre la solution`] : [];
+  });
 }
 
 function validateStation(station: Station): string[] {
@@ -168,11 +223,8 @@ function validateStation(station: Station): string[] {
   if (!Number.isInteger(station.line) || station.line < 1 || station.line > lines.length) {
     return [`ligne ${station.line} inconnue (1 à ${lines.length})`];
   }
-  const tools = allowedTools(station.line);
-  for (const tool of [...(station.newTools ?? []), ...('tool' in station && station.tool ? [station.tool] : [])]) {
-    if (!tools.includes(tool)) errors.push(`outil ${tool} pas encore débloqué à la ligne ${station.line}`);
-  }
   try {
+    errors.push(...tutorialErrors(station));
     if (station.type === 'predict') {
       if (station.wrong.length !== 2) errors.push(`${station.wrong.length} fausses réponses au lieu de 2`);
       const boards = predictBoards(station);
