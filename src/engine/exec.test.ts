@@ -25,6 +25,17 @@ test('the git prefix is optional', () => {
   assert.equal(ok(emptyRepo(), 'git commit').move, 'commit');
 });
 
+test('aliases run the full command, gate included', () => {
+  let state = ok(emptyRepo(), 'git co').state;
+  state = ok(state, 'ck -b feature').state;
+  state = ok(state, 'co').state;
+  state = ok(state, 'ck main').state;
+  assert.equal(ok(state, 'mr feature').move, ok(state, 'merge feature').move);
+  assert.deepEqual(ok(state, 'st').output, ok(state, 'status').output);
+  assert.deepEqual(ok(state, 'lo').output, ok(state, 'log').output);
+  assert.match(refused({ ...state, allowed: ['commit'] }, 'mr feature'), /merge/);
+});
+
 test('engine bugs propagate instead of becoming player errors', () => {
   const corrupt = { ...emptyRepo(), branches: { main: 'k404' } };
   assert.throws(() => exec(corrupt, 'log'), TypeError);
