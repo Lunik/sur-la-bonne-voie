@@ -323,6 +323,9 @@ export function play(station: PlayedStation, steps: Step[]): { state: RepoState;
 
 /** Read-only refusal of an inquiry: content text, so it lives with the stations. */
 export const INQUIRY_READ_ONLY = 'Enquête : on observe le plateau, on ne manœuvre pas. Essayez log ou show.';
+/** Short feedback on the yard; the full text sits in the goal panel (remark) or the terminal (happening). */
+export const PHASE_DONE = 'Remarque traitée : le contrôleur en a une autre.';
+export const HAPPENED = 'Un événement vient de survenir : voir le terminal.';
 
 export const sameCars = (a: string[], b: string[]) => a.length === b.length && [...a].sort().join() === [...b].sort().join();
 

@@ -70,7 +70,9 @@ test('events fire once the move count is reached, and again after an undo', () =
   let s = step(newSession(station('train-supplementaire')), 'merge feature');
   assert.equal(s.repo.commits[s.repo.remote.main].label, 'E');
   assert.equal(s.log.filter((l) => l.kind === 'event').length, 1);
-  assert.match(s.toast!.text, /collègue/);
+  assert.match(s.toast!.text, /événement/);
+  const event = s.log.find((l) => l.kind === 'event');
+  assert.ok(event && 'text' in event && /collègue/.test(event.text));
   assert.match(step(s, 'push').toast!.text, /rejected/);
   s = reduce(s, { type: 'undo', message: 'u', nothing: 'n' });
   assert.equal(s.repo.remote.main, newSession(station('train-supplementaire')).repo.remote.main, 'undo takes the event back');
@@ -87,7 +89,7 @@ test('a review moves to the next phase, shows its remark and target, and undo go
   let s = step(newSession(station('revue-de-quai')), 'rebase main');
   assert.equal(s.phase, 1);
   assert.equal(s.toast?.tone, 'good');
-  assert.match(s.toast!.text, /soudez C et D/);
+  assert.match(s.toast!.text, /Remarque traitée/);
   assert.ok(s.target);
   s = reduce(s, { type: 'undo', message: 'u', nothing: 'n' });
   assert.equal(s.phase, 0);

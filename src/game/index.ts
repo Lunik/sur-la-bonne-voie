@@ -2,7 +2,7 @@
 // ui/ reaches engine and levels through this module only (see docs/architecture.md).
 import { build, type RepoState } from '../engine/index.ts';
 import {
-  advance, bisectCandidates, cornered, faulty, fire, goals, INQUIRY_READ_ONLY, isGuess, isPlayed, predictBoards, runStep, sameCars, startBoard,
+  advance, bisectCandidates, cornered, faulty, fire, goals, HAPPENED, INQUIRY_READ_ONLY, PHASE_DONE, isGuess, isPlayed, predictBoards, runStep, sameCars, startBoard,
   type Goal, type Station, type Step,
 } from '../levels/index.ts';
 
@@ -134,7 +134,6 @@ function step(session: Session, action: Extract<Action, { type: 'step' }>): Sess
   const { state: repo, fired } = fire(station, result.state, session.moves, moves);
   const phase = advance(station, session.phase, repo);
   const all = goals(station);
-  const remark = station.type === 'review' && phase > session.phase && phase < all.length ? station.phases[phase].remark : undefined;
   const next: Session = {
     ...session,
     repo,
@@ -143,7 +142,7 @@ function step(session: Session, action: Extract<Action, { type: 'step' }>): Sess
     target: phase === session.phase ? session.target : targetOf(station, all[phase]) ?? session.target,
     history: result.moves ? [...session.history, { repo: session.repo, moves: session.moves, phase: session.phase }] : session.history,
     log: [...session.log, ...echoed, ...fired.flatMap((f): LogLine[] => [{ kind: 'event', text: f.say }, ...f.output.map((text) => ({ kind: 'output' as const, text }))])],
-    toast: fired.length ? { tone: 'info', text: fired.at(-1)!.say } : remark ? { tone: 'good', text: remark } : result.moves ? { tone: 'info', text: action.message } : session.toast,
+    toast: fired.length ? { tone: 'info', text: HAPPENED } : phase > session.phase && phase < all.length ? { tone: 'good', text: PHASE_DONE } : result.moves ? { tone: 'info', text: action.message } : session.toast,
   };
   if (phase === all.length) return { ...next, status: 'won' };
   if (station.budget !== undefined && moves >= station.budget) return { ...next, status: 'failed', failure: 'budget' };

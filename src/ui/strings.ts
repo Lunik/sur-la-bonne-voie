@@ -30,7 +30,7 @@ export const strings = {
   closed: 'fermée',
   tagShort: {
     compo: 'compo', rules: 'règles', predict: 'prono', retro: 'rétro', enquete: 'enquête', review: 'revue', bisect: 'avarie',
-    budget: 'budget', timed: 'chrono', breakdown: 'panne', events: 'horaire', locked: 'public', gc: 'ramassage', gitflow: 'gitflow', todo: 'feuille',
+    budget: 'budget', timed: 'chrono', breakdown: 'panne', events: 'horaire', locked: 'public', gc: 'gc', gitflow: 'gitflow', todo: 'feuille',
   } satisfies Record<Tag, string>,
   tag: {
     compo: 'Composition', rules: 'Règlement', predict: 'Pronostic', retro: 'Pronostic inversé', enquete: 'Enquête', review: 'Revue de quai',
